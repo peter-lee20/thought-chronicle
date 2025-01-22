@@ -28,8 +28,8 @@ const styles = StyleSheet.create({
     },
 
     image: {
-        width: "38%",
-        height: "20%"
+        width: 152,
+        height: 151
     },
 
     heading: {
@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
         fontSize: 24,
         lineHeight: 36,
         marginTop: 26,
-        marginBottom: 26
+        marginBottom: 26,
     },
 
     text: {
