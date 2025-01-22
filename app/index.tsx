@@ -27,7 +27,8 @@ export default function App() {
 
       {/* Sign Up Link */}
       <TouchableOpacity>
-        <Text style={[styles.signUp, { textDecorationLine: 'underline' }]}>Don't have an account? Sign up</Text>
+        <Text style={[styles.signUp, { color: '#666', fontWeight: 'normal', textAlign: 'center' }]}>Don't have an account?{' '}
+<Text style ={[styles.signUp, {color: '#7E948C', fontWeight: 'bold', textDecorationLine: 'underline' }]}>Sign up</Text></Text>
       </TouchableOpacity>
     </View>
   );
