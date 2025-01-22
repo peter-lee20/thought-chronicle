@@ -123,13 +123,14 @@ const styles = StyleSheet.create({
  },
  button: {
    backgroundColor: "#7E948C",
-   paddingVertical: 15,
+   paddingVertical: 20,
    paddingHorizontal: 20,
    borderRadius: 15,
    borderWidth: 1,
    borderColor: "#7E948C",
    alignItems: "center",
    width: "100%",
+   marginTop: 20,
  },
  buttonText: {
    color: "white",
