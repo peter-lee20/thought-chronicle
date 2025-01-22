@@ -5,7 +5,7 @@ export default function App() {
   return (
     <View style={styles.container}>
       {/* Illustration */}
-      <Image source={require('../../thought-chronicle/assets/images/illustration.png')} style={styles.illustration} />
+      <Image source={require('../assets/images/illustration.png')} style={styles.illustration} />
 
       {/* Title and Subtitle */}
       <Text style={styles.title}>Chronicle your thoughts</Text>
