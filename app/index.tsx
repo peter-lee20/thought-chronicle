@@ -12,12 +12,12 @@ export default function App() {
       <Text style={styles.subtitle}>Pause, reflect, grow.</Text>
 
       {/* Input Fields */}
-      <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" />
-      <TextInput style={styles.input} placeholder="Password" secureTextEntry={true} />
+      <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" placeholderTextColor = "#7E948C" />
+      <TextInput style={styles.input} placeholder="Password" secureTextEntry={true} placeholderTextColor = "#7E948C" />
 
       {/* Forgot Password Link */}
       <TouchableOpacity>
-        <Text style={styles.forgotPassword}>Forgot your password?</Text>
+        <Text style={[styles.forgotPassword, { textDecorationLine: 'underline' }]}>Forgot your password?</Text>
       </TouchableOpacity>
 
       {/* Sign In Button */}
@@ -27,7 +27,7 @@ export default function App() {
 
       {/* Sign Up Link */}
       <TouchableOpacity>
-        <Text style={styles.signUp}>Don't have an account? Sign up</Text>
+        <Text style={[styles.signUp, { textDecorationLine: 'underline' }]}>Don't have an account? Sign up</Text>
       </TouchableOpacity>
     </View>
   );
@@ -38,7 +38,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F5F5DC', // Beige background color
+    backgroundColor: '#F0ECE0', //background color
     padding: 20,
   },
   illustration: {
@@ -62,24 +62,25 @@ const styles = StyleSheet.create({
   input: {
     width: '100%',
     height: 50,
-    borderColor: '#ccc',
+    borderColor: '#7E948C',
     borderWidth: 1,
     borderRadius: 5,
     paddingHorizontal: 10,
     marginBottom: 15,
-    backgroundColor: '#fff',
+    backgroundColor: '#F0ECE0',
   },
   forgotPassword: {
     fontSize: 14,
-    color: '#007BFF',
+    color: '#7E948C',
     marginBottom: 20,
     textAlign: 'right',
     width: '100%',
+    fontWeight: 'bold',
   },
   signInButton: {
     width: '100%',
     height: 50,
-    backgroundColor: '#6B8E23', // Olive green button color
+    backgroundColor: '#7E948C', // Olive green button color
     justifyContent: 'center',
     alignItems: 'center',
     borderRadius: 5,
@@ -92,7 +93,8 @@ const styles = StyleSheet.create({
   },
   signUp: {
     fontSize: 14,
-    color: '#007BFF',
+    color: '#7E948C',
     textAlign: 'center',
+    fontWeight: 'bold',
   },
 });
