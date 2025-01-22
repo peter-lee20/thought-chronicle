@@ -12,13 +12,27 @@ export default function App() {
       <Text style={styles.subtitle}>Pause, reflect, grow.</Text>
 
       {/* Input Fields */}
-      <TextInput style={styles.input} placeholder="Email" keyboardType="email-address" placeholderTextColor = "#7E948C" />
-      <TextInput style={styles.input} placeholder="Password" secureTextEntry={true} placeholderTextColor = "#7E948C" />
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        keyboardType="email-address"
+        placeholderTextColor="#7E948C"
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        secureTextEntry={true}
+        placeholderTextColor="#7E948C"
+      />
 
       {/* Forgot Password Link */}
-      <TouchableOpacity>
-        <Text style={[styles.forgotPassword, { textDecorationLine: 'underline' }]}>Forgot your password?</Text>
-      </TouchableOpacity>
+      <View style={{ width: '100%' }}>
+        <TouchableOpacity>
+          <Text style={[styles.forgotPassword, { textDecorationLine: 'underline' }]}>
+            Forgot your password?
+          </Text>
+        </TouchableOpacity>
+      </View>
 
       {/* Sign In Button */}
       <TouchableOpacity style={styles.signInButton}>
@@ -27,8 +41,26 @@ export default function App() {
 
       {/* Sign Up Link */}
       <TouchableOpacity>
-        <Text style={[styles.signUp, { color: '#666', fontWeight: 'normal', textAlign: 'center' }]}>Don't have an account?{' '}
-<Text style ={[styles.signUp, {color: '#7E948C', fontWeight: 'bold', textDecorationLine: 'underline' }]}>Sign up</Text></Text>
+        <Text
+          style={[
+            styles.signUp,
+            { color: '#666', fontWeight: 'normal', textAlign: 'center' },
+          ]}
+        >
+          Don't have an account?{' '}
+          <Text
+            style={[
+              styles.signUp,
+              {
+                color: '#7E948C',
+                fontWeight: 'bold',
+                textDecorationLine: 'underline',
+              },
+            ]}
+          >
+            Sign up
+          </Text>
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -39,7 +71,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#F0ECE0', //background color
+    backgroundColor: '#F0ECE0', // background color
     padding: 20,
   },
   illustration: {
@@ -75,17 +107,21 @@ const styles = StyleSheet.create({
     color: '#7E948C',
     marginBottom: 20,
     textAlign: 'right',
-    width: '100%',
+    width: '100%', 
     fontWeight: 'bold',
   },
   signInButton: {
     width: '100%',
     height: 50,
-    backgroundColor: '#7E948C', // Olive green button color
+    paddingVertical: 20, 
+    paddingHorizontal: 20,
+    borderWidth: 1,
+    backgroundColor: '#7E948C',
+    borderColor: '#7E948C',
     justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: 5,
-    marginBottom: 20,
+    borderRadius: 15,
+    marginTop: 20,
   },
   signInButtonText: {
     fontSize: 16,
@@ -99,3 +135,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
 });
+
