@@ -1,8 +1,9 @@
+import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Button, StyleSheet, Alert, Image } from "react-native";
 
 
-export default function Index() {
+export default function Signup() {
  const [email, setEmail] = useState("");
  const [firstName, setFirstName] = useState("");
  const [lastName, setLastName] = useState("");
@@ -18,6 +19,7 @@ export default function Index() {
 
 
    Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
+   router.replace("/(setup)/verification");
    // Additional signup logic here
  };
 
@@ -25,7 +27,7 @@ export default function Index() {
  return (
    <View style={styles.container}>
      <Image
-       source={require("../assets/images/signup-image.png")} // Replace with your image path
+       source={require("../../assets/images/signup-image.png")} // Replace with your image path
        style={styles.image}
      />
      <Text style={styles.heading}>Sign Up</Text>
@@ -73,10 +75,8 @@ export default function Index() {
        <Text style={styles.buttonText}>Create Account</Text>
      </TouchableOpacity>
      <View style={styles.footer}>
-       <Text style={styles.footerText}>Already have an account? </Text>
-       <TouchableOpacity onPress={handleSignUp}>
-         <Text style={styles.link}>Sign In</Text>
-       </TouchableOpacity>
+        <Text style={styles.footerText}>Already have an account? </Text>
+        <Link href="/" style={styles.link}>Sign In</Link>
      </View>
    </View>
  );

@@ -1,11 +1,12 @@
+import { Link } from 'expo-router';
 import React from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
 
-export default function App() {
+export default function Index() {
   return (
     <View style={styles.container}>
       {/* Illustration */}
-      <Image source={require('../assets/images/illustration.png')} style={styles.illustration} />
+      <Image source={require('../../assets/images/illustration.png')} style={styles.illustration} />
 
       {/* Title and Subtitle */}
       <Text style={styles.title}>Chronicle your thoughts</Text>
@@ -48,7 +49,8 @@ export default function App() {
           ]}
         >
           Don't have an account?{' '}
-          <Text
+          <Link
+            href="/signup"
             style={[
               styles.signUp,
               {
@@ -59,7 +61,7 @@ export default function App() {
             ]}
           >
             Sign up
-          </Text>
+          </Link>
         </Text>
       </TouchableOpacity>
     </View>
