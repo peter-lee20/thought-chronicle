@@ -1,7 +1,32 @@
-import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
+import { FIREBASE_AUTH } from '../FirebaseConfig';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function App() {
+   const [email, setEmail] = useState("");
+   const [firstName, setFirstName] = useState("");
+   const [lastName, setLastName] = useState("");
+   const [password, setPassword] = useState("");
+   const [confirmPassword, setConfirmPassword] = useState("");
+   const [loading, setLoading] = useState(false);
+
+   // Authentication
+  const auth = FIREBASE_AUTH;
+
+  const handleSignIn = async () => {
+    setLoading(true);
+    try {
+        const response = await signInWithEmailAndPassword(auth, email, password);
+        Alert.alert("Success", `Signed in as ${firstName} ${lastName}`);
+        console.log(response);
+
+    } catch (error) {
+        console.log(error);
+    } finally {
+        setLoading(false);
+  }
+  }
   return (
     <View style={styles.container}>
       {/* Illustration */}

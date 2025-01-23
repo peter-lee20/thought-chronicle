@@ -1,5 +1,7 @@
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Button, StyleSheet, Alert, Image } from "react-native";
+import { FIREBASE_AUTH } from '../FirebaseConfig';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 
 export default function Index() {
@@ -8,16 +10,27 @@ export default function Index() {
  const [lastName, setLastName] = useState("");
  const [password, setPassword] = useState("");
  const [confirmPassword, setConfirmPassword] = useState("");
+ const [loading, setLoading] = useState(false);
+
+ // Authentication
+ const auth = FIREBASE_AUTH;
 
 
- const handleSignUp = () => {
+ const handleSignUp = async () => {
    if (password !== confirmPassword) {
      Alert.alert("Error", "Passwords do not match");
      return;
    }
 
-
-   Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
+   try {
+      const response = await createUserWithEmailAndPassword(auth, email, password);
+      Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
+      console.log(response);
+    } catch (error) {
+        console.log(error);
+    } finally {
+        setLoading(false)
+}
    // Additional signup logic here
  };
 
