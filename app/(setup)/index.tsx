@@ -1,14 +1,12 @@
+import { Link } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
-import { FIREBASE_AUTH } from '../FirebaseConfig';
+import { FIREBASE_AUTH } from '../../FirebaseConfig';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function App() {
    const [email, setEmail] = useState("");
-   const [firstName, setFirstName] = useState("");
-   const [lastName, setLastName] = useState("");
    const [password, setPassword] = useState("");
-   const [confirmPassword, setConfirmPassword] = useState("");
    const [loading, setLoading] = useState(false);
 
    // Authentication
@@ -18,7 +16,7 @@ export default function App() {
     setLoading(true);
     try {
         const response = await signInWithEmailAndPassword(auth, email, password);
-        Alert.alert("Success", `Signed in as ${firstName} ${lastName}`);
+        Alert.alert("Success", `Signed in as ${email}`);
         console.log(response);
 
     } catch (error) {
@@ -42,12 +40,14 @@ export default function App() {
         placeholder="Email"
         keyboardType="email-address"
         placeholderTextColor="#7E948C"
+        onChangeText={setEmail}
       />
       <TextInput
         style={styles.input}
         placeholder="Password"
         secureTextEntry={true}
         placeholderTextColor="#7E948C"
+        onChangeText={setPassword}
       />
 
       {/* Forgot Password Link */}
@@ -60,7 +60,9 @@ export default function App() {
       </View>
 
       {/* Sign In Button */}
-      <TouchableOpacity style={styles.signInButton}>
+      <TouchableOpacity 
+      style={styles.signInButton}
+      onPress={(handleSignIn)}>
         <Text style={styles.signInButtonText}>Sign in</Text>
       </TouchableOpacity>
 
