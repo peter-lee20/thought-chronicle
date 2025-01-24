@@ -2,7 +2,9 @@ import { Link, router } from "expo-router";
 import React, { useState } from "react";
 import { View, Text, TextInput, TouchableOpacity, Button, StyleSheet, Alert, Image } from "react-native";
 import { FIREBASE_AUTH } from '../../FirebaseConfig';
+import { FIRESTORE_DB } from '../../FirebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { addDoc, collection } from 'firebase/firestore'
 
 
 export default function Signup() {
@@ -26,6 +28,10 @@ export default function Signup() {
    try {
       const response = await createUserWithEmailAndPassword(auth, email, password);
       Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
+
+      // Store first and last name to firestore
+      addDoc(collection(FIRESTORE_DB, 'names'), {email: email, firstname: firstName, lastname: lastName})
+      
       console.log(response);
     } catch (error) {
         console.log(error);
