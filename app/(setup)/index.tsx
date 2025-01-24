@@ -9,7 +9,7 @@ export default function App() {
    const [password, setPassword] = useState("");
    const [loading, setLoading] = useState(false);
 
-   // Authentication
+   // Firebase authentication token
   const auth = FIREBASE_AUTH;
 
   const handleSignIn = async () => {

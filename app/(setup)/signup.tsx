@@ -13,7 +13,7 @@ export default function Signup() {
  const [confirmPassword, setConfirmPassword] = useState("");
  const [loading, setLoading] = useState(false);
 
- // Authentication
+ // Firebase authentication token
  const auth = FIREBASE_AUTH;
 
 
