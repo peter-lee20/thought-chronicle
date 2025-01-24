@@ -8,39 +8,39 @@ import { addDoc, collection } from 'firebase/firestore'
 
 
 export default function Signup() {
-  const [email, setEmail] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+ const [email, setEmail] = useState("");
+ const [firstName, setFirstName] = useState("");
+ const [lastName, setLastName] = useState("");
+ const [password, setPassword] = useState("");
+ const [confirmPassword, setConfirmPassword] = useState("");
+ const [loading, setLoading] = useState(false);
 
  // Firebase authentication token
  const auth = FIREBASE_AUTH;
 
 
-  const handleSignUp = async () => {
-    if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
-      return;
-    }
+ const handleSignUp = async () => {
+   if (password !== confirmPassword) {
+     Alert.alert("Error", "Passwords do not match");
+     return;
+   }
 
-    try {
+   try {
       const response = await createUserWithEmailAndPassword(auth, email, password);
       Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
 
+
       // Store first and last name to firestore
       addDoc(collection(FIRESTORE_DB, 'names'), {email: email, firstname: firstName, lastname: lastName})
-      
       router.replace("/verification");
       console.log(response);
     } catch (error) {
-      console.log(error);
+        console.log(error);
     } finally {
-      setLoading(false)
-    }
-    // Additional signup logic here
-  };
+        setLoading(false)
+}
+   // Additional signup logic here
+ };
 
 
  return (
@@ -95,7 +95,7 @@ export default function Signup() {
      </TouchableOpacity>
      <View style={styles.footer}>
         <Text style={styles.footerText}>Already have an account? </Text>
-        <Link href="/(setup)" style={styles.link}>Sign In</Link>
+        <Link href="/" style={styles.link}>Sign In</Link>
      </View>
    </View>
  );
