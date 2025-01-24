@@ -1,8 +1,30 @@
 import { Link } from 'expo-router';
-import React from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image } from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
+import { FIREBASE_AUTH } from '../../FirebaseConfig';
+import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
-export default function Index() {
+export default function App() {
+   const [email, setEmail] = useState("");
+   const [password, setPassword] = useState("");
+   const [loading, setLoading] = useState(false);
+
+   // Authentication
+  const auth = FIREBASE_AUTH;
+
+  const handleSignIn = async () => {
+    setLoading(true);
+    try {
+        const response = await signInWithEmailAndPassword(auth, email, password);
+        Alert.alert("Success", `Signed in as ${email}`);
+        console.log(response);
+
+    } catch (error) {
+        console.log(error);
+    } finally {
+        setLoading(false);
+  }
+  }
   return (
     <View style={styles.container}>
       {/* Illustration */}
@@ -18,12 +40,14 @@ export default function Index() {
         placeholder="Email"
         keyboardType="email-address"
         placeholderTextColor="#7E948C"
+        onChangeText={setEmail}
       />
       <TextInput
         style={styles.input}
         placeholder="Password"
         secureTextEntry={true}
         placeholderTextColor="#7E948C"
+        onChangeText={setPassword}
       />
 
       {/* Forgot Password Link */}
@@ -36,7 +60,9 @@ export default function Index() {
       </View>
 
       {/* Sign In Button */}
-      <TouchableOpacity style={styles.signInButton}>
+      <TouchableOpacity 
+      style={styles.signInButton}
+      onPress={(handleSignIn)}>
         <Text style={styles.signInButtonText}>Sign in</Text>
       </TouchableOpacity>
 
