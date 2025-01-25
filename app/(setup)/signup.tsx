@@ -18,10 +18,19 @@ export default function Signup() {
   // Firebase authentication token
   const auth = FIREBASE_AUTH;
 
+  const isValidEmail = (email: string) => {
+    const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/
+    return regex.test(email);
+  }
 
   const handleSignUp = async () => {
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      Alert.alert("Error", "Invalid email format");
       return;
     }
 

@@ -1,30 +1,35 @@
-import { Link } from 'expo-router';
+import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
 import { FIREBASE_AUTH } from '../../FirebaseConfig';
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function App() {
-   const [email, setEmail] = useState("");
-   const [password, setPassword] = useState("");
-   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-   // Firebase authentication token
+  // Firebase authentication token
   const auth = FIREBASE_AUTH;
+
+  const changePassword = () => {
+    router.replace("/forgot");
+  }
 
   const handleSignIn = async () => {
     setLoading(true);
     try {
-        const response = await signInWithEmailAndPassword(auth, email, password);
-        Alert.alert("Success", `Signed in as ${email}`);
-        console.log(response);
-
+      const response = await signInWithEmailAndPassword(auth, email, password);
+      Alert.alert("Success", `Signed in as ${email}`);
+      console.log(response);
+      router.replace("/(tabs)/(home)/homepage");
     } catch (error) {
-        console.log(error);
+      console.log(error);
     } finally {
-        setLoading(false);
+      setLoading(false);
+    }
   }
-  }
+
   return (
     <View style={styles.container}>
       {/* Illustration */}
@@ -52,7 +57,7 @@ export default function App() {
 
       {/* Forgot Password Link */}
       <View style={{ width: '100%' }}>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={changePassword}>
           <Text style={[styles.forgotPassword, { textDecorationLine: 'underline' }]}>
             Forgot your password?
           </Text>
