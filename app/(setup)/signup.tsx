@@ -15,8 +15,8 @@ export default function Signup() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
- // Firebase authentication token
- const auth = FIREBASE_AUTH;
+  // Firebase authentication token
+  const auth = FIREBASE_AUTH;
 
 
   const handleSignUp = async () => {
@@ -28,7 +28,6 @@ export default function Signup() {
     try {
       const response = await createUserWithEmailAndPassword(auth, email, password);
       Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
-
 
       // Store first and last name to firestore
       addDoc(collection(FIRESTORE_DB, 'names'), {email: email, firstname: firstName, lastname: lastName})
