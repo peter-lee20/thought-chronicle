@@ -2,7 +2,7 @@ import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
 import { FIREBASE_AUTH } from '../../FirebaseConfig';
-import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function App() {
   const [email, setEmail] = useState("");
@@ -100,71 +100,71 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F0ECE0', // background color
-    padding: 20,
-  },
-  illustration: {
-    width: 200,
-    height: 200,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 20,
-    textAlign: 'center',
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#666',
-    marginBottom: 30,
-    textAlign: 'center',
-  },
-  input: {
-    width: '100%',
-    height: 50,
-    borderColor: '#7E948C',
-    borderWidth: 2,
-    borderRadius: 15,
-    paddingHorizontal: 10,
-    marginBottom: 15,
-    backgroundColor: '#F0ECE0',
-  },
-  forgotPassword: {
-    fontSize: 14,
-    color: '#7E948C',
-    marginBottom: 20,
-    textAlign: 'right',
-    width: '100%', 
-    fontWeight: 'bold',
-  },
-  signInButton: {
-    backgroundColor: "#7E948C",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: "#7E948C",
-    alignItems: "center",
-    width: "100%",
-    marginTop: 20,
-    marginBottom: 20
-  },
-  signInButtonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: "Poppins",
-  },
-  signUp: {
-    fontSize: 14,
-    color: '#7E948C',
-    textAlign: 'center',
-    fontWeight: 'bold',
-  },
+   container: {
+      flex: 1,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: '#F0ECE0',
+      padding: 20,
+   },
+   illustration: {
+      width: 200,
+      height: 200,
+      marginBottom: 20,
+   },
+   title: {
+      fontSize: 24,
+      fontWeight: 'bold',
+      color: '#333',
+      marginBottom: 20,
+      textAlign: 'center',
+   },
+   subtitle: {
+      fontSize: 16,
+      color: '#666',
+      marginBottom: 30,
+      textAlign: 'center',
+   },
+   input: {
+      width: '100%',
+      height: 50,
+      borderColor: '#7E948C',
+      borderWidth: 2,
+      borderRadius: 15,
+      paddingHorizontal: 10,
+      marginBottom: 15,
+      backgroundColor: '#F0ECE0',
+   },
+   forgotPassword: {
+      fontSize: 14,
+      color: '#7E948C',
+      marginBottom: 20,
+      textAlign: 'right',
+      width: '100%',
+      fontWeight: 'bold',
+   },
+   signInButton: {
+      backgroundColor: "#7E948C",
+      paddingVertical: 20,
+      paddingHorizontal: 20,
+      borderRadius: 15,
+      borderWidth: 1,
+      borderColor: "#7E948C",
+      alignItems: "center",
+      width: "100%",
+      marginTop: 20,
+      marginBottom: 20,
+   },
+   signInButtonText: {
+      color: "white",
+      fontSize: 16,
+      fontWeight: "bold",
+      fontFamily: "Poppins",
+   },
+   signUp: {
+      fontSize: 14,
+      color: '#7E948C',
+      textAlign: 'center',
+      fontWeight: 'bold',
+   },
 });
