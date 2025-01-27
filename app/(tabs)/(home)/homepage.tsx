@@ -11,6 +11,7 @@ export default function HomePage() {
   const streak = 5;
   const dailyQuestion = "What made you smile today?";
   const currentDate = new Date();
+  const maxCharacters = 1500;
 
   const getWeekRange = () => {
     const startOfWeek = new Date(currentDate);
@@ -35,6 +36,10 @@ export default function HomePage() {
   const handleSubmitResponse = async () => {
     if (response.trim() === '') {
       Alert.alert("Please enter a response.");
+      return;
+    }
+    if (response.length > maxCharacters) {
+      Alert.alert(`Response exceeds the maximum limit of ${maxCharacters} characters.`);
       return;
     }
 
@@ -110,9 +115,14 @@ export default function HomePage() {
                 placeholder="Type your response here..."
                 placeholderTextColor="#70664550"
                 multiline
+                maxLength = {maxCharacters}
                 value={response} // Bind the value to the state
                 onChangeText={setResponse} // Update state on text change
               />
+              {/* Character Counter */}
+              <Text style={styles.characterCounter}>
+                {response.length}/{maxCharacters} characters
+              </Text>
               <TouchableOpacity style={styles.respondButton} onPress={handleSubmitResponse}>
                 <Text style={styles.buttonText}>Submit Response</Text>
               </TouchableOpacity>
@@ -209,6 +219,13 @@ const styles = StyleSheet.create({
     height: 150,
     marginBottom: 10,
     backgroundColor: '#70664533',
+  },
+  characterCounter: {
+    fontSize: 12,
+    color: '#706645',
+    marginBottom: 10,
+    textAlign: 'right',
+    fontFamily: "Poppins",
   },
   respondButton: {
     backgroundColor: '#706645CC',

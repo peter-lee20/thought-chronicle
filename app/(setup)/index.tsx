@@ -25,6 +25,7 @@ export default function App() {
       router.replace("/(tabs)/(home)/homepage");
     } catch (error) {
       console.log(error);
+      Alert.alert("Error", "Failed to sign in. Please try again.");
     } finally {
       setLoading(false);
     }
