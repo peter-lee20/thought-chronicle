@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, Alert, Text, TextInput, TouchableOpacity, View, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Image } from 'react-native';
 import WeekCalendar from './weekCalendar';
-import { FIREBASE_AUTH } from '../../FirebaseConfig';
-import { FIRESTORE_DB } from '../../FirebaseConfig';
+import { FIREBASE_AUTH } from '../../../FirebaseConfig';
+import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { addDoc, collection } from 'firebase/firestore';
 
@@ -81,13 +81,13 @@ export default function HomePage() {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.streakContainer}>
-              <Image source={require('../../assets/images/fire.png')} style={styles.fireImage} resizeMode="contain"/>
+              <Image source={require('../../../assets/images/fire.png')} style={styles.fireImage} resizeMode="contain"/>
               <Text style={styles.days}>
                 {streak}
               </Text>
             </View>
             <TouchableOpacity onPress={clickedProfile}>
-              <Image source={require('../../assets/images/profile.png')} style={styles.image} resizeMode="contain" />
+              <Image source={require('../../../assets/images/profile.png')} style={styles.image} resizeMode="contain" />
             </TouchableOpacity>
           </View>
 
@@ -122,22 +122,22 @@ export default function HomePage() {
           {/* Footer */}
           <View style={styles.footer}>
             <TouchableOpacity>
-              <Image source={require('../../assets/images/today.png')} style={styles.footerImage}resizeMode="contain" />
+              <Image source={require('../../../assets/images/today.png')} style={styles.footerImage}resizeMode="contain" />
             </TouchableOpacity>
             <TouchableOpacity>
-              <Image source={require('../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
+              <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
             </TouchableOpacity>
             <TouchableOpacity>
-              <Image source={require('../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain"/>
+              <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain"/>
               <Text style = {styles.plusSign}>
                 +
               </Text>
             </TouchableOpacity>
             <TouchableOpacity>
-              <Image source={require('../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain"/>
+              <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain"/>
             </TouchableOpacity>
             <TouchableOpacity>
-              <Image source={require('../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
+              <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
             </TouchableOpacity>
           </View>
         </ScrollView>

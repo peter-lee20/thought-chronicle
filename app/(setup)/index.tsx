@@ -1,104 +1,102 @@
-import { Link, useRouter } from 'expo-router';
+import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
 import { FIREBASE_AUTH } from '../../FirebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function App() {
-   const [email, setEmail] = useState("");
-   const [password, setPassword] = useState("");
-   const [loading, setLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [loading, setLoading] = useState(false);
 
-   // Firebase authentication token
-   const auth = FIREBASE_AUTH;
+  // Firebase authentication token
+  const auth = FIREBASE_AUTH;
 
-   // Initialize the router
-   const router = useRouter();
+  const changePassword = () => {
+    router.replace("/forgot");
+  }
 
-   const handleSignIn = async () => {
-     setLoading(true);
-     try {
-         const response = await signInWithEmailAndPassword(auth, email, password);
-         Alert.alert("Success", `Signed in as ${email}`);
-         console.log(response);
+  const handleSignIn = async () => {
+    setLoading(true);
+    try {
+      const response = await signInWithEmailAndPassword(auth, email, password);
+      Alert.alert("Success", `Signed in as ${email}`);
+      console.log(response);
+      router.replace("/(tabs)/(home)/homepage");
+    } catch (error) {
+      console.log(error);
+    } finally {
+      setLoading(false);
+    }
+  }
 
-         // Navigate to the homepage after successful sign-in
-         router.push('/homepage');  // Replace with your homepage path
-     } catch (error) {
-         console.log(error);
-         Alert.alert("Error", "Failed to sign in. Please try again.");
-     } finally {
-         setLoading(false);
-     }
-   }
+  return (
+    <View style={styles.container}>
+      {/* Illustration */}
+      <Image source={require('../../assets/images/illustration.png')} style={styles.illustration} />
 
-   return (
-      <View style={styles.container}>
-         {/* Illustration */}
-         <Image source={require('../../assets/images/illustration.png')} style={styles.illustration} />
+      {/* Title and Subtitle */}
+      <Text style={styles.title}>Chronicle your thoughts</Text>
+      <Text style={styles.subtitle}>Pause, reflect, grow.</Text>
 
-         {/* Title and Subtitle */}
-         <Text style={styles.title}>Chronicle your thoughts</Text>
-         <Text style={styles.subtitle}>Pause, reflect, grow.</Text>
+      {/* Input Fields */}
+      <TextInput
+        style={styles.input}
+        placeholder="Email"
+        keyboardType="email-address"
+        placeholderTextColor="#7E948C"
+        onChangeText={setEmail}
+      />
+      <TextInput
+        style={styles.input}
+        placeholder="Password"
+        secureTextEntry={true}
+        placeholderTextColor="#7E948C"
+        onChangeText={setPassword}
+      />
 
-         {/* Input Fields */}
-         <TextInput
-            style={styles.input}
-            placeholder="Email"
-            keyboardType="email-address"
-            placeholderTextColor="#7E948C"
-            onChangeText={setEmail}
-         />
-         <TextInput
-            style={styles.input}
-            placeholder="Password"
-            secureTextEntry={true}
-            placeholderTextColor="#7E948C"
-            onChangeText={setPassword}
-         />
-
-         {/* Forgot Password Link */}
-         <View style={{ width: '100%' }}>
-            <TouchableOpacity>
-               <Text style={[styles.forgotPassword, { textDecorationLine: 'underline' }]}>
-                  Forgot your password?
-               </Text>
-            </TouchableOpacity>
-         </View>
-
-         {/* Sign In Button */}
-         <TouchableOpacity 
-            style={styles.signInButton}
-            onPress={handleSignIn}>
-            <Text style={styles.signInButtonText}>Sign in</Text>
-         </TouchableOpacity>
-
-         {/* Sign Up Link */}
-         <TouchableOpacity>
-            <Text
-               style={[
-                  styles.signUp,
-                  { color: '#666', fontWeight: 'normal', textAlign: 'center' },
-               ]}
-            >
-               Don't have an account?{' '}
-               <Link
-                  href="/signup"
-                  style={[
-                     styles.signUp,
-                     {
-                        color: '#7E948C',
-                        fontWeight: 'bold',
-                        textDecorationLine: 'underline',
-                     },
-                  ]}
-               >
-                  Sign up
-               </Link>
-            </Text>
-         </TouchableOpacity>
+      {/* Forgot Password Link */}
+      <View style={{ width: '100%' }}>
+        <TouchableOpacity onPress={(changePassword)}>
+          <Text style={[styles.forgotPassword, { textDecorationLine: 'underline' }]}>
+            Forgot your password?
+          </Text>
+        </TouchableOpacity>
       </View>
-   );
+
+      {/* Sign In Button */}
+      <TouchableOpacity 
+      style={styles.signInButton}
+      onPress={(handleSignIn)}>
+        <Text style={styles.signInButtonText}>Sign in</Text>
+      </TouchableOpacity>
+
+      {/* Sign Up Link */}
+      <TouchableOpacity>
+        <Text
+          style={[
+            styles.signUp,
+            { color: '#666', fontWeight: 'normal', textAlign: 'center' },
+          ]}
+        >
+          Don't have an account?{' '}
+          <Link
+            href="/signup"
+            style={[
+              styles.signUp,
+              {
+                color: '#7E948C',
+                fontWeight: 'bold',
+                textDecorationLine: 'underline',
+              },
+            ]}
+          >
+            Sign up
+          </Link>
+        </Text>
+      </TouchableOpacity>
+    </View>
+  );
 }
 
 const styles = StyleSheet.create({
