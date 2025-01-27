@@ -1,22 +1,13 @@
-import React from 'react';
-import {
-  StyleSheet,
-  Alert,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-  ScrollView,
-  Button,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
-  TouchableWithoutFeedback,
-  Image,
-} from 'react-native';
+import React, { useState } from 'react';
+import { StyleSheet, Alert, Text, TextInput, TouchableOpacity, View, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Image } from 'react-native';
 import WeekCalendar from './weekCalendar';
+import { FIREBASE_AUTH } from '../../FirebaseConfig';
+import { FIRESTORE_DB } from '../../FirebaseConfig';
+import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { addDoc, collection } from 'firebase/firestore';
 
 export default function HomePage() {
+  const [response, setResponse] = useState(''); // State for the text input
   const streak = 5;
   const dailyQuestion = "What made you smile today?";
   const currentDate = new Date();
@@ -39,7 +30,38 @@ export default function HomePage() {
   const clickedProfile = () => {
     Alert.alert("Profile Clicked");
     return;
-  }
+  };
+
+  const handleSubmitResponse = async () => {
+    if (response.trim() === '') {
+      Alert.alert("Please enter a response.");
+      return;
+    }
+
+    try {
+      // Get the current user's UID from Firebase Auth
+      const user = FIREBASE_AUTH.currentUser;
+
+      if (user) {
+        // Save to Firestore
+        await addDoc(collection(FIRESTORE_DB, 'daily-question-responses'), {
+          question: dailyQuestion,
+          response: response,
+          date: currentDate.toLocaleDateString(),
+          timestamp: new Date(),
+          userId: user.uid, // Track the user who submitted the response
+        });
+
+        Alert.alert("Response submitted successfully!");
+        setResponse(''); // Clear input after submission
+      } else {
+        Alert.alert("You need to be logged in to submit a response.");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Failed to submit response. Please try again.");
+    }
+  };
 
   const options: Intl.DateTimeFormatOptions = {
     weekday: "long", // "long", "short", or "narrow"
@@ -58,7 +80,6 @@ export default function HomePage() {
         <ScrollView style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
-            
             <View style={styles.streakContainer}>
               <Image source={require('../../assets/images/fire.png')} style={styles.fireImage} resizeMode="contain"/>
               <Text style={styles.days}>
@@ -89,8 +110,10 @@ export default function HomePage() {
                 placeholder="Type your response here..."
                 placeholderTextColor="#70664550"
                 multiline
+                value={response} // Bind the value to the state
+                onChangeText={setResponse} // Update state on text change
               />
-              <TouchableOpacity style={styles.respondButton}>
+              <TouchableOpacity style={styles.respondButton} onPress={handleSubmitResponse}>
                 <Text style={styles.buttonText}>Submit Response</Text>
               </TouchableOpacity>
             </View>
@@ -173,7 +196,6 @@ const styles = StyleSheet.create({
   },
   dailyQuestion: {
     marginBottom: 20,
-    
   },
   question: {
     fontSize: 16,
