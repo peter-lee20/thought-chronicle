@@ -57,7 +57,7 @@ export default function App() {
 
       {/* Forgot Password Link */}
       <View style={{ width: '100%' }}>
-        <TouchableOpacity onPress={changePassword}>
+        <TouchableOpacity onPress={(changePassword)}>
           <Text style={[styles.forgotPassword, { textDecorationLine: 'underline' }]}>
             Forgot your password?
           </Text>

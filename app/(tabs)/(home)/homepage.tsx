@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { StyleSheet, Alert, Text, TextInput, TouchableOpacity, View, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Image } from 'react-native';
 import WeekCalendar from './weekCalendar';
-import { FIREBASE_AUTH } from '../../FirebaseConfig';
-import { FIRESTORE_DB } from '../../FirebaseConfig';
+import { FIREBASE_AUTH } from '../../../FirebaseConfig';
+import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { addDoc, collection } from 'firebase/firestore';
 
