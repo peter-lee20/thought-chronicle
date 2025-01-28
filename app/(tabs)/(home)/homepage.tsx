@@ -4,12 +4,38 @@ import WeekCalendar from './weekCalendar';
 import { FIREBASE_AUTH } from '../../../FirebaseConfig';
 import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, getDocs, collection } from 'firebase/firestore';
 
+
+// Function to fetch random question from Firestore
+
+const fetchQuestion = async () => {
+
+  // Inefficient if our question database is big
+  const q_pool = await getDocs(collection(FIRESTORE_DB, 'daily-question-prompts'));
+  if (q_pool.empty){
+    console.log("Question prompt database is empty")
+    return null;
+  }
+  const docs = q_pool.docs
+  const randomIndex = Math.floor(Math.random() * docs.length);
+  const data = docs[randomIndex].data();
+  return data["prompt"]
+  
+
+
+}
 export default function HomePage() {
   const [response, setResponse] = useState(''); // State for the text input
   const streak = 5;
-  const dailyQuestion = "What made you smile today?";
+  var dailyQuestion = "What made you smile today?";
+
+  // Random question testing
+  fetchQuestion().then((question) => {
+    console.log(question);
+  })
+
+  
   const currentDate = new Date();
   const maxCharacters = 1500;
 
