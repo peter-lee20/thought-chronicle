@@ -16,9 +16,60 @@ export default function HomePage() {
   const currentDate = new Date();
   const maxCharacters = 1500;
 
+  const getWeekRange = () => {
+    const startOfWeek = new Date(currentDate);
+    const endOfWeek = new Date(currentDate);
+
+    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
+    endOfWeek.setDate(currentDate.getDate() + (6 - currentDate.getDay()));
+
+    return {
+      start: startOfWeek.toLocaleDateString(),
+      end: endOfWeek.toLocaleDateString(),
+    };
+  };
+
+  const weekRange = getWeekRange();
+
   const toggleDropdown = () => {
     setShowDropdown((prev) => !prev);
-  };
+  }
+
+  const handleSubmitResponse = async () => {
+    if (response.trim() === '') {
+      Alert.alert("Please enter a response.");
+      return;
+    }
+
+    if (response.length > maxCharacters) {
+      Alert.alert(`Response exceeds the maximum limit of ${maxCharacters} characters.`);
+      return;
+    } 
+
+    try {
+      // Get the current user's UID from Firebase Auth
+      const user = FIREBASE_AUTH.currentUser;
+
+      if (user) {
+        // Save to Firestore
+        await addDoc(collection(FIRESTORE_DB, 'daily-question-responses'), {
+          question: dailyQuestion,
+          response: response,
+          date: currentDate.toLocaleDateString(),
+          timestamp: new Date(),
+          userId: user.uid, // Track the user who submitted the response
+        });
+
+        Alert.alert("Response submitted successfully!");
+        setResponse(''); // Clear input after submission
+      } else {
+        Alert.alert("You need to be logged in to submit a response.");
+      }
+    } catch (error) {
+      console.error(error);
+      Alert.alert("Failed to submit response. Please try again.");
+    }
+  }
 
   const handleSignOut = async () => {
     try {
@@ -90,7 +141,7 @@ export default function HomePage() {
               <Text style={styles.characterCounter}>
                 {response.length}/{maxCharacters} characters
               </Text>
-              <TouchableOpacity style={styles.respondButton}>
+              <TouchableOpacity style={styles.respondButton} onPress={handleSubmitResponse}>
                 <Text style={styles.buttonText}>Submit Response</Text>
               </TouchableOpacity>
             </View>
@@ -98,7 +149,24 @@ export default function HomePage() {
 
           {/* Footer */}
           <View style={styles.footer}>
-            {/* Footer buttons */}
+            <TouchableOpacity>
+                <Image source={require('../../../assets/images/today.png')} style={styles.footerImage}resizeMode="contain" />
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain"/>
+                <Text style = {styles.plusSign}>
+                  +
+                </Text>
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain"/>
+              </TouchableOpacity>
+              <TouchableOpacity>
+                <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
+              </TouchableOpacity>
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
