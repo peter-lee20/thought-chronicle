@@ -17,10 +17,10 @@ const fetchQuestion = async () => {
     console.log("Question prompt database is empty")
     return null;
   }
-  const docs = q_pool.docs
+  const docs = q_pool.docs;
   const randomIndex = Math.floor(Math.random() * docs.length);
   const data = docs[randomIndex].data();
-  return data["prompt"]
+  return data.prompt
   
 
 
@@ -28,14 +28,8 @@ const fetchQuestion = async () => {
 export default function HomePage() {
   const [response, setResponse] = useState(''); // State for the text input
   const streak = 5;
-  var dailyQuestion = "What made you smile today?";
+  let dailyQuestion = fetchQuestion();
 
-  // Random question testing
-  fetchQuestion().then((question) => {
-    console.log(question);
-  })
-
-  
   const currentDate = new Date();
   const maxCharacters = 1500;
 
