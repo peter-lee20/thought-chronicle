@@ -5,74 +5,31 @@ import { FIREBASE_AUTH } from '../../../FirebaseConfig';
 import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { addDoc, collection } from 'firebase/firestore';
+import { signOut } from 'firebase/auth';
+import { Link, router } from 'expo-router';
 
 export default function HomePage() {
-  const [response, setResponse] = useState(''); // State for the text input
+  const [response, setResponse] = useState('');
+  const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
   const streak = 5;
-  const dailyQuestion = "What made you smile today?";
+  const dailyQuestion = 'What made you smile today?';
   const currentDate = new Date();
   const maxCharacters = 1500;
 
-  const getWeekRange = () => {
-    const startOfWeek = new Date(currentDate);
-    const endOfWeek = new Date(currentDate);
-
-    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
-    endOfWeek.setDate(currentDate.getDate() + (6 - currentDate.getDay()));
-
-    return {
-      start: startOfWeek.toLocaleDateString(),
-      end: endOfWeek.toLocaleDateString(),
-    };
+  const toggleDropdown = () => {
+    setShowDropdown((prev) => !prev);
   };
 
-  const weekRange = getWeekRange();
-
-  const clickedProfile = () => {
-    Alert.alert("Profile Clicked");
-    return;
-  };
-
-  const handleSubmitResponse = async () => {
-    if (response.trim() === '') {
-      Alert.alert("Please enter a response.");
-      return;
-    }
-    if (response.length > maxCharacters) {
-      Alert.alert(`Response exceeds the maximum limit of ${maxCharacters} characters.`);
-      return;
-    }
-
+  const handleSignOut = async () => {
     try {
-      // Get the current user's UID from Firebase Auth
-      const user = FIREBASE_AUTH.currentUser;
-
-      if (user) {
-        // Save to Firestore
-        await addDoc(collection(FIRESTORE_DB, 'daily-question-responses'), {
-          question: dailyQuestion,
-          response: response,
-          date: currentDate.toLocaleDateString(),
-          timestamp: new Date(),
-          userId: user.uid, // Track the user who submitted the response
-        });
-
-        Alert.alert("Response submitted successfully!");
-        setResponse(''); // Clear input after submission
-      } else {
-        Alert.alert("You need to be logged in to submit a response.");
-      }
+      await signOut(FIREBASE_AUTH);
+      Alert.alert('Signed out successfully!');
+      router.replace("/(setup)");
+      // Redirect to login screen or handle accordingly
     } catch (error) {
       console.error(error);
-      Alert.alert("Failed to submit response. Please try again.");
+      Alert.alert('Failed to sign out. Please try again.');
     }
-  };
-
-  const options: Intl.DateTimeFormatOptions = {
-    weekday: "long", // "long", "short", or "narrow"
-    year: "numeric", // "numeric" or "2-digit"
-    month: "long", // "numeric", "2-digit", "long", "short", or "narrow"
-    day: "numeric", // "numeric" or "2-digit"
   };
 
   return (
@@ -86,20 +43,31 @@ export default function HomePage() {
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.streakContainer}>
-              <Image source={require('../../../assets/images/fire.png')} style={styles.fireImage} resizeMode="contain"/>
-              <Text style={styles.days}>
-                {streak}
-              </Text>
+              <Image source={require('../../../assets/images/fire.png')} style={styles.fireImage} resizeMode="contain" />
+              <Text style={styles.days}>{streak}</Text>
             </View>
-            <TouchableOpacity onPress={clickedProfile}>
-              <Image source={require('../../../assets/images/profile.png')} style={styles.image} resizeMode="contain" />
-            </TouchableOpacity>
+            <View>
+              <TouchableOpacity onPress={toggleDropdown}>
+                <Image
+                  source={require('../../../assets/images/profile.png')}
+                  style={styles.image}
+                  resizeMode="contain"
+                />
+              </TouchableOpacity>
+              {showDropdown && (
+                <View style={styles.dropdownMenu}>
+                  <TouchableOpacity style={styles.dropdownItem} onPress={handleSignOut}>
+                    <Text style={styles.dropdownText}>Sign Out</Text>
+                  </TouchableOpacity>
+                </View>
+              )}
+            </View>
           </View>
 
           {/* Main Content */}
           <View style={styles.mainContent}>
             <Text style={styles.title}>Today</Text>
-            <Text style={styles.date}>{currentDate.toLocaleDateString(undefined, options)}</Text>
+            <Text style={styles.date}>{currentDate.toLocaleDateString()}</Text>
 
             {/* Week Overview */}
             <View style={styles.weekDisplay}>
@@ -115,15 +83,14 @@ export default function HomePage() {
                 placeholder="Type your response here..."
                 placeholderTextColor="#70664550"
                 multiline
-                maxLength = {maxCharacters}
-                value={response} // Bind the value to the state
-                onChangeText={setResponse} // Update state on text change
+                maxLength={maxCharacters}
+                value={response}
+                onChangeText={setResponse}
               />
-              {/* Character Counter */}
               <Text style={styles.characterCounter}>
                 {response.length}/{maxCharacters} characters
               </Text>
-              <TouchableOpacity style={styles.respondButton} onPress={handleSubmitResponse}>
+              <TouchableOpacity style={styles.respondButton}>
                 <Text style={styles.buttonText}>Submit Response</Text>
               </TouchableOpacity>
             </View>
@@ -131,24 +98,7 @@ export default function HomePage() {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <TouchableOpacity>
-              <Image source={require('../../../assets/images/today.png')} style={styles.footerImage}resizeMode="contain" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain"/>
-              <Text style = {styles.plusSign}>
-                +
-              </Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain"/>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
-            </TouchableOpacity>
+            {/* Footer buttons */}
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
@@ -291,5 +241,29 @@ const styles = StyleSheet.create({
   footerImage: {
     width: 50,
     height: 50,
-  }
+  }, 
+  dropdownMenu: {
+    position: 'absolute',
+    top: 50, // Position below the profile image
+    right: 0,
+    width: 100,
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    shadowColor: '#000',
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 5,
+    zIndex: 10,
+  },
+  dropdownItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEE',
+  },
+  dropdownText: {
+    color: '#706645',
+    fontSize: 16,
+    fontFamily: 'Poppins',
+  },
 });
