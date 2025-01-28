@@ -24,13 +24,18 @@ export default function Signup() {
   }
 
   const handleSignUp = async () => {
-    if (password !== confirmPassword) {
-      Alert.alert("Error", "Passwords do not match");
+    if (email == '' || firstName == '' || lastName == '' || password == '' || confirmPassword == '') {
+      Alert.alert("Error", "Missing fields");
       return;
     }
 
     if (!isValidEmail(email)) {
       Alert.alert("Error", "Invalid email format");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      Alert.alert("Error", "Passwords do not match");
       return;
     }
 
@@ -44,6 +49,9 @@ export default function Signup() {
       console.log(response);
     } catch (error) {
       console.log(error);
+      if (error instanceof Error) {
+        Alert.alert(error.message);
+      }
     } finally {
       setLoading(false)
     }
