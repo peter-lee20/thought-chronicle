@@ -6,29 +6,10 @@ import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { addDoc, getDocs, collection } from 'firebase/firestore';
 
-
-// Function to fetch random question from Firestore
-
-const fetchQuestion = async () => {
-
-  // Inefficient if our question database is big
-  const q_pool = await getDocs(collection(FIRESTORE_DB, 'daily-question-prompts'));
-  if (q_pool.empty){
-    console.log("Question prompt database is empty")
-    return null;
-  }
-  const docs = q_pool.docs;
-  const randomIndex = Math.floor(Math.random() * docs.length);
-  const data = docs[randomIndex].data();
-  return data.prompt
-  
-
-
-}
 export default function HomePage() {
   const [response, setResponse] = useState(''); // State for the text input
   const streak = 5;
-  let dailyQuestion = fetchQuestion();
+  let dailyQuestion = "What is your pet peeve?"; // I don't know what to do with this yet
 
   const currentDate = new Date();
   const maxCharacters = 1500;
