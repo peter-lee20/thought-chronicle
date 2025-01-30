@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Alert, Text, TextInput, TouchableOpacity, View, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Image } from 'react-native';
 import WeekCalendar from './weekCalendar';
 import { FIREBASE_AUTH } from '../../../FirebaseConfig';
 import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { addDoc, collection } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { Link, router } from 'expo-router';
 
@@ -12,9 +12,28 @@ export default function HomePage() {
   const [response, setResponse] = useState('');
   const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
   const streak = 5;
-  const dailyQuestion = 'What made you smile today?';
+  const [question, setQuestion] = useState('');
   const currentDate = new Date();
   const maxCharacters = 1500;
+
+  useEffect(() => {
+    const fetchQuestion = async () => {
+      try {
+        const docRef = doc(FIRESTORE_DB, "current-question", "latest");
+        const snapshot = await getDoc(docRef);
+
+        if (snapshot.exists()) {
+          setQuestion(snapshot.data().text);
+        } else {
+          console.log("No daily question found!");
+        }
+      } catch (error) {
+        console.error("Error fetching question:", error);
+      }
+    }
+
+    fetchQuestion();
+  }, []);
 
   const getWeekRange = () => {
     const startOfWeek = new Date(currentDate);
@@ -53,7 +72,7 @@ export default function HomePage() {
       if (user) {
         // Save to Firestore
         await addDoc(collection(FIRESTORE_DB, 'daily-question-responses'), {
-          question: dailyQuestion,
+          question: question,
           response: response,
           date: currentDate.toLocaleDateString(),
           timestamp: new Date(),
@@ -128,7 +147,7 @@ export default function HomePage() {
             {/* Daily Question */}
             <View style={styles.dailyQuestion}>
               <Text style={styles.subtitle}>TODAY'S DAILY QUESTION</Text>
-              <Text style={styles.question}>{dailyQuestion}</Text>
+              <Text style={styles.question}>{question}</Text>
               <TextInput
                 style={styles.responseField}
                 placeholder="Type your response here..."
