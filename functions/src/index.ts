@@ -6,7 +6,7 @@ import { FieldValue } from "firebase-admin/firestore";
 
 admin.initializeApp();
 // Function to fetch random question from Firestore
-exports.scheduleFetchQuestion = onSchedule("every 10 minutes",  
+exports.scheduleFetchQuestion = onSchedule("0 0 * * *",  
   async () => {
     // Inefficient if our question database is big
     try {

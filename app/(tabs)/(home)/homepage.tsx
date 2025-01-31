@@ -141,7 +141,9 @@ export default function HomePage() {
           {/* Main Content */}
           <View style={styles.mainContent}>
             <Text style={styles.title}>Today</Text>
-            <Text style={styles.date}>{currentDate.toLocaleDateString()}</Text>
+            <Text style={styles.date}>
+              {currentDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}
+            </Text>
 
             {/* Week Overview */}
             <View style={styles.weekDisplay}>
