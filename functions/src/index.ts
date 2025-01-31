@@ -1,12 +1,12 @@
-import * as functions from "firebase-functions";
+// import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import { onSchedule } from "firebase-functions/scheduler";
 import { FieldValue } from "firebase-admin/firestore";
-import { onRequest } from "firebase-functions/https";
+// import { onRequest } from "firebase-functions/https";
 
 admin.initializeApp();
 // Function to fetch random question from Firestore
-export const scheduleFetchQuestion = onSchedule("every 2 minutes",  
+exports.scheduleFetchQuestion = onSchedule("every 10 minutes",  
   async () => {
     // Inefficient if our question database is big
     try {
@@ -34,6 +34,7 @@ export const scheduleFetchQuestion = onSchedule("every 2 minutes",
     }
   }
 );
+
 
 // export const manuallyFetchQuestion = functions.https.onRequest(async (req, res) => {
 //   // Inefficient if our question database is big
