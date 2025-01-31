@@ -39,7 +39,7 @@ export const fetchPrompt = functions.https.onRequest(async (req, res) => {
       res.send(data);
     })
     .catch((error) => {
-      console.error("Error fetching question", error);
+      console.error("Error fetching prompt", error);
       res.status(500).send({error: "Internal Server Error"});
     });
 });
