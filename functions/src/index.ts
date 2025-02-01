@@ -16,7 +16,7 @@ export const fetchQuestion = functions.https.onRequest(async (req, res) => {
       // Get random document from database
       const randomIndex = Math.floor(Math.random() * qPool.length);
       const data = qPool[randomIndex].data();
-      res.send(data);
+      res.send(data["prompt"]);
     })
     .catch((error) => {
       console.error("Error fetching question", error);
@@ -36,7 +36,7 @@ export const fetchPrompt = functions.https.onRequest(async (req, res) => {
       // Get random document from database
       const randomIndex = Math.floor(Math.random() * qPool.length);
       const data = qPool[randomIndex].data();
-      res.send(data);
+      res.send(data["prompt"]);
     })
     .catch((error) => {
       console.error("Error fetching prompt", error);
