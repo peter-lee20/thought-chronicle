@@ -8,6 +8,10 @@ import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { Link, router } from 'expo-router';
 
+const navEntries = async () => {
+  router.replace("/(entries)");
+}
+
 export default function HomePage() {
   const [response, setResponse] = useState('');
   const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
@@ -142,7 +146,7 @@ export default function HomePage() {
           <View style={styles.mainContent}>
             <Text style={styles.title}>Today</Text>
             <Text style={styles.date}>
-              {currentDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}
+              {currentDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </Text>
 
             {/* Week Overview */}
@@ -177,7 +181,7 @@ export default function HomePage() {
             <TouchableOpacity>
                 <Image source={require('../../../assets/images/today.png')} style={styles.footerImage}resizeMode="contain" />
               </TouchableOpacity>
-              <TouchableOpacity>
+              <TouchableOpacity onPress = {(navEntries)}>
                 <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
               </TouchableOpacity>
               <TouchableOpacity onPress={goToJournal}>
