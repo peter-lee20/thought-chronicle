@@ -1,5 +1,6 @@
 // import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
+import * as functions from "firebase-functions";
 import { onSchedule } from "firebase-functions/scheduler";
 import { FieldValue } from "firebase-admin/firestore";
 // import { onRequest } from "firebase-functions/https";
@@ -35,7 +36,6 @@ exports.scheduleFetchQuestion = onSchedule("0 0 * * *",
   }
 );
 
-
 // export const manuallyFetchQuestion = functions.https.onRequest(async (req, res) => {
 //   // Inefficient if our question database is big
 //   console.log("running")
@@ -56,3 +56,23 @@ exports.scheduleFetchQuestion = onSchedule("0 0 * * *",
 //       res.status(500).send({error: "Internal Server Error"});
 //     });
 // });
+
+export const fetchPrompt = functions.https.onRequest(async (req, res) => {
+  // Inefficient if our question database is big
+  admin.firestore().collection("random-prompts").get()
+    .then((snapshot) => {
+      const qPool = snapshot.docs;
+      if (qPool.length == 0) {
+        console.log("Random prompt database is empty");
+      }
+
+      // Get random document from database
+      const randomIndex = Math.floor(Math.random() * qPool.length);
+      const data = qPool[randomIndex].data();
+      res.send(data["prompt"]);
+    })
+    .catch((error) => {
+      console.error("Error fetching prompt", error);
+      res.status(500).send({error: "Internal Server Error"});
+    });
+});
