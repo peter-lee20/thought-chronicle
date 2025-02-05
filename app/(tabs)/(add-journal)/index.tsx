@@ -22,9 +22,13 @@ export default function JournalEntry() {
                     multiline={true}
                 />
                 <View style={styles.footer}>
+                    <TouchableOpacity style={styles.help}>
+                        <Image source={require("../../../assets/images/fire.png")} style={styles.check}/>
+                    </TouchableOpacity>    
+
                     <TouchableOpacity style={styles.finished}>
                         <Image source={require("../../../assets/images/check.png")} style={styles.check}/>
-                    </TouchableOpacity>       
+                    </TouchableOpacity>   
                 </View>  
             </ScrollView>
         </KeyboardAvoidingView>
@@ -74,8 +78,9 @@ const styles = StyleSheet.create({
 
     footer: {
         flex: 1,
-        justifyContent: "flex-end",
+        justifyContent: "space-between",
         alignItems: "flex-end",
+        flexDirection: "row",
     },
 
     finished: {
@@ -95,5 +100,18 @@ const styles = StyleSheet.create({
 
     check: {
         resizeMode: "center"
+    },
+
+    help: {
+        backgroundColor: '#F0ECE0', 
+        borderColor: '#706645CC',
+        borderWidth: 2,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        alignItems: "center",
+        justifyContent: "center",
+        marginLeft: 27,
+        marginBottom: 15
     }
 })
