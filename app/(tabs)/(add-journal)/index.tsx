@@ -8,6 +8,10 @@ export default function JournalEntry() {
         router.replace("/(home)/homepage");
     }
 
+    const finishEntry = () => {
+        router.replace("/(add-journal)/confirmation");
+    }
+
     return (
         <KeyboardAvoidingView style={styles.container} behavior="height" keyboardVerticalOffset={100}>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
@@ -22,7 +26,7 @@ export default function JournalEntry() {
                     multiline={true}
                 />
                 <View style={styles.footer}>
-                    <TouchableOpacity style={styles.finished}>
+                    <TouchableOpacity style={styles.finished} onPress={finishEntry}>
                         <Image source={require("../../../assets/images/check.png")} style={styles.check}/>
                     </TouchableOpacity>       
                 </View>  
