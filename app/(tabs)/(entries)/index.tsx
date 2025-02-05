@@ -4,7 +4,7 @@ import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
 import { signOut, getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { doc, getDoc, getDocs, collection, query, where } from 'firebase/firestore';
-import { format } from "date-fns"; // Ensure you have date-fns installed
+import { format, subDays } from "date-fns"; // Ensure you have date-fns installed
 
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -53,27 +53,6 @@ export default function EntryPage() {
     setCurrentPickerType(type);
     setIsDatePickerVisible(true);
   };
-  // const handleDateChange = (type, value) => {
-  //   const newDate = new Date(selectedDate);
-  //   if (type === 'month') newDate.setMonth(value - 1);
-  //   if (type === 'day') newDate.setDate(value);
-  //   if (type === 'year') newDate.setFullYear(value);
-  //   setSelectedDate(newDate);
-  // };
-
-  // const handleJournalEntryChange = (date, text) => {
-  //   setJournalEntries((prev) => ({
-  //     ...prev,
-  //     [date.toDateString()]: text,
-  //   }));
-  // };
-
-  // const handleDailyResponseChange = (date, text) => {
-  //   setDailyResponses((prev) => ({
-  //     ...prev,
-  //     [date.toDateString()]: text,
-  //   }));
-  // };
 
   const getPreviousDates = (numDays = 7) => {
     return Array.from({ length: numDays }, (_, i) => {
@@ -82,183 +61,6 @@ export default function EntryPage() {
       return date;
     });
   };
-
-  // // Function to fetch responses from Firestore
-  // const fetchEntries = async () => {
-  //   const dateKey = selectedDate.toISOString().split('T')[0]; // Format date as YYYY-MM-DD
-  //   try {
-  //     const docRef = doc(FIRESTORE_DB, 'journalEntries', dateKey);
-  //     const docSnap = await getDoc(docRef);
-  //     if (docSnap.exists()) {
-  //       const data = docSnap.data();
-  //       setJournalEntries(data.journal || {}); 
-  //       setDailyResponses(data.responses || {}); 
-  //     } else {
-  //       setJournalEntries({});
-  //       setDailyResponses({});
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching data:", error);
-  //   }
-  // };
-
-
-
-  // // Fetch responses whenever the selected date changes
-  // useEffect(() => {
-  //   fetchEntries();
-  // }, [selectedDate]);
-
-  // const fetchResponses = async () => {
-  //   // const dateKey = selectedDate.toISOString().split('T')[0]; // Format: YYYY-MM-DD
-
-  //   const dateKey = new Date(selectedDate).toLocaleDateString("en-US"); 
-  //   console.log("Selected Date:", selectedDate);
-  //   console.log("Formatted Date:", new Date(selectedDate).toLocaleDateString("en-US"));
-
-  //   try {
-  //     // Fetch from `daily-question-responses` collection
-  //     const docRef = doc(FIRESTORE_DB, 'daily-question-responses', dateKey);
-  //     const docSnap = await getDoc(docRef);
-
-  //     if (docSnap.exists()) {
-  //       const data = docSnap.data();
-  //       console.log("Fetched data:", data); // Debugging log
-  //       setDailyResponses({ [dateKey]: data.response || "" }); // Ensure that responses exist
-  //     } else {
-  //       console.log("No data found for date:", dateKey); // Debugging log
-  //       setDailyResponses({});
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching data:", error);
-  //   }
-  // };
-
-  // const fetchResponses = async () => {
-  //   const dateKey = new Date(selectedDate).toLocaleDateString("en-US");
-  //   console.log("Querying Firestore with date:", dateKey);
-  
-  //   const docRef = doc(FIRESTORE_DB, 'daily-question-responses', dateKey);
-  //   const docSnap = await getDoc(docRef);
-  
-  //   if (docSnap.exists()) {
-  //     console.log("Data found:", docSnap.data());
-  //   } else {
-  //     console.log("No data found for date:", dateKey);
-  //     console.log("Available documents in collection:");
-      
-  //     const querySnapshot = await getDocs(collection(FIRESTORE_DB, 'daily-question-responses'));
-  //     querySnapshot.forEach(doc => {
-  //       console.log("Document ID:", doc.id);
-  //     });
-  //   }
-  // };
-
-  // const fetchResponses = async () => {
-  //   const formattedDate = new Date(selectedDate).toLocaleDateString("en-US");
-  //   console.log("Querying Firestore with date:", formattedDate);
-  
-  //   const q = query(
-  //     collection(FIRESTORE_DB, "daily-question-responses"),
-  //     where("date", "==", formattedDate) // Adjust field name if needed
-  //   );
-  
-  //   const querySnapshot = await getDocs(q);
-  
-  //   if (!querySnapshot.empty) {
-  //     querySnapshot.forEach(doc => {
-  //       console.log("Data found:", doc.id, doc.data());
-  //     });
-  //   } else {
-  //     console.log("No data found for date:", formattedDate);
-  //   }
-  // };
-
-  // const fetchResponses = async () => {
-  //   if (!currentUser?.uid) {
-  //     console.error("User not logged in!");
-  //     return;
-  //   }
-  
-  //   const formattedDate = selectedDate.toLocaleDateString(); // Matches Firestore format: "M/D/YYYY"
-  //   console.log("Querying Firestore with date:", formattedDate);
-  
-  //   const q = query(
-  //     collection(FIRESTORE_DB, "daily-question-responses"),
-  //     where("date", "==", formattedDate),  // Ensure same format
-  //     where("userId", "==", currentUser.uid)  // Only fetch current user's response
-  //   );
-  
-  //   try {
-  //     const querySnapshot = await getDocs(q);
-  
-  //     if (querySnapshot.empty) {
-  //       console.log("No data found for", formattedDate);
-  //       setDailyResponses(prev => ({
-  //         ...prev,
-  //         [formattedDate]: "",
-  //       }));
-  //     } else {
-  //       querySnapshot.forEach(doc => {
-  //         console.log("Found document:", doc.id, doc.data());
-  //         setDailyResponses(prev => ({
-  //           ...prev,
-  //           [formattedDate]: doc.data().response || "",
-  //         }));
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching responses:", error);
-  //   }
-  // };
-
-  // const fetchResponses = async () => {
-  //   if (!currentUser?.uid) {
-  //     console.error("User not logged in!");
-  //     return;
-  //   }
-  
-  //   const formattedDate = selectedDate.toLocaleDateString(); // Matches Firestore format: "M/D/YYYY"
-  //   console.log("Querying Firestore with date:", formattedDate);
-  // // const formattedDate = format(selectedDate, "yyyy-MM-dd");
-  // // console.log("Querying Firestore with date:", formattedDate);
-  
-  //   // Query Firestore to find documents where the 'date' field matches the selected date
-  //   // and the 'userId' matches the current user
-  //   const q = query(
-  //     collection(FIRESTORE_DB, "daily-question-responses"),
-  //     where("date", "==", formattedDate),  // Ensure same format
-  //     where("userId", "==", currentUser.uid)  // Only fetch current user's response
-  //   );
-  
-  //   try {
-  //     const querySnapshot = await getDocs(q);
-  
-  //     if (querySnapshot.empty) {
-  //       console.log("No data found for", formattedDate);
-  //       setDailyResponses(prev => ({
-  //         ...prev,
-  //         [format(selectedDate, "yyyy-MM-dd")]: "",  // If no response found, set it as an empty string
-  //       }));
-  //     } else {
-  //       // Loop through the querySnapshot to handle multiple documents (if any)
-  //       querySnapshot.forEach(doc => {
-  //         const docData = doc.data();
-  //         const response = docData?.response || ""; // Strip the response value, defaulting to empty string
-  //         console.log(response)
-  //         console.log(formattedDate)
-  
-  //         console.log("Found document:", doc.id, docData);
-  //         setDailyResponses(prev => ({
-  //           ...prev,
-  //           [format(selectedDate, "yyyy-MM-dd")]: response,  // Update the dailyResponses state with the fetched response
-  //         }));
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching responses:", error);
-  //   }
-  // };
 
 const fetchResponses = async () => {
   if (!currentUser?.uid) {
@@ -305,43 +107,43 @@ const fetchResponses = async () => {
   }
 };
 
-  
-  
+// Function to fetch responses for the last 7 days
+// const fetchResponses = async () => {
+//   if (!currentUser?.uid) {
+//     console.error("User not logged in!");
+//     return;
+//   }
 
-  // const fetchResponses = async () => {
-  //   const formattedDate = new Date(selectedDate).toISOString().split('T')[0]; // Ensure YYYY-MM-DD format
-  //   console.log("Querying Firestore with date:", formattedDate);
-  
-  //   const q = query(
-  //     collection(FIRESTORE_DB, "daily-question-responses"),
-  //     where("date", "==", formattedDate) // Ensure this matches Firestore field type
-  //   );
-  
-  //   try {
-  //     const querySnapshot = await getDocs(q);
-  
-  //     if (querySnapshot.empty) {
-  //       console.log("No data found for", formattedDate);
-  //       setDailyResponses(prev => ({
-  //         ...prev,
-  //         [formattedDate]: "",
-  //       }));
-  //     } else {
-  //       querySnapshot.forEach(doc => {
-  //         console.log("Found document:", doc.id, doc.data());
-  //         setDailyResponses(prev => ({
-  //           ...prev,
-  //           [formattedDate]: doc.data().response || "",
-  //         }));
-  //       });
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching responses:", error);
-  //   }
-  // };
-  
-  
-  
+//   const past7Days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), i)); // Last 7 days
+//   const formattedDates = past7Days.map(date => format(date, "yyyy-MM-dd"));
+
+//   const responses: DailyResponse = {};
+
+//   try {
+//     for (const date of formattedDates) {
+//       const q = query(
+//         collection(FIRESTORE_DB, "daily-question-responses"),
+//         where("date", "==", date),
+//         where("userId", "==", currentUser.uid)
+//       );
+
+//       const querySnapshot = await getDocs(q);
+
+//       if (!querySnapshot.empty) {
+//         querySnapshot.forEach(doc => {
+//           const docData = doc.data();
+//           const response = docData?.response || "";
+//           responses[date] = response;
+//         });
+//       } else {
+//         responses[date] = ""; // Store empty response if none found for that date
+//       }
+//     }
+//     setDailyResponses(responses);
+//   } catch (error) {
+//     console.error("Error fetching responses:", error);
+//   }
+// };
 
   useEffect(() => {
     fetchResponses();
@@ -390,6 +192,49 @@ const fetchResponses = async () => {
       </View>
     );
   };
+  // const renderDateContent = () => {
+  //   return (
+  //     <View style={styles.responseContainer}>
+  //       {getPreviousDates(7).map((date, index) => {
+  //         const formattedDate = format(date, "yyyy-MM-dd");
+  //         return (
+  //           <View key={index} style={styles.entryContainer}>
+  //             <Text style={styles.dateText}>
+  //               {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+  //             </Text>
+  //             {dailyResponses[formattedDate] ? (
+  //               <Text style={styles.entryText}>{dailyResponses[formattedDate]}</Text>
+  //             ) : (
+  //               <Text style={styles.noDataText}>No response available.</Text>
+  //             )}
+  //           </View>
+  //         );
+  //       })}
+  //     </View>
+  //   );
+  // };
+  // const renderDateContent = () => {
+  //   return (
+  //     <View style={styles.responseContainer}>
+  //       {Object.keys(dailyResponses).map(date => (
+  //         <View key={date} style={styles.entryContainer}>
+  //           <Text style={styles.dateText}>
+  //             {new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+  //           </Text>
+
+  //           {dailyResponses[date] ? (
+  //             <View style={styles.entryContainer}>
+  //               <Text style={styles.entryLabel}>Daily Response:</Text>
+  //               <Text style={styles.entryText}>{dailyResponses[date]}</Text>
+  //             </View>
+  //           ) : (
+  //             <Text style={styles.noDataText}>No response available for this date.</Text>
+  //           )}
+  //         </View>
+  //       ))}
+  //     </View>
+  //   );
+  // };
   
   
 
