@@ -6,6 +6,29 @@ import { FIREBASE_AUTH } from '../../../FirebaseConfig';
 import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
 
+const callPromptFunc = async () => {
+    try {
+        const user = FIREBASE_AUTH.currentUser;
+        if (!user) throw new Error('User not authenticated');
+    
+        const idToken = await user.getIdToken();
+    
+        const response = await fetch('https://fetchprompt-bdm3hcghyq-uc.a.run.app', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ message: 'Authenticated request' }),
+        });
+    
+        const data = await response.json();
+        return data
+      } catch (error) {
+        console.error('Error calling protected function:', error);
+      }
+}
+
 export default function JournalEntry() {
     const [response, setResponse] = useState('');
     const currentDate = new Date();
