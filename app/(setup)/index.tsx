@@ -180,9 +180,12 @@ const styles = StyleSheet.create({
       color: "white",
       fontSize: 16,
       fontWeight: "bold",
+      fontFamily: "Poppins",
    },
    signUp: {
       fontSize: 14,
       color: '#7E948C',
+      textAlign: 'center',
+      fontWeight: 'bold',
    },
 });
