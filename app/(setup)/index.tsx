@@ -12,6 +12,7 @@ import {
   Platform,
   Keyboard,
   TouchableWithoutFeedback,
+  ScrollView,
 } from 'react-native';
 import { FIREBASE_AUTH } from '../../FirebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
@@ -64,7 +65,10 @@ export default function App() {
             keyboardType="email-address"
             placeholderTextColor="#7E948C"
             onChangeText={setEmail}
+            autoCorrect={false}
+            autoCapitalize="none"
           />
+
           <TextInput
             style={styles.input}
             placeholder="Password"
