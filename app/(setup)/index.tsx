@@ -1,6 +1,18 @@
 import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
-import { StyleSheet, Text, TextInput, TouchableOpacity, View, Image, Alert } from 'react-native';
+import {
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  Image,
+  Alert,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import { FIREBASE_AUTH } from '../../FirebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
@@ -14,7 +26,7 @@ export default function App() {
 
   const changePassword = () => {
     router.replace("/forgot");
-  }
+  };
 
   const handleSignIn = async () => {
     setLoading(true);
@@ -29,74 +41,82 @@ export default function App() {
     } finally {
       setLoading(false);
     }
-  }
+  };
 
   return (
-    <View style={styles.container}>
-      {/* Illustration */}
-      <Image source={require('../../assets/images/illustration.png')} style={styles.illustration} />
+    <KeyboardAvoidingView
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+      style={{ flex: 1 }}
+    >
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View style={styles.container}>
+          {/* Illustration */}
+          <Image source={require('../../assets/images/illustration.png')} style={styles.illustration} />
 
-      {/* Title and Subtitle */}
-      <Text style={styles.title}>Chronicle your thoughts</Text>
-      <Text style={styles.subtitle}>Pause, reflect, grow.</Text>
+          {/* Title and Subtitle */}
+          <Text style={styles.title}>Chronicle your thoughts</Text>
+          <Text style={styles.subtitle}>Pause, reflect, grow.</Text>
 
-      {/* Input Fields */}
-      <TextInput
-        style={styles.input}
-        placeholder="Email"
-        keyboardType="email-address"
-        placeholderTextColor="#7E948C"
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        secureTextEntry={true}
-        placeholderTextColor="#7E948C"
-        onChangeText={setPassword}
-      />
+          {/* Input Fields */}
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            keyboardType="email-address"
+            placeholderTextColor="#7E948C"
+            onChangeText={setEmail}
+          />
+          <TextInput
+            style={styles.input}
+            placeholder="Password"
+            secureTextEntry={true}
+            placeholderTextColor="#7E948C"
+            onChangeText={setPassword}
+          />
 
-      {/* Forgot Password Link */}
-      <View style={{ width: '100%' }}>
-        <TouchableOpacity onPress={(changePassword)}>
-          <Text style={[styles.forgotPassword, { textDecorationLine: 'underline' }]}>
-            Forgot your password?
-          </Text>
-        </TouchableOpacity>
-      </View>
+          {/* Forgot Password Link */}
+          <View style={{ width: '100%' }}>
+            <TouchableOpacity onPress={changePassword}>
+              <Text style={[styles.forgotPassword, { textDecorationLine: 'underline' }]}>
+                Forgot your password?
+              </Text>
+            </TouchableOpacity>
+          </View>
 
-      {/* Sign In Button */}
-      <TouchableOpacity 
-      style={styles.signInButton}
-      onPress={(handleSignIn)}>
-        <Text style={styles.signInButtonText}>Sign in</Text>
-      </TouchableOpacity>
-
-      {/* Sign Up Link */}
-      <TouchableOpacity>
-        <Text
-          style={[
-            styles.signUp,
-            { color: '#666', fontWeight: 'normal', textAlign: 'center' },
-          ]}
-        >
-          Don't have an account?{' '}
-          <Link
-            href="/signup"
-            style={[
-              styles.signUp,
-              {
-                color: '#7E948C',
-                fontWeight: 'bold',
-                textDecorationLine: 'underline',
-              },
-            ]}
+          {/* Sign In Button */}
+          <TouchableOpacity 
+            style={styles.signInButton}
+            onPress={handleSignIn}
           >
-            Sign up
-          </Link>
-        </Text>
-      </TouchableOpacity>
-    </View>
+            <Text style={styles.signInButtonText}>Sign in</Text>
+          </TouchableOpacity>
+
+          {/* Sign Up Link */}
+          <TouchableOpacity>
+            <Text
+              style={[
+                styles.signUp,
+                { color: '#666', fontWeight: 'normal', textAlign: 'center' },
+              ]}
+            >
+              Don't have an account?{' '}
+              <Link
+                href="/signup"
+                style={[
+                  styles.signUp,
+                  {
+                    color: '#7E948C',
+                    fontWeight: 'bold',
+                    textDecorationLine: 'underline',
+                  },
+                ]}
+              >
+                Sign up
+              </Link>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </TouchableWithoutFeedback>
+    </KeyboardAvoidingView>
   );
 }
 
@@ -160,12 +180,9 @@ const styles = StyleSheet.create({
       color: "white",
       fontSize: 16,
       fontWeight: "bold",
-      fontFamily: "Poppins",
    },
    signUp: {
       fontSize: 14,
       color: '#7E948C',
-      textAlign: 'center',
-      fontWeight: 'bold',
    },
 });
