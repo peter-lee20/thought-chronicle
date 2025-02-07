@@ -30,11 +30,19 @@ const callPromptFunc = async () => {
 }
 
 export default function JournalEntry() {
+    const[prompt, setPrompt] = useState("What are you currently feeling or experiencing?")
+
     const [response, setResponse] = useState('');
     const currentDate = new Date();
 
     const backHome = () => {
         router.replace("/(home)/homepage");
+    }
+
+    const getPrompt = async () => {
+        const string = await callPromptFunc();
+        setPrompt(string);
+        
     }
 
     const handleSubmitResponse = async () => {
@@ -73,7 +81,7 @@ export default function JournalEntry() {
                 <TouchableOpacity onPress={backHome}>
                     <Image source={require("../../../assets/images/close-button.png")} style={styles.close}/>
                 </TouchableOpacity>
-                <Text style={styles.prompt}>What are you currently feeling or experiencing?</Text>
+                <Text style={styles.prompt}>{prompt}</Text>
                 <TextInput
                     placeholder="Start writing..." 
                     placeholderTextColor="#b4bcbc"   
@@ -83,7 +91,7 @@ export default function JournalEntry() {
                     onChangeText={setResponse}
                 />
                 <View style={styles.footer}>
-                    <TouchableOpacity style={styles.help}>
+                    <TouchableOpacity style={styles.help} onPress={getPrompt}>
                         <Image source={require("../../../assets/images/fire.png")} style={styles.check}/>
                     </TouchableOpacity>   
 
