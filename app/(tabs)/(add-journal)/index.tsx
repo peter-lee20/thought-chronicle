@@ -31,14 +31,16 @@ const callPromptFunc = async () => {
 
 export default function JournalEntry() {
     const[prompt, setPrompt] = useState("What are you currently feeling or experiencing?")
-
     const [response, setResponse] = useState('');
+    const wordCount = response.trim() ? response.trim().    split(/\s+/).length : 0;
     const currentDate = new Date();
+    const minWords = 50;
+    const maxWords = 1500;
 
     const backHome = () => {
         router.replace("/(home)/homepage");
     }
-    
+
     const getPrompt = async () => {
         const string = await callPromptFunc();
         setPrompt(string);
@@ -46,10 +48,14 @@ export default function JournalEntry() {
     }
 
     const handleSubmitResponse = async () => {
-        if (response.trim() === '') {
-            Alert.alert("Please enter a response.");
+        if (wordCount < minWords) {
+            Alert.alert("Go ahead, express yourself!", "Please enter an entry that is between 50 and 1500 words.");
             return;
-          }
+        }
+
+        if (wordCount > maxWords) {
+            Alert.alert("Woah, slow your roll!", "Please enter an entry that is between 50 and 1500 words.");
+        }
         
         try {
           // Get the current user's UID from Firebase Auth
@@ -63,8 +69,6 @@ export default function JournalEntry() {
               timestamp: new Date(),
               userId: user.uid, // Track the user who submitted the response
             });
-            
-            router.replace("/(add-journal)/confirmation");
             setResponse(''); // Clear input after submission
           } else {
             Alert.alert("You need to be logged in to submit a response.");
@@ -82,6 +86,7 @@ export default function JournalEntry() {
                     <Image source={require("../../../assets/images/close-button.png")} style={styles.close}/>
                 </TouchableOpacity>
                 <Text style={styles.prompt}>{prompt}</Text>
+
                 <TextInput
                     placeholder="Start writing..." 
                     placeholderTextColor="#b4bcbc"   
@@ -91,13 +96,24 @@ export default function JournalEntry() {
                     onChangeText={setResponse}
                 />
                 <View style={styles.footer}>
-                    <TouchableOpacity style={styles.help} onPress={getPrompt}>
-                        <Image source={require("../../../assets/images/fire.png")} style={styles.check}/>
-                    </TouchableOpacity>   
+                    <View style={styles.wordCount}>
+                        <Text style={[styles.minWordDisplay, wordCount < minWords ? { color: "red" } : { color: "#706645" }]}>
+                            Minimum {wordCount}/{minWords} words
+                        </Text>   
+                        <Text style={[styles.maxWordDisplay, wordCount > maxWords ? { color: "red" } : {color: "#706645" }]}>
+                            Maximum {wordCount}/{maxWords} words
+                        </Text>
+                    </View>
 
-                    <TouchableOpacity style={styles.finished} onPress={handleSubmitResponse}>
-                        <Image source={require("../../../assets/images/check.png")} style={styles.check}/>
-                    </TouchableOpacity>   
+                    <View style={styles.buttons}>
+                        <TouchableOpacity style={styles.help} onPress={getPrompt}>
+                            <Image source={require("../../../assets/images/fire.png")} style={styles.check}/>
+                        </TouchableOpacity>
+
+                        <TouchableOpacity style={styles.finished} onPress={handleSubmitResponse}>
+                            <Image source={require("../../../assets/images/check.png")} style={styles.check}/>
+                        </TouchableOpacity>   
+                    </View>
                 </View>  
             </ScrollView>
         </KeyboardAvoidingView>
@@ -147,9 +163,49 @@ const styles = StyleSheet.create({
 
     footer: {
         flex: 1,
+        marginBottom: 15,
+    },
+
+    wordCount: {
+        flex: 1,
+        alignItems: "flex-end",
+        justifyContent:  "flex-end",
+        marginTop: 25,
+        marginLeft: 27,
+        marginRight: 27,
+        marginBottom: 25,
+    },
+
+    minWordDisplay: {
+        fontFamily: "Poppins",
+        fontSize: 14,
+        color: "#706645",
+        // textAlign: "center",
+    },
+
+    maxWordDisplay: {
+        fontFamily: "Poppins",
+        fontSize: 14,
+        color: "#706645",
+        // textAlign: "center"
+    },
+    
+    buttons: {
         justifyContent: "space-between",
         alignItems: "flex-end",
         flexDirection: "row",
+    },
+
+    help: {
+        backgroundColor: '#F0ECE0', 
+        borderColor: '#706645CC',
+        borderWidth: 2,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        alignItems: "center",
+        justifyContent: "center",
+        marginLeft: 27,
     },
 
     finished: {
@@ -164,23 +220,9 @@ const styles = StyleSheet.create({
         alignItems: "center",
         justifyContent: "center",
         marginRight: 27,
-        marginBottom: 15
     },
 
     check: {
         resizeMode: "center"
     },
-
-    help: {
-        backgroundColor: '#F0ECE0', 
-        borderColor: '#706645CC',
-        borderWidth: 2,
-        width: 60,
-        height: 60,
-        borderRadius: 30,
-        alignItems: "center",
-        justifyContent: "center",
-        marginLeft: 27,
-        marginBottom: 15
-    }
 })
