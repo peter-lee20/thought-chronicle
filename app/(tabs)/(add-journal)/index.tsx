@@ -69,6 +69,8 @@ export default function JournalEntry() {
               timestamp: new Date(),
               userId: user.uid, // Track the user who submitted the response
             });
+
+            router.replace("/(add-journal)/confirmation");
             setResponse(''); // Clear input after submission
           } else {
             Alert.alert("You need to be logged in to submit a response.");
