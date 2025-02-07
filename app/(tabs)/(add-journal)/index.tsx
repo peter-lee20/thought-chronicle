@@ -6,12 +6,43 @@ import { FIREBASE_AUTH } from '../../../FirebaseConfig';
 import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
 
+const callPromptFunc = async () => {
+    try {
+        const user = FIREBASE_AUTH.currentUser;
+        if (!user) throw new Error('User not authenticated');
+    
+        const idToken = await user.getIdToken();
+    
+        const response = await fetch('https://fetchprompt-bdm3hcghyq-uc.a.run.app', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${idToken}`,
+          },
+          body: JSON.stringify({ message: 'Authenticated request' }),
+        });
+    
+        const data = await response.json();
+        return data
+      } catch (error) {
+        console.error('Error calling protected function:', error);
+      }
+}
+
 export default function JournalEntry() {
+    const[prompt, setPrompt] = useState("What are you currently feeling or experiencing?")
+
     const [response, setResponse] = useState('');
     const currentDate = new Date();
 
     const backHome = () => {
         router.replace("/(home)/homepage");
+    }
+
+    const getPrompt = async () => {
+        const string = await callPromptFunc();
+        setPrompt(string);
+        
     }
 
     const handleSubmitResponse = async () => {
@@ -50,7 +81,7 @@ export default function JournalEntry() {
                 <TouchableOpacity onPress={backHome}>
                     <Image source={require("../../../assets/images/close-button.png")} style={styles.close}/>
                 </TouchableOpacity>
-                <Text style={styles.prompt}>What are you currently feeling or experiencing?</Text>
+                <Text style={styles.prompt}>{prompt}</Text>
                 <TextInput
                     placeholder="Start writing..." 
                     placeholderTextColor="#b4bcbc"   
@@ -60,9 +91,13 @@ export default function JournalEntry() {
                     onChangeText={setResponse}
                 />
                 <View style={styles.footer}>
+                    <TouchableOpacity style={styles.help} onPress={getPrompt}>
+                        <Image source={require("../../../assets/images/fire.png")} style={styles.check}/>
+                    </TouchableOpacity>   
+
                     <TouchableOpacity style={styles.finished} onPress={handleSubmitResponse}>
                         <Image source={require("../../../assets/images/check.png")} style={styles.check}/>
-                    </TouchableOpacity>       
+                    </TouchableOpacity>   
                 </View>  
             </ScrollView>
         </KeyboardAvoidingView>
@@ -112,8 +147,9 @@ const styles = StyleSheet.create({
 
     footer: {
         flex: 1,
-        justifyContent: "flex-end",
+        justifyContent: "space-between",
         alignItems: "flex-end",
+        flexDirection: "row",
     },
 
     finished: {
@@ -133,5 +169,18 @@ const styles = StyleSheet.create({
 
     check: {
         resizeMode: "center"
+    },
+
+    help: {
+        backgroundColor: '#F0ECE0', 
+        borderColor: '#706645CC',
+        borderWidth: 2,
+        width: 60,
+        height: 60,
+        borderRadius: 30,
+        alignItems: "center",
+        justifyContent: "center",
+        marginLeft: 27,
+        marginBottom: 15
     }
 })
