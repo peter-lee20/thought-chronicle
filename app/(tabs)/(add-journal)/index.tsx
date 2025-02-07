@@ -38,7 +38,7 @@ export default function JournalEntry() {
     const backHome = () => {
         router.replace("/(home)/homepage");
     }
-
+    
     const getPrompt = async () => {
         const string = await callPromptFunc();
         setPrompt(string);
@@ -64,7 +64,7 @@ export default function JournalEntry() {
               userId: user.uid, // Track the user who submitted the response
             });
             
-            Alert.alert("Response submitted successfully!");
+            router.replace("/(add-journal)/confirmation");
             setResponse(''); // Clear input after submission
           } else {
             Alert.alert("You need to be logged in to submit a response.");
