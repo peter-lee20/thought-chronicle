@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, Alert, Text, TouchableOpacity, View, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, TextInput, Image, Modal } from 'react-native';
+import { StyleSheet, Alert, Text, TouchableOpacity, View, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, TextInput, Image, Modal, ActivityIndicator } from 'react-native';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
 import { signOut, getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
@@ -24,6 +24,7 @@ export default function EntryPage() {
   const [dailyResponses, setDailyResponses] = useState<DailyResponse>({});
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false); // State for date picker visibility
   const [currentPickerType, setCurrentPickerType] = useState(''); // State to track which picker is open (month, day, year)
+  const [loading, setLoading] = useState(false);
 
   const auth = getAuth();
   const currentUser = auth.currentUser;
@@ -62,88 +63,64 @@ export default function EntryPage() {
     });
   };
 
-const fetchResponses = async () => {
-  if (!currentUser?.uid) {
-    console.error("User not logged in!");
-    return;
-  }
-
-  // Firestore expects "M/D/YYYY"
-  const firestoreDate = selectedDate.toLocaleDateString(); 
-  console.log("Querying Firestore with date:", firestoreDate);
-
-  // Format for state storage as "YYYY-MM-DD"
-  const stateDateKey = format(selectedDate, "yyyy-MM-dd");
-
-  const q = query(
-    collection(FIRESTORE_DB, "daily-question-responses"),
-    where("date", "==", firestoreDate),
-    where("userId", "==", currentUser.uid)
-  );
-
-  try {
-    const querySnapshot = await getDocs(q);
-
-    if (querySnapshot.empty) {
-      console.log("No data found for", firestoreDate);
-      setDailyResponses(prev => ({
-        ...prev,
-        [stateDateKey]: "", // Store empty response if none found
-      }));
-    } else {
-      querySnapshot.forEach(doc => {
-        const docData = doc.data();
-        const response = docData?.response || "";
-
-        console.log("Found document:", doc.id, docData);
-        setDailyResponses(prev => ({
-          ...prev,
-          [stateDateKey]: response, // Store response using "YYYY-MM-DD" key
-        }));
-      });
+  const fetchResponses = async () => {
+    if (!currentUser?.uid) {
+      console.error("User not logged in!");
+      return;
     }
-  } catch (error) {
-    console.error("Error fetching responses:", error);
-  }
-};
 
-// Function to fetch responses for the last 7 days
-// const fetchResponses = async () => {
-//   if (!currentUser?.uid) {
-//     console.error("User not logged in!");
-//     return;
-//   }
-
-//   const past7Days = Array.from({ length: 7 }, (_, i) => subDays(new Date(), i)); // Last 7 days
-//   const formattedDates = past7Days.map(date => format(date, "yyyy-MM-dd"));
-
-//   const responses: DailyResponse = {};
-
-//   try {
-//     for (const date of formattedDates) {
-//       const q = query(
-//         collection(FIRESTORE_DB, "daily-question-responses"),
-//         where("date", "==", date),
-//         where("userId", "==", currentUser.uid)
-//       );
-
-//       const querySnapshot = await getDocs(q);
-
-//       if (!querySnapshot.empty) {
-//         querySnapshot.forEach(doc => {
-//           const docData = doc.data();
-//           const response = docData?.response || "";
-//           responses[date] = response;
-//         });
-//       } else {
-//         responses[date] = ""; // Store empty response if none found for that date
-//       }
-//     }
-//     setDailyResponses(responses);
-//   } catch (error) {
-//     console.error("Error fetching responses:", error);
-//   }
-// };
+    setLoading(true); // Start loading
+  
+    // Generate an array of the last 7 days
+    const past7Days = Array.from({ length: 7 }, (_, i) => {
+      const date = new Date(selectedDate);
+      date.setDate(selectedDate.getDate() - i);
+      return date;
+    });
+  
+    // Create an object to store responses for each date
+    const responses: DailyResponse = {};
+  
+    try {
+      // Loop through each of the last 7 days
+      for (const date of past7Days) {
+        // Format the date for Firestore query (e.g., "M/D/YYYY")
+        const firestoreDate = date.toLocaleDateString();
+        console.log("Querying Firestore for date:", firestoreDate);
+  
+        // Query Firestore for responses on this date
+        const q = query(
+          collection(FIRESTORE_DB, "daily-question-responses"),
+          where("date", "==", firestoreDate),
+          where("userId", "==", currentUser.uid)
+        );
+  
+        const querySnapshot = await getDocs(q);
+  
+        // Format the date for state storage (e.g., "YYYY-MM-DD")
+        const stateDateKey = format(date, "yyyy-MM-dd");
+  
+        if (querySnapshot.empty) {
+          console.log("No data found for", firestoreDate);
+          responses[stateDateKey] = ""; // Store empty response if none found
+        } else {
+          querySnapshot.forEach((doc) => {
+            const docData = doc.data();
+            const response = docData?.response || "";
+            responses[stateDateKey] = response; // Store response for this date
+          });
+        }
+      }
+  
+      // Update the state with all fetched responses
+      setDailyResponses(responses);
+    } catch (error) {
+      console.error("Error fetching responses:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
 
   useEffect(() => {
     fetchResponses();
@@ -171,74 +148,85 @@ const fetchResponses = async () => {
   };
 
   // Function to display past responses
+
   const renderDateContent = () => {
-    // Ensure we use the same "YYYY-MM-DD" format to retrieve from state
-    const formattedDate = format(selectedDate, "yyyy-MM-dd");
+    if (loading) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color="#706645" />
+        </View>
+      );
+    }
   
     return (
-      <View style={styles.responseContainer}>
-        <Text style={styles.dateText}>
-          {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-        </Text>
-  
-        {dailyResponses[formattedDate] ? (
-          <View style={styles.entryContainer}>
-            <Text style={styles.entryLabel}>Daily Response:</Text>
-            <Text style={styles.entryText}>{dailyResponses[formattedDate]}</Text>
-          </View>
-        ) : (
-          <Text style={styles.noDataText}>No response available for this date.</Text>
-        )}
-      </View>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        style={styles.scrollView}
+        nestedScrollEnabled={true} // Enable nested scrolling for Android
+        keyboardShouldPersistTaps="handled" // Allow tapping to dismiss the keyboard
+        showsVerticalScrollIndicator={true} // Always show the scroll indicator
+        indicatorStyle="black" // For iOS: dark scrollbar
+        scrollIndicatorInsets={{ right: 1 }} // Adjust scrollbar insets for better positioning
+      >
+        {getPreviousDates(7).map((date, index) => {
+          const formattedDate = format(date, "yyyy-MM-dd");
+          return (
+            <View key={index} style={styles.dateEntryContainer}>
+              <Text style={styles.dateText}>
+                {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+              </Text>
+              <View style={styles.entryContainer}>
+                <Text style={styles.entryLabel}>DAILY QUESTION</Text>
+                {dailyResponses[formattedDate] ? (
+                  <Text style={styles.entryText}>{dailyResponses[formattedDate]}</Text>
+                ) : (
+                  <Text style={styles.noDataText}>No response available.</Text>
+                )}
+              </View>
+            </View>
+          );
+        })}
+      </ScrollView>
     );
   };
+  
+
   // const renderDateContent = () => {
+  //   if (loading) {
+  //     return (
+  //       <View style={styles.loadingContainer}>
+  //         <ActivityIndicator size="large" color="#706645" />
+  //       </View>
+  //     );
+  //   }
+  
   //   return (
-  //     <View style={styles.responseContainer}>
+  //     <ScrollView
+  //       contentContainerStyle={styles.scrollContent}
+  //       style={styles.scrollView}
+  //     >
   //       {getPreviousDates(7).map((date, index) => {
   //         const formattedDate = format(date, "yyyy-MM-dd");
   //         return (
-  //           <View key={index} style={styles.entryContainer}>
+  //           <View key={index} style={styles.dateEntryContainer}>
   //             <Text style={styles.dateText}>
   //               {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
   //             </Text>
-  //             {dailyResponses[formattedDate] ? (
-  //               <Text style={styles.entryText}>{dailyResponses[formattedDate]}</Text>
-  //             ) : (
-  //               <Text style={styles.noDataText}>No response available.</Text>
-  //             )}
+  //             <View style={styles.entryContainer}>
+  //               <Text style={styles.entryLabel}>DAILY QUESTION</Text>
+  //               {dailyResponses[formattedDate] ? (
+  //                 <Text style={styles.entryText}>{dailyResponses[formattedDate]}</Text>
+  //               ) : (
+  //                 <Text style={styles.noDataText}>No response available.</Text>
+  //               )}
+  //             </View>
   //           </View>
   //         );
   //       })}
-  //     </View>
-  //   );
-  // };
-  // const renderDateContent = () => {
-  //   return (
-  //     <View style={styles.responseContainer}>
-  //       {Object.keys(dailyResponses).map(date => (
-  //         <View key={date} style={styles.entryContainer}>
-  //           <Text style={styles.dateText}>
-  //             {new Date(date).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-  //           </Text>
-
-  //           {dailyResponses[date] ? (
-  //             <View style={styles.entryContainer}>
-  //               <Text style={styles.entryLabel}>Daily Response:</Text>
-  //               <Text style={styles.entryText}>{dailyResponses[date]}</Text>
-  //             </View>
-  //           ) : (
-  //             <Text style={styles.noDataText}>No response available for this date.</Text>
-  //           )}
-  //         </View>
-  //       ))}
-  //     </View>
+  //     </ScrollView>
   //   );
   // };
   
-  
-
-
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -281,10 +269,12 @@ const fetchResponses = async () => {
           )}
 
           {/* Scrollable Content */}
-          <ScrollView contentContainerStyle={styles.scrollContent}>
-            {/* Date Content */}
-            {renderDateContent()}
-          </ScrollView>
+          
+          <View style={{ flex: 1 }}>
+            <ScrollView>
+              {renderDateContent()}
+            </ScrollView>
+          </View>
 
           {/* Footer */}
           <View style={styles.footer}>
@@ -319,6 +309,10 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     padding: 20,
+    paddingBottom: 100,
+  },
+  scrollContainer: {
+    flex: 1, // Ensure the container takes up available space
   },
   header: {
     flexDirection: 'row',
@@ -344,6 +338,9 @@ const styles = StyleSheet.create({
   dateContainer: {
     marginBottom: 20,
     
+  },
+  dateEntryContainer: {
+    marginBottom: 20, // Add space between date entries
   },
   dateText: {
     fontSize: 24,
@@ -412,6 +409,9 @@ const styles = StyleSheet.create({
     fontFamily: "Poppins",
     fontSize: 16,
   },
+  scrollView: {
+    flex: 1, // Ensure the ScrollView takes up available space
+  },
   dropdownMenu: {
     position: 'absolute',
     top: 50,
@@ -448,5 +448,10 @@ const styles = StyleSheet.create({
     fontStyle: "italic",
     color: "#888",
     marginTop: 10,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
