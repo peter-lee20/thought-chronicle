@@ -4,26 +4,27 @@ import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
 import { signOut, getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { doc, getDoc, getDocs, collection, query, where } from 'firebase/firestore';
-import { format, subDays } from "date-fns"; // Ensure you have date-fns installed
+import { format } from "date-fns";
 
 import DateTimePicker from '@react-native-community/datetimepicker';
 
-
 interface JournalEntry {
-  [key: string]: string; // The key is a date (YYYY-MM-DD), and the value is the journal entry text
+  response: string;
+  timestamp: Date | null;
 }
 
 interface DailyResponse {
-  [key: string]: string; // The key is a date (YYYY-MM-DD), and the value is the daily response text
+  response: string;
+  timestamp: Date | null;
 }
 
 export default function EntryPage() {
-  const [showDropdown, setShowDropdown] = useState(false); // State for profile dropdown visibility
-  const [selectedDate, setSelectedDate] = useState(new Date()); // State for selected date
-  const [journalEntries, setJournalEntries] = useState<JournalEntry>({});
-  const [dailyResponses, setDailyResponses] = useState<DailyResponse>({});
-  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false); // State for date picker visibility
-  const [currentPickerType, setCurrentPickerType] = useState(''); // State to track which picker is open (month, day, year)
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [dailyResponse, setDailyResponse] = useState<DailyResponse | null>(null);
+  const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
+  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
+  const [currentPickerType, setCurrentPickerType] = useState('');
   const [loading, setLoading] = useState(false);
 
   const auth = getAuth();
@@ -43,11 +44,12 @@ export default function EntryPage() {
       Alert.alert('Failed to sign out. Please try again.');
     }
   };
+
   const handleDateChange = (_event: any, selectedDate?: Date) => {
     if (selectedDate) {
       setSelectedDate(selectedDate);
     }
-    setIsDatePickerVisible(false); // Close the picker after selection
+    setIsDatePickerVisible(false);
   };
 
   const openDatePicker = (type: string) => {
@@ -55,12 +57,12 @@ export default function EntryPage() {
     setIsDatePickerVisible(true);
   };
 
-  const getPreviousDates = (numDays = 7) => {
-    return Array.from({ length: numDays }, (_, i) => {
-      const date = new Date(selectedDate);
-      date.setDate(selectedDate.getDate() - i);
-      return date;
-    });
+  const formatDateForFirestore = (date: Date): string => {
+    return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+  };
+
+  const formatDateForState = (date: Date): string => {
+    return format(date, "yyyy-MM-dd");
   };
 
   const fetchResponses = async () => {
@@ -69,58 +71,53 @@ export default function EntryPage() {
       return;
     }
 
-    setLoading(true); // Start loading
-  
-    // Generate an array of the last 7 days
-    const past7Days = Array.from({ length: 7 }, (_, i) => {
-      const date = new Date(selectedDate);
-      date.setDate(selectedDate.getDate() - i);
-      return date;
-    });
-  
-    // Create an object to store responses for each date
-    const responses: DailyResponse = {};
-  
+    setLoading(true);
+    const firestoreDate = formatDateForFirestore(selectedDate);
+
     try {
-      // Loop through each of the last 7 days
-      for (const date of past7Days) {
-        // Format the date for Firestore query (e.g., "M/D/YYYY")
-        const firestoreDate = date.toLocaleDateString();
-        console.log("Querying Firestore for date:", firestoreDate);
-  
-        // Query Firestore for responses on this date
-        const q = query(
-          collection(FIRESTORE_DB, "daily-question-responses"),
-          where("date", "==", firestoreDate),
-          where("userId", "==", currentUser.uid)
-        );
-  
-        const querySnapshot = await getDocs(q);
-  
-        // Format the date for state storage (e.g., "YYYY-MM-DD")
-        const stateDateKey = format(date, "yyyy-MM-dd");
-  
-        if (querySnapshot.empty) {
-          console.log("No data found for", firestoreDate);
-          responses[stateDateKey] = ""; // Store empty response if none found
-        } else {
-          querySnapshot.forEach((doc) => {
-            const docData = doc.data();
-            const response = docData?.response || "";
-            responses[stateDateKey] = response; // Store response for this date
-          });
-        }
+      // Fetch Daily Question Response
+      const dailyQuestionQuery = query(
+        collection(FIRESTORE_DB, "daily-question-responses"),
+        where("date", "==", firestoreDate),
+        where("userId", "==", currentUser.uid)
+      );
+
+      const dailyQuestionSnapshot = await getDocs(dailyQuestionQuery);
+      if (dailyQuestionSnapshot.docs.length > 0) {
+        const doc = dailyQuestionSnapshot.docs[0]; // Assuming only one response per day
+        const docData = doc.data();
+        setDailyResponse({
+          response: docData.response || "",
+          timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
+        });
+      } else {
+        setDailyResponse(null);
       }
-  
-      // Update the state with all fetched responses
-      setDailyResponses(responses);
+
+      // Fetch Journal Entries
+      const journalQuery = query(
+        collection(FIRESTORE_DB, "journal-responses"),
+        where("date", "==", firestoreDate),
+        where("userId", "==", currentUser.uid)
+      );
+
+      const journalSnapshot = await getDocs(journalQuery);
+      const journalEntriesData: JournalEntry[] = [];
+      journalSnapshot.forEach((doc) => {
+        const docData = doc.data();
+        journalEntriesData.push({
+          response: docData.response || "",
+          timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
+        });
+      });
+      setJournalEntries(journalEntriesData);
+
     } catch (error) {
       console.error("Error fetching responses:", error);
     } finally {
       setLoading(false);
     }
   };
-  
 
   useEffect(() => {
     fetchResponses();
@@ -129,25 +126,23 @@ export default function EntryPage() {
   const renderDateDropdowns = () => {
     return (
       <View style={styles.dateDropdownContainer}>
-        {/* Month Dropdown */}
         <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('month')}>
-          <Text style = {styles.pickerText}>{selectedDate.toLocaleString('default', { month: 'long' })}</Text>
+          <Text style={styles.pickerText}>{selectedDate.toLocaleString('default', { month: 'long' })}</Text>
         </TouchableOpacity>
-
-        {/* Day Dropdown */}
         <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('day')}>
-          <Text style = {styles.pickerText}>{selectedDate.getDate()}</Text>
+          <Text style={styles.pickerText}>{selectedDate.getDate()}</Text>
         </TouchableOpacity>
-
-        {/* Year Dropdown */}
         <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('year')}>
-          <Text style = {styles.pickerText}>{selectedDate.getFullYear()}</Text>
+          <Text style={styles.pickerText}>{selectedDate.getFullYear()}</Text>
         </TouchableOpacity>
       </View>
     );
   };
 
-  // Function to display past responses
+  const formatTime = (timestamp: Date | null) => {
+    if (!timestamp) return '';
+    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   const renderDateContent = () => {
     if (loading) {
@@ -157,76 +152,78 @@ export default function EntryPage() {
         </View>
       );
     }
-  
+
+    const hasContent = dailyResponse || journalEntries.length > 0;
+
     return (
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         style={styles.scrollView}
-        nestedScrollEnabled={true} // Enable nested scrolling for Android
-        keyboardShouldPersistTaps="handled" // Allow tapping to dismiss the keyboard
-        showsVerticalScrollIndicator={true} // Always show the scroll indicator
-        indicatorStyle="black" // For iOS: dark scrollbar
-        scrollIndicatorInsets={{ right: 1 }} // Adjust scrollbar insets for better positioning
+        nestedScrollEnabled={true}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={true}
+        indicatorStyle="black"
+        scrollIndicatorInsets={{ right: 1 }}
       >
-        {getPreviousDates(7).map((date, index) => {
-          const formattedDate = format(date, "yyyy-MM-dd");
-          return (
-            <View key={index} style={styles.dateEntryContainer}>
-              <Text style={styles.dateText}>
-                {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-              </Text>
-              <View style={styles.entryContainer}>
-                <Text style={styles.entryLabel}>DAILY QUESTION</Text>
-                {dailyResponses[formattedDate] ? (
-                  <Text style={styles.entryText}>{dailyResponses[formattedDate]}</Text>
-                ) : (
-                  <Text style={styles.noDataText}>No response available.</Text>
-                )}
+        <Text style={styles.dateText}>
+          {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+        </Text>
+
+        {hasContent ? (
+          <>
+            {/* Daily Question Response */}
+            {dailyResponse && (
+              <View style={styles.dateEntryContainer}>
+                <View style={styles.entryContainer}>
+                  <Image
+                    source={require('../../../assets/images/question_mark.png')}
+                    style={styles.questionMarkImage}
+                    resizeMode='contain'
+                  />
+                  <View style={styles.textContainer}>
+                    <Text style={styles.entryLabel}>DAILY QUESTION</Text>
+                    <Text style={styles.entryText}>{dailyResponse.response}</Text>
+                    {dailyResponse.timestamp && (
+                      <Text style={styles.timestampText}>
+                        {formatTime(dailyResponse.timestamp)}
+                      </Text>
+                    )}
+                  </View>
+                </View>
               </View>
-            </View>
-          );
-        })}
+            )}
+
+            {/* Journal Entries */}
+            {journalEntries.map((entry, index) => (
+              <View style={styles.dateEntryContainer} key={index}>
+                <View style={styles.entryContainer}>
+                  <Image
+                    source={require('../../../assets/images/journal.png')}
+                    style={styles.questionMarkImage}
+                    resizeMode='contain'
+                  />
+                  <View style={styles.textContainer}>
+                    <Text style={styles.entryLabel}>JOURNAL ENTRY</Text>
+                    <Text style={styles.entryText}>{entry.response}</Text>
+                    {entry.timestamp && (
+                      <Text style={styles.timestampText}>
+                        {formatTime(entry.timestamp)}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              </View>
+            ))}
+          </>
+        ) : (
+          <View style={styles.noContentContainer}>
+            <Text style={styles.noContentText}>No responses or journal entries for this day.</Text>
+          </View>
+        )}
       </ScrollView>
     );
   };
-  
 
-  // const renderDateContent = () => {
-  //   if (loading) {
-  //     return (
-  //       <View style={styles.loadingContainer}>
-  //         <ActivityIndicator size="large" color="#706645" />
-  //       </View>
-  //     );
-  //   }
-  
-  //   return (
-  //     <ScrollView
-  //       contentContainerStyle={styles.scrollContent}
-  //       style={styles.scrollView}
-  //     >
-  //       {getPreviousDates(7).map((date, index) => {
-  //         const formattedDate = format(date, "yyyy-MM-dd");
-  //         return (
-  //           <View key={index} style={styles.dateEntryContainer}>
-  //             <Text style={styles.dateText}>
-  //               {date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
-  //             </Text>
-  //             <View style={styles.entryContainer}>
-  //               <Text style={styles.entryLabel}>DAILY QUESTION</Text>
-  //               {dailyResponses[formattedDate] ? (
-  //                 <Text style={styles.entryText}>{dailyResponses[formattedDate]}</Text>
-  //               ) : (
-  //                 <Text style={styles.noDataText}>No response available.</Text>
-  //               )}
-  //             </View>
-  //           </View>
-  //         );
-  //       })}
-  //     </ScrollView>
-  //   );
-  // };
-  
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -269,7 +266,7 @@ export default function EntryPage() {
           )}
 
           {/* Scrollable Content */}
-          
+
           <View style={{ flex: 1 }}>
             <ScrollView>
               {renderDateContent()}
@@ -311,9 +308,6 @@ const styles = StyleSheet.create({
     padding: 20,
     paddingBottom: 100,
   },
-  scrollContainer: {
-    flex: 1, // Ensure the container takes up available space
-  },
   header: {
     flexDirection: 'row',
     marginBottom: 20,
@@ -327,8 +321,8 @@ const styles = StyleSheet.create({
     borderRadius: 10,
     marginHorizontal: 20,
     marginBottom: 10,
-    
-    
+
+
   },
   dropdownButton: {
     padding: 15,
@@ -337,7 +331,7 @@ const styles = StyleSheet.create({
   },
   dateContainer: {
     marginBottom: 20,
-    
+
   },
   dateEntryContainer: {
     marginBottom: 20, // Add space between date entries
@@ -348,69 +342,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     color: "#706645",
     fontFamily: "Poppins",
-  },
-  entryContainer: { 
-    backgroundColor: '#EDE3C5', 
-    padding: 10, 
-    borderRadius: 10, 
-    marginBottom: 10
-  },
-  entryLabel: { 
-    fontSize: 18, 
-    fontWeight: '600', 
-    color: "#4F4A36" 
-  },
-  entryText: { 
-    fontSize: 16, 
-    color: "#4F4A36" 
-  },
-  boldDateText: {
-    fontSize: 24,
-    fontWeight: '700',
-    marginBottom: 10,
-    color: "#706645",
-    fontFamily: "Poppins",
-  },
-  textInput: {
-    borderRadius: 10,
-    padding: 10,
-    height: 100,
-    marginBottom: 10,
-    backgroundColor: '#70664533',
-    textAlignVertical: 'top',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    paddingVertical: 20,
-    backgroundColor: '#F0ECE0',
-    borderTopWidth: 1,
-    borderTopColor: '#70664533',
-  },
-  footerImage: {
-    width: 50,
-    height: 50,
-  },
-  image: {
-    width: 40,
-    height: 40,
-  },
-  plusSign: {
-    marginLeft: 15.5,
-    marginTop: 4,
-    position: 'absolute',
-    fontSize: 30,
-    color: 'white',
-    fontWeight: '400',
-  },
-  pickerText: {
-    color: '#FFF',
-    fontWeight: '600',
-    fontFamily: "Poppins",
-    fontSize: 16,
-  },
-  scrollView: {
-    flex: 1, // Ensure the ScrollView takes up available space
   },
   dropdownMenu: {
     position: 'absolute',
@@ -436,22 +367,94 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: 'Poppins',
   },
-  modalContainer: {
+  entryContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EDE3C5',
+    padding: 10,
+    borderRadius: 10,
+    marginBottom: 10,
+    minHeight: 100,
+    overflow: 'hidden',
+  },
+  entryLabel: {
+    fontSize: 18,
+    fontWeight: '600',
+    color: "#4F4A36"
+  },
+  entryText: {
+    fontSize: 16,
+    color: "#4F4A36"
+  },
+  footer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 20,
+    backgroundColor: '#F0ECE0',
+    borderTopWidth: 1,
+    borderTopColor: '#70664533',
+  },
+  footerImage: {
+    width: 50,
+    height: 50,
+  },
+  image: {
+    width: 40,
+    height: 40,
+  },
+  pickerText: {
+    color: '#FFF',
+    fontWeight: '600',
+    fontFamily: "Poppins",
+    fontSize: 16,
+  },
+  scrollView: {
+    flex: 1, // Ensure the ScrollView takes up available space
+  },
+  loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
   },
-  responseContainer: { marginBottom: 20 },
+  questionMarkImage: {
+    width: 40,
+    height: 40,
+    marginRight: 10,
+  },
+  textContainer: {
+    flex: 1,
+    position: 'relative',
+  },
+  timestampText: {
+    position: 'absolute',
+    top: 5,
+    right: 5,
+    fontSize: 12,
+    color: '#888',
+  },
   noDataText: {
     fontSize: 14,
     fontStyle: "italic",
     color: "#888",
     marginTop: 10,
   },
-  loadingContainer: {
+    noContentContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    marginTop: 50,
+  },
+  noContentText: {
+    fontSize: 16,
+    color: '#706645',
+    fontStyle: 'italic',
+  },
+  plusSign: {
+    marginLeft: 15.5,
+    marginTop: 4,
+    position: 'absolute',
+    fontSize: 30,
+    color: 'white',
+    fontWeight: '400',
   },
 });
