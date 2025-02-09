@@ -9,7 +9,7 @@ import { signOut } from 'firebase/auth';
 import { Link, router } from 'expo-router';
 
 const navEntries = async () => {
-  router.replace("/(entries)");
+  router.replace("/(entries)/entries");
 }
 
 export default function HomePage() {

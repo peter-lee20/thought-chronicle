@@ -166,6 +166,9 @@ export default function EntryPage() {
         scrollIndicatorInsets={{ right: 1 }}
       >
         <Text style={styles.dateText}>
+          <Text style={styles.boldDay}>
+            {selectedDate.toLocaleDateString('en-US', { weekday: 'long' })},
+          </Text>{' '}
           {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
         </Text>
 
@@ -174,44 +177,64 @@ export default function EntryPage() {
             {/* Daily Question Response */}
             {dailyResponse && (
               <View style={styles.dateEntryContainer}>
-                <View style={styles.entryContainer}>
+                <TouchableOpacity 
+                  style={styles.entryContainer}
+                  onPress={() => {
+                    // Handle press event
+                    console.log("Daily Question Pressed!");
+                  }}
+                >
                   <Image
                     source={require('../../../assets/images/question_mark.png')}
-                    style={styles.questionMarkImage}
+                    style={styles.entryImage}
                     resizeMode='contain'
                   />
                   <View style={styles.textContainer}>
-                    <Text style={styles.entryLabel}>DAILY QUESTION</Text>
-                    <Text style={styles.entryText}>{dailyResponse.response}</Text>
-                    {dailyResponse.timestamp && (
-                      <Text style={styles.timestampText}>
-                        {formatTime(dailyResponse.timestamp)}
-                      </Text>
-                    )}
+                    <View style={styles.titleRow}>
+                      <Text style={styles.entryLabel}>DAILY QUESTION</Text>
+                      {dailyResponse.timestamp && (
+                        <Text style={styles.timestampText}>
+                          {formatTime(dailyResponse.timestamp)}
+                        </Text>
+                      )}
+                    </View>
+                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
+                      {dailyResponse.response}
+                    </Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               </View>
             )}
 
             {/* Journal Entries */}
             {journalEntries.map((entry, index) => (
               <View style={styles.dateEntryContainer} key={index}>
-                <View style={styles.entryContainer}>
+                <TouchableOpacity
+                  style={styles.entryContainer}
+                  onPress={() => {
+                    // Handle press event
+                    console.log("Journal Entry Pressed!");
+                  }}
+                >
                   <Image
                     source={require('../../../assets/images/journal.png')}
-                    style={styles.questionMarkImage}
+                    style={styles.entryImage}
                     resizeMode='contain'
                   />
                   <View style={styles.textContainer}>
-                    <Text style={styles.entryLabel}>JOURNAL ENTRY</Text>
-                    <Text style={styles.entryText}>{entry.response}</Text>
-                    {entry.timestamp && (
-                      <Text style={styles.timestampText}>
-                        {formatTime(entry.timestamp)}
-                      </Text>
-                    )}
+                    <View style={styles.titleRow}>
+                      <Text style={styles.entryLabel}>JOURNAL</Text>
+                      {entry.timestamp && (
+                        <Text style={styles.timestampText}>
+                          {formatTime(entry.timestamp)}
+                        </Text>
+                      )}
+                    </View>
+                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
+                      {entry.response}
+                    </Text>
                   </View>
-                </View>
+                </TouchableOpacity>
               </View>
             ))}
           </>
@@ -369,22 +392,33 @@ const styles = StyleSheet.create({
   },
   entryContainer: {
     flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#EDE3C5',
+    alignItems: 'flex-start',
+    backgroundColor: '#FDFCF3',
     padding: 10,
-    borderRadius: 10,
+    borderRadius: 15,
     marginBottom: 10,
-    minHeight: 100,
+    minHeight: 130,
     overflow: 'hidden',
   },
   entryLabel: {
-    fontSize: 18,
-    fontWeight: '600',
-    color: "#4F4A36"
+    marginTop: 10,
+    fontSize: 13,
+    fontWeight: '400',
+    color: "#706645CC"
   },
   entryText: {
-    fontSize: 16,
-    color: "#4F4A36"
+    marginTop: 10,
+    fontSize: 12,
+    color: "#706645CC",
+    fontWeight: '600',
+    marginRight: 25,
+  },
+  entryImage: {
+    width: 30,
+    height: 30,
+    marginRight: 20,
+    marginTop: 40, // Added to align with the text
+    marginLeft: 10,
   },
   footer: {
     flexDirection: 'row',
@@ -416,21 +450,22 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  questionMarkImage: {
-    width: 40,
-    height: 40,
-    marginRight: 10,
-  },
   textContainer: {
     flex: 1,
-    position: 'relative',
+  },
+  titleRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 5, // Added space between title and content
   },
   timestampText: {
     position: 'absolute',
-    top: 5,
-    right: 5,
-    fontSize: 12,
-    color: '#888',
+    top: 10,
+    right: 20,
+    fontSize: 13,
+    color: '#706645CC',
+    fontFamily: "Poppins",
   },
   noDataText: {
     fontSize: 14,
@@ -457,4 +492,7 @@ const styles = StyleSheet.create({
     color: 'white',
     fontWeight: '400',
   },
+  boldDay: {
+    fontWeight: 'bold',
+  }
 });
