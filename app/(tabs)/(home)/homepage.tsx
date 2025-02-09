@@ -102,10 +102,6 @@ export default function HomePage() {
     }
   };
 
-  const goToJournal = () => {
-    router.replace("/(add-journal)/");
-  }
-
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
@@ -177,10 +173,10 @@ export default function HomePage() {
             <TouchableOpacity>
                 <Image source={require('../../../assets/images/today.png')} style={styles.footerImage}resizeMode="contain" />
               </TouchableOpacity>
-              <TouchableOpacity>
+              <TouchableOpacity onPress={() => {router.replace('/(entries)/')}}>
                 <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
               </TouchableOpacity>
-              <TouchableOpacity onPress={goToJournal}>
+              <TouchableOpacity onPress={() => {router.replace('/(add-journal)/')}}>
                 <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain"/>
                 <Text style = {styles.plusSign}>
                   +
