@@ -54,7 +54,8 @@ export default function HomePage() {
 
   // State that user has already responded
   const log = () => {
-    console.log("User has already responded");
+    Alert.alert("You've already responded to the prompt for today. Come back tomorrow!");
+    return;
   }
   
 
