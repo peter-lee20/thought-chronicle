@@ -7,12 +7,14 @@ import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { Link, router } from 'expo-router';
+import { ReactNativeAsyncStorage } from 'firebase/auth';
 
 export default function HomePage() {
   const [response, setResponse] = useState('');
   const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
   const streak = 5;
   const [question, setQuestion] = useState('');
+  const [responded, setResponded] = useState<boolean>(false);
   const currentDate = new Date();
   const maxCharacters = 1500;
 
@@ -50,6 +52,12 @@ export default function HomePage() {
 
   const weekRange = getWeekRange();
 
+  // State that user has already responded
+  const log = () => {
+    console.log("User has already responded");
+  }
+  
+
   const toggleDropdown = () => {
     setShowDropdown((prev) => !prev);
   }
@@ -81,6 +89,7 @@ export default function HomePage() {
 
         Alert.alert("Response submitted successfully!");
         setResponse(''); // Clear input after submission
+        setResponded(true);
       } else {
         Alert.alert("You need to be logged in to submit a response.");
       }
@@ -166,7 +175,7 @@ export default function HomePage() {
               <Text style={styles.characterCounter}>
                 {response.length}/{maxCharacters} characters
               </Text>
-              <TouchableOpacity style={styles.respondButton} onPress={handleSubmitResponse}>
+              <TouchableOpacity style={responded === true ? styles.grayButton : styles.respondButton} onPress={responded === true ? log : handleSubmitResponse}>
                 <Text style={styles.buttonText}>Submit Response</Text>
               </TouchableOpacity>
             </View>
@@ -272,6 +281,13 @@ const styles = StyleSheet.create({
   },
   respondButton: {
     backgroundColor: '#706645CC',
+    paddingVertical: 17.5,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginBottom: '30%',
+  },
+  grayButton: {
+    backgroundColor: '#808080',
     paddingVertical: 17.5,
     borderRadius: 15,
     alignItems: 'center',
