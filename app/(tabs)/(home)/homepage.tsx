@@ -1,18 +1,33 @@
 import React, { useEffect, useState } from 'react';
-import { StyleSheet, Alert, Text, TextInput, TouchableOpacity, View, ScrollView, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Image } from 'react-native';
+import {
+  StyleSheet,
+  Alert,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Keyboard,
+  TouchableWithoutFeedback,
+  Image,
+} from 'react-native';
 import WeekCalendar from './weekCalendar';
 import { FIREBASE_AUTH } from '../../../FirebaseConfig';
 import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, setDoc, updateDoc, getDocs } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { Link, router } from 'expo-router';
+import { ReactNativeAsyncStorage } from 'firebase/auth';
 
 export default function HomePage() {
   const [response, setResponse] = useState('');
-  const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
-  const streak = 5;
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [streak, setStreak] = useState(0);
   const [question, setQuestion] = useState('');
+  const [responded, setResponded] = useState<boolean>(false);
   const currentDate = new Date();
   const maxCharacters = 1500;
 
@@ -31,8 +46,41 @@ export default function HomePage() {
         console.error("Error fetching question:", error);
       }
     }
-
+ 
     fetchQuestion();
+    checkResponse();
+  }, []);
+
+  useEffect(() => {
+    const fetchUserStreak = async () => {
+      const user = FIREBASE_AUTH.currentUser;
+      if (user) {
+        try {
+          const streakDocRef = doc(FIRESTORE_DB, 'userStreaks', user.uid);
+          const streakDocSnap = await getDoc(streakDocRef);
+          const todayStr = currentDate.toLocaleDateString();
+          const yesterday = new Date(currentDate);
+          yesterday.setDate(currentDate.getDate() - 1);
+          const yesterdayStr = yesterday.toLocaleDateString();
+
+          if (streakDocSnap.exists()) {
+            const data = streakDocSnap.data();
+            if (data.lastAnsweredDate === todayStr || data.lastAnsweredDate === yesterdayStr) {
+              setStreak(data.currentStreak);
+            } else {
+              //Resets the streak to 0 if the user misses a day
+              setStreak(0);
+              await updateDoc(streakDocRef, { currentStreak: 0 });
+            }
+          } else {
+            setStreak(0);
+          }
+        } catch (error) {
+          console.error('Error fetching user streak:', error);
+        }
+      }
+    };
+    fetchUserStreak();
   }, []);
 
   const getWeekRange = () => {
@@ -50,6 +98,34 @@ export default function HomePage() {
 
   const weekRange = getWeekRange();
 
+    // Check if user has already responded
+  const checkResponse = async () => {
+
+    const user = FIREBASE_AUTH.currentUser;
+    if (user) {
+      const userID = user.uid;
+      const responses = collection(FIRESTORE_DB, "daily-question-responses");
+      const snapshot = await getDocs(responses);
+
+      if (snapshot.empty){
+        return;
+      }
+
+      const documents = snapshot.docs;
+      // Iterate through all documents, set responded to true if there exists a document with the user's ID and current date
+      documents.forEach((document) => {
+        if (document.data()["userId"] === userID && document.data()["date"] === currentDate.toLocaleDateString()) {
+          setResponded(true);
+          return;
+        }
+      })
+
+    } else {
+      console.log("User must be authenticated");
+    }
+
+  }
+
   const toggleDropdown = () => {
     setShowDropdown((prev) => !prev);
   }
@@ -66,29 +142,67 @@ export default function HomePage() {
     } 
 
     try {
-      // Get the current user's UID from Firebase Auth
+      // Get the current user.
       const user = FIREBASE_AUTH.currentUser;
 
       if (user) {
-        // Save to Firestore
+        const todayStr = currentDate.toLocaleDateString();
+        const yesterday = new Date(currentDate);
+        yesterday.setDate(currentDate.getDate() - 1);
+        const yesterdayStr = yesterday.toLocaleDateString();
+
+        // Reference the user’s streak document.
+        const streakDocRef = doc(FIRESTORE_DB, 'userStreaks', user.uid);
+        const streakDocSnap = await getDoc(streakDocRef);
+        let newStreak = 1; // Default streak if no previous record.
+
+        if (streakDocSnap.exists()) {
+          const data = streakDocSnap.data();
+          // Check if the user already answered today.
+          if (data.lastAnsweredDate === todayStr) {
+            newStreak = data.currentStreak;
+          } else if (data.lastAnsweredDate === yesterdayStr) {
+            // Consecutive day: increment the streak.
+            newStreak = data.currentStreak + 1;
+          } else {
+            // Missed one or more days: start over at 1.
+            newStreak = 1;
+          }
+          await updateDoc(streakDocRef, {
+            currentStreak: newStreak,
+            lastAnsweredDate: todayStr,
+          });
+        } else {
+          // If no streak document exists, create one.
+          await setDoc(streakDocRef, {
+            currentStreak: newStreak,
+            lastAnsweredDate: todayStr,
+          });
+        }
+
+        // Update local state so the UI shows the new streak.
+        setStreak(newStreak);
+
+        // Save the daily response.
         await addDoc(collection(FIRESTORE_DB, 'daily-question-responses'), {
           question: question,
           response: response,
-          date: currentDate.toLocaleDateString(),
+          date: todayStr,
           timestamp: new Date(),
-          userId: user.uid, // Track the user who submitted the response
+          userId: user.uid,
         });
 
-        Alert.alert("Response submitted successfully!");
-        setResponse(''); // Clear input after submission
+        Alert.alert('Response submitted successfully!');
+        setResponse(''); // Clear the input.
+        setResponded(true);
       } else {
-        Alert.alert("You need to be logged in to submit a response.");
+        Alert.alert('You need to be logged in to submit a response.');
       }
     } catch (error) {
       console.error(error);
-      Alert.alert("Failed to submit response. Please try again.");
+      Alert.alert('Failed to submit response. Please try again.');
     }
-  }
+  };
 
   const handleSignOut = async () => {
     try {
@@ -110,14 +224,18 @@ export default function HomePage() {
     <KeyboardAvoidingView
       style={{ flex: 1 }}
       contentContainerStyle={{ flexGrow: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
+      behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <ScrollView style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.streakContainer}>
-              <Image source={require('../../../assets/images/fire.png')} style={styles.fireImage} resizeMode="contain" />
+              <Image
+                source={require('../../../assets/images/fire.png')}
+                style={styles.fireImage}
+                resizeMode="contain"
+              />
+              {/* Display the dynamic streak */}
               <Text style={styles.days}>{streak}</Text>
             </View>
             <View>
@@ -142,7 +260,12 @@ export default function HomePage() {
           <View style={styles.mainContent}>
             <Text style={styles.title}>Today</Text>
             <Text style={styles.date}>
-              {currentDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'})}
+              {currentDate.toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
             </Text>
 
             {/* Week Overview */}
@@ -156,7 +279,8 @@ export default function HomePage() {
               <Text style={styles.question}>{question}</Text>
               <TextInput
                 style={styles.responseField}
-                placeholder="Type your response here..."
+                placeholder={responded === true ? "You've already responded! Come back tomorrow!" : "Type your response here..."}
+                editable={!responded}
                 placeholderTextColor="#70664550"
                 multiline
                 maxLength={maxCharacters}
@@ -166,7 +290,7 @@ export default function HomePage() {
               <Text style={styles.characterCounter}>
                 {response.length}/{maxCharacters} characters
               </Text>
-              <TouchableOpacity style={styles.respondButton} onPress={handleSubmitResponse}>
+              <TouchableOpacity style={responded === true ? styles.grayButton : styles.respondButton} onPress={handleSubmitResponse} disabled={responded}>
                 <Text style={styles.buttonText}>Submit Response</Text>
               </TouchableOpacity>
             </View>
@@ -175,23 +299,41 @@ export default function HomePage() {
           {/* Footer */}
           <View style={styles.footer}>
             <TouchableOpacity>
-                <Image source={require('../../../assets/images/today.png')} style={styles.footerImage}resizeMode="contain" />
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
-              </TouchableOpacity>
-              <TouchableOpacity onPress={goToJournal}>
-                <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain"/>
-                <Text style = {styles.plusSign}>
-                  +
-                </Text>
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain"/>
-              </TouchableOpacity>
-              <TouchableOpacity>
-                <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
-              </TouchableOpacity>
+              <Image
+                source={require('../../../assets/images/today.png')}
+                style={styles.footerImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image
+                source={require('../../../assets/images/entries.png')}
+                style={styles.footerImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={goToJournal}>
+              <Image
+                source={require('../../../assets/images/circle.png')}
+                style={styles.footerImage}
+                resizeMode="contain"
+              />
+              <Text style={styles.plusSign}>+</Text>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image
+                source={require('../../../assets/images/feed.png')}
+                style={styles.footerImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image
+                source={require('../../../assets/images/friends.png')}
+                style={styles.footerImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
@@ -262,6 +404,7 @@ const styles = StyleSheet.create({
     height: 150,
     marginBottom: 10,
     backgroundColor: '#70664533',
+    textAlignVertical: 'top',
   },
   characterCounter: {
     fontSize: 12,
@@ -269,6 +412,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'right',
     fontFamily: "Poppins",
+  },
+  grayButton: {
+    backgroundColor: '#808080',
+    paddingVertical: 17.5,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginBottom: '30%',
   },
   respondButton: {
     backgroundColor: '#706645CC',
