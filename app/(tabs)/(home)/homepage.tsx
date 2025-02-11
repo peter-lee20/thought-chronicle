@@ -4,7 +4,7 @@ import WeekCalendar from './weekCalendar';
 import { FIREBASE_AUTH } from '../../../FirebaseConfig';
 import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { Link, router } from 'expo-router';
 import { ReactNativeAsyncStorage } from 'firebase/auth';
@@ -35,6 +35,7 @@ export default function HomePage() {
     }
 
     fetchQuestion();
+    checkResponse();
   }, []);
 
   const getWeekRange = () => {
@@ -52,7 +53,39 @@ export default function HomePage() {
 
   const weekRange = getWeekRange();
 
-  // State that user has already responded
+  // Check if user has already responded
+  const checkResponse = async () => {
+    // NOTE: This function is really inefficient due to the structure of the database at the moment. I am iterating through the whole collection.
+    // Change this function once the database is updated to be more easily fetched from.
+
+    const user = FIREBASE_AUTH.currentUser;
+    if (user) {
+      const userID = user.uid;
+      const responses = collection(FIRESTORE_DB, "daily-question-responses");
+      const snapshot = await getDocs(responses);
+
+      // Check if collection is empty, return with no changes if so
+      if (snapshot.empty){
+        return;
+      }
+      const documents = snapshot.docs;
+
+      // Iterate through all documents, set responded to true if there exists a document with the user's ID and current date
+      documents.forEach((document) => {
+        console.log(document.data()["date"], currentDate.toLocaleDateString())
+        if (document.data()["userId"] === userID && document.data()["date"] === currentDate.toLocaleDateString()) {
+          console.log("We're in.")
+          setResponded(true);
+          return;
+        }
+      })
+
+    } else {
+      console.log("User must be authenticated");
+    }
+    
+  }
+  // State that user has already responded if they already submitted a response
   const log = () => {
     Alert.alert("You've already responded to the prompt for today. Come back tomorrow!");
     return;
