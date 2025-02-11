@@ -55,8 +55,6 @@ export default function HomePage() {
 
   // Check if user has already responded
   const checkResponse = async () => {
-    // NOTE: This function is really inefficient due to the structure of the database at the moment. I am iterating through the whole collection.
-    // Change this function once the database is updated to be more easily fetched from.
 
     const user = FIREBASE_AUTH.currentUser;
     if (user) {
@@ -64,17 +62,14 @@ export default function HomePage() {
       const responses = collection(FIRESTORE_DB, "daily-question-responses");
       const snapshot = await getDocs(responses);
 
-      // Check if collection is empty, return with no changes if so
       if (snapshot.empty){
         return;
       }
-      const documents = snapshot.docs;
 
+      const documents = snapshot.docs;
       // Iterate through all documents, set responded to true if there exists a document with the user's ID and current date
       documents.forEach((document) => {
-        console.log(document.data()["date"], currentDate.toLocaleDateString())
         if (document.data()["userId"] === userID && document.data()["date"] === currentDate.toLocaleDateString()) {
-          console.log("We're in.")
           setResponded(true);
           return;
         }
@@ -84,11 +79,6 @@ export default function HomePage() {
       console.log("User must be authenticated");
     }
     
-  }
-  // State that user has already responded if they already submitted a response
-  const log = () => {
-    Alert.alert("You've already responded to the prompt for today. Come back tomorrow!");
-    return;
   }
   
 
@@ -199,7 +189,8 @@ export default function HomePage() {
               <Text style={styles.question}>{question}</Text>
               <TextInput
                 style={styles.responseField}
-                placeholder="Type your response here..."
+                placeholder={responded === true ? "You've already responded! Come back tomorrow!" : "Type your response here..."}
+                editable={!responded}
                 placeholderTextColor="#70664550"
                 multiline
                 maxLength={maxCharacters}
@@ -209,7 +200,7 @@ export default function HomePage() {
               <Text style={styles.characterCounter}>
                 {response.length}/{maxCharacters} characters
               </Text>
-              <TouchableOpacity style={responded === true ? styles.grayButton : styles.respondButton} onPress={responded === true ? log : handleSubmitResponse}>
+              <TouchableOpacity style={responded === true ? styles.grayButton : styles.respondButton} onPress={handleSubmitResponse} disabled={responded}>
                 <Text style={styles.buttonText}>Submit Response</Text>
               </TouchableOpacity>
             </View>
@@ -305,6 +296,7 @@ const styles = StyleSheet.create({
     height: 150,
     marginBottom: 10,
     backgroundColor: '#70664533',
+    textAlignVertical: "top",
   },
   characterCounter: {
     fontSize: 12,
