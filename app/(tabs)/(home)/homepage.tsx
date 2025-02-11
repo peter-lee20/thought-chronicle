@@ -17,15 +17,17 @@ import WeekCalendar from './weekCalendar';
 import { FIREBASE_AUTH } from '../../../FirebaseConfig';
 import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
-import { addDoc, collection, doc, getDoc, setDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, setDoc, updateDoc, getDocs } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { Link, router } from 'expo-router';
+import { ReactNativeAsyncStorage } from 'firebase/auth';
 
 export default function HomePage() {
   const [response, setResponse] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
   const [streak, setStreak] = useState(0);
   const [question, setQuestion] = useState('');
+  const [responded, setResponded] = useState<boolean>(false);
   const currentDate = new Date();
   const maxCharacters = 1500;
 
@@ -44,8 +46,9 @@ export default function HomePage() {
         console.error("Error fetching question:", error);
       }
     }
-
+ 
     fetchQuestion();
+    checkResponse();
   }, []);
 
   useEffect(() => {
@@ -94,6 +97,34 @@ export default function HomePage() {
   };
 
   const weekRange = getWeekRange();
+
+    // Check if user has already responded
+  const checkResponse = async () => {
+
+    const user = FIREBASE_AUTH.currentUser;
+    if (user) {
+      const userID = user.uid;
+      const responses = collection(FIRESTORE_DB, "daily-question-responses");
+      const snapshot = await getDocs(responses);
+
+      if (snapshot.empty){
+        return;
+      }
+
+      const documents = snapshot.docs;
+      // Iterate through all documents, set responded to true if there exists a document with the user's ID and current date
+      documents.forEach((document) => {
+        if (document.data()["userId"] === userID && document.data()["date"] === currentDate.toLocaleDateString()) {
+          setResponded(true);
+          return;
+        }
+      })
+
+    } else {
+      console.log("User must be authenticated");
+    }
+
+  }
 
   const toggleDropdown = () => {
     setShowDropdown((prev) => !prev);
@@ -163,6 +194,7 @@ export default function HomePage() {
 
         Alert.alert('Response submitted successfully!');
         setResponse(''); // Clear the input.
+        setResponded(true);
       } else {
         Alert.alert('You need to be logged in to submit a response.');
       }
@@ -247,7 +279,8 @@ export default function HomePage() {
               <Text style={styles.question}>{question}</Text>
               <TextInput
                 style={styles.responseField}
-                placeholder="Type your response here..."
+                placeholder={responded === true ? "You've already responded! Come back tomorrow!" : "Type your response here..."}
+                editable={!responded}
                 placeholderTextColor="#70664550"
                 multiline
                 maxLength={maxCharacters}
@@ -257,7 +290,7 @@ export default function HomePage() {
               <Text style={styles.characterCounter}>
                 {response.length}/{maxCharacters} characters
               </Text>
-              <TouchableOpacity style={styles.respondButton} onPress={handleSubmitResponse}>
+              <TouchableOpacity style={responded === true ? styles.grayButton : styles.respondButton} onPress={handleSubmitResponse} disabled={responded}>
                 <Text style={styles.buttonText}>Submit Response</Text>
               </TouchableOpacity>
             </View>
@@ -371,6 +404,7 @@ const styles = StyleSheet.create({
     height: 150,
     marginBottom: 10,
     backgroundColor: '#70664533',
+    textAlignVertical: 'top',
   },
   characterCounter: {
     fontSize: 12,
@@ -378,6 +412,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: 'right',
     fontFamily: "Poppins",
+  },
+  grayButton: {
+    backgroundColor: '#808080',
+    paddingVertical: 17.5,
+    borderRadius: 15,
+    alignItems: 'center',
+    marginBottom: '30%',
   },
   respondButton: {
     backgroundColor: '#706645CC',
