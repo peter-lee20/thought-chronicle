@@ -9,7 +9,11 @@ import { TouchableWithoutFeedback } from 'react-native';
 
 export default function EntriesCalendar() {
     const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
+
     const [selectedDate, setSelectedDate] = useState(new Date());
+    const selectedYear: string = selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: 'long'});
+
+
     const [modalVisible, setModalVisible] = useState(false);
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     const options: Intl.DateTimeFormatOptions = {
@@ -37,11 +41,21 @@ export default function EntriesCalendar() {
         }
     };
 
-    const monthName = ({ name }: {name: string}) => {
+    const handleMonthPress = (month: string) => {
+        const monthIndex = months.indexOf(month) + 1;
+        const newDate = `${selectedYear}-${monthIndex.toString().padStart(2, "0")}-01`;
+        setSelectedDate(new Date(newDate));
+        setModalVisible(false);
+        console.log(newDate);
+    };
+
+    const MonthButton = ({item}: {item: string}) => {
         return (
-            <Text>{ name }</Text>
+            <TouchableOpacity style={styles.monthButtons} onPress={() => handleMonthPress}>
+                <Text style={styles.monthButtonsText}>{item}</Text>
+            </TouchableOpacity> 
         );
-    }
+    };
 
     const dayComponent = ({ date }: {date: any}) => {
         return (
@@ -92,7 +106,7 @@ export default function EntriesCalendar() {
             <View style={styles.body}>
                 <View style={styles.dateContainer}>
                     <Text style={styles.date}>
-                        {selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: 'long'})}
+                        { selectedYear }
                     </Text>
                     
                     <TouchableOpacity onPress={() => {setModalVisible(true)}}>
@@ -107,30 +121,28 @@ export default function EntriesCalendar() {
                         transparent={true}
                     >
                         <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-                            <View style={styles.modalContent}>
-                                <View style={styles.modalHeader}>
-                                    <Text style={styles.modalYear}>2025</Text>
-                                    <View style={styles.modalButtons}>
-                                        <TouchableOpacity>
-                                            <Image source={require("../../../assets/images/angle-left-solid.png")} style={styles.modalArrows}/>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity>
-                                            <Image source={require("../../../assets/images/angle-right-solid.png")} style={styles.modalArrows}/>
-                                        </TouchableOpacity>
+                            <TouchableWithoutFeedback>
+                                <View style={styles.modalContent}>
+                                    <View style={styles.modalHeader}>
+                                        <Text style={styles.modalYear}>{selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric' })}</Text>
+                                        <View style={styles.modalButtons}>
+                                            <TouchableOpacity>
+                                                <Image source={require("../../../assets/images/angle-left-solid.png")} style={styles.modalArrows}/>
+                                            </TouchableOpacity>
+                                            <TouchableOpacity>
+                                                <Image source={require("../../../assets/images/angle-right-solid.png")} style={styles.modalArrows}/>
+                                            </TouchableOpacity>
+                                        </View>
                                     </View>
-                                </View>
 
-                                <FlatList
-                                    data={months}
-                                    //keyExtractor={(item, index) => index.toString()}
-                                    renderItem={({item}) => (
-                                    <TouchableOpacity style={styles.monthButtons}>
-                                        <Text style={styles.monthButtonsText}>{item}</Text>
-                                    </TouchableOpacity> )}
-                                    numColumns={4}
-                                    contentContainerStyle={styles.monthGrid}
-                                />
-                            </View>
+                                    <FlatList
+                                        data={months}
+                                        renderItem={({item}) => <MonthButton item={item}/>}
+                                        numColumns={4}
+                                        contentContainerStyle={styles.monthGrid}
+                                    />
+                                </View>
+                            </TouchableWithoutFeedback>
                         </TouchableOpacity>
                     </Modal>
                 </View>
@@ -295,8 +307,8 @@ const styles = StyleSheet.create({
     },
 
     monthGrid: {
-        flexDirection: "row",
-        flexWrap: "wrap",
+        flexDirection: "column",
+        //flexWrap: "wrap",
         justifyContent: "space-evenly",
     },
 
