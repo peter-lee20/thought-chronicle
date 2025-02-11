@@ -1,14 +1,25 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView, Alert, SafeAreaView } from 'react-native'
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView, Alert, SafeAreaView, Modal, FlatList } from 'react-native'
 import React, { useState } from 'react'
 import { Calendar } from 'react-native-calendars';
 import { router } from 'expo-router'
 import { FIREBASE_AUTH } from '@/FirebaseConfig';
 import { signOut } from 'firebase/auth';
 import { TriangleDownFill } from 'akar-icons';
+import { TouchableWithoutFeedback } from 'react-native';
 
 export default function EntriesCalendar() {
     const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
-    const [selectedDate, setSelectedDate] = useState(new Date())
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const [modalVisible, setModalVisible] = useState(false);
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const options: Intl.DateTimeFormatOptions = {
+        timeZone: "America/Los_Angeles",
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+    }
+    const pstDateString = new Intl.DateTimeFormat("en-CA", options).format(selectedDate);
+    
 
     const toggleDropdown = () => {
         setShowDropdown((prev) => !prev);
@@ -16,24 +27,30 @@ export default function EntriesCalendar() {
 
     const handleSignOut = async () => {
         try {
-        await signOut(FIREBASE_AUTH);
-        Alert.alert('Signed out successfully!');
-        router.replace("/(setup)");
-        // Redirect to login screen or handle accordingly
+            await signOut(FIREBASE_AUTH);
+            Alert.alert('Signed out successfully!');
+            router.replace("/(setup)");
+            // Redirect to login screen or handle accordingly
         } catch (error) {
-        console.error(error);
-        Alert.alert('Failed to sign out. Please try again.');
+            console.error(error);
+            Alert.alert('Failed to sign out. Please try again.');
         }
     };
 
-    const dayComponent = ({ date }) => {
+    const monthName = ({ name }: {name: string}) => {
+        return (
+            <Text>{ name }</Text>
+        );
+    }
+
+    const dayComponent = ({ date }: {date: any}) => {
         return (
           <View style={styles.dayContainer}>
-            {(selectedDate.toISOString().split('T')[0] == date.dateString) ? (
+            {(pstDateString == date.dateString) ? (
                 <View>
                     <Image
                         style={{ borderWidth: 2, borderColor: '#706645', borderRadius: 25}}
-                        source={require('../../../assets/images/blank-circle-icon.png')} // Replace with your icon path
+                        source={require('../../../assets/images/blank-circle-icon.png')} // Replace with your icon path 
                     />
                     <Text style={styles.selectedDayText}>{parseInt(date.dateString.split('-')[2],10)}</Text>
                 </View>
@@ -75,15 +92,47 @@ export default function EntriesCalendar() {
             <View style={styles.body}>
                 <View style={styles.dateContainer}>
                     <Text style={styles.date}>
-                        {selectedDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long'})}
+                        {selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: 'long'})}
                     </Text>
                     
-                    <TouchableOpacity>
+                    <TouchableOpacity onPress={() => {setModalVisible(true)}}>
                         <Image
                             style={{ width: 20, height: 20 }} 
                             source={require("../../../assets/images/caret-down-solid.png")}
                         />
                     </TouchableOpacity>
+
+                    <Modal
+                        visible={modalVisible}
+                        transparent={true}
+                    >
+                        <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+                            <View style={styles.modalContent}>
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalYear}>2025</Text>
+                                    <View style={styles.modalButtons}>
+                                        <TouchableOpacity>
+                                            <Image source={require("../../../assets/images/angle-left-solid.png")} style={styles.modalArrows}/>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity>
+                                            <Image source={require("../../../assets/images/angle-right-solid.png")} style={styles.modalArrows}/>
+                                        </TouchableOpacity>
+                                    </View>
+                                </View>
+
+                                <FlatList
+                                    data={months}
+                                    //keyExtractor={(item, index) => index.toString()}
+                                    renderItem={({item}) => (
+                                    <TouchableOpacity style={styles.monthButtons}>
+                                        <Text style={styles.monthButtonsText}>{item}</Text>
+                                    </TouchableOpacity> )}
+                                    numColumns={4}
+                                    contentContainerStyle={styles.monthGrid}
+                                />
+                            </View>
+                        </TouchableOpacity>
+                    </Modal>
                 </View>
                 
 
@@ -198,6 +247,72 @@ const styles = StyleSheet.create({
         fontWeight: 600,
         lineHeight: 36,
         marginRight: 20,
+    },
+
+    modalOverlay: {
+        flex: 1,
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "rgba(0, 0, 0, 0.5)",
+    },
+
+    modalContent: {
+        width: 352,
+        height: 242,
+        borderRadius: 20,
+        backgroundColor: "white",
+        paddingLeft: 23,
+        paddingRight: 23,
+        paddingTop: 18,
+        paddingBottom: 18,
+    },
+
+    modalHeader: {
+        flex: 1,
+        flexDirection: "row",
+        alignItems: "flex-start",
+        justifyContent: "space-between"
+    },
+
+    modalYear: {
+        fontFamily: "Poppins",
+        fontSize: 32,
+        fontWeight: 700,
+        lineHeight: 48,
+        color: "#706645",
+    },
+
+    modalButtons: {
+        flex: 1,
+        flexDirection: "row",
+        gap: 8,
+        justifyContent: "center",
+    },
+
+    modalArrows: {
+        width: 20,
+        height: 40
+    },
+
+    monthGrid: {
+        flexDirection: "row",
+        flexWrap: "wrap",
+        justifyContent: "space-evenly",
+    },
+
+    monthButtons: {
+        backgroundColor: "#F0ECE0",
+        width: 69,
+        height: 38,
+        alignItems: "center",
+        justifyContent: "center",
+        borderRadius: 15,
+    },
+
+    monthButtonsText: {
+        color: "#706645",
+        fontSize: 16, 
+        fontWeight: 600,
     },
 
     calendar: {
