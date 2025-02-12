@@ -22,6 +22,10 @@ import { signOut } from 'firebase/auth';
 import { Link, router } from 'expo-router';
 import { ReactNativeAsyncStorage } from 'firebase/auth';
 
+const navEntries = async () => {
+  router.replace("/(entries)/entries");
+}
+
 export default function HomePage() {
   const [response, setResponse] = useState('');
   const [showDropdown, setShowDropdown] = useState(false);
