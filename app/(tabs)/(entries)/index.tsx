@@ -4,14 +4,16 @@ import { Calendar } from 'react-native-calendars';
 import { router } from 'expo-router'
 import { FIREBASE_AUTH } from '@/FirebaseConfig';
 import { signOut } from 'firebase/auth';
-import { TriangleDownFill } from 'akar-icons';
 import { TouchableWithoutFeedback } from 'react-native';
+import { select } from 'firebase-functions/params';
 
 export default function EntriesCalendar() {
     const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
 
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const selectedYear: string = selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: 'long'});
+    const selectedMonth: string = selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'long' })
+    const selectedMonthYear: string = selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: 'long'})
+    const selectedYear: string = selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric'});
 
 
     const [modalVisible, setModalVisible] = useState(false);
@@ -42,17 +44,23 @@ export default function EntriesCalendar() {
     };
 
     const handleMonthPress = (month: string) => {
-        const monthIndex = months.indexOf(month) + 1;
-        const newDate = `${selectedYear}-${monthIndex.toString().padStart(2, "0")}-01`;
-        setSelectedDate(new Date(newDate));
+        const monthIndex = months.indexOf(month);
+        // const newDate = `${selectedYear}-${monthIndex.toString().padStart(2, "0")}-01`;
+        const newDate = new Date(parseInt(selectedYear), monthIndex);
+        setSelectedDate(newDate);
         setModalVisible(false);
-        console.log(newDate);
     };
 
     const MonthButton = ({item}: {item: string}) => {
+        const monthIndex = months.indexOf(item);
+
         return (
-            <TouchableOpacity style={styles.monthButtons} onPress={() => handleMonthPress}>
-                <Text style={styles.monthButtonsText}>{item}</Text>
+            <TouchableOpacity style={styles.monthButtons} onPress={() => handleMonthPress(item)}>
+                {monthIndex > parseInt(selectedMonth) ? (
+                    <Text style={styles.monthButtonsText}>{item}</Text>
+                ) : (
+                    <Text style={[styles.monthButtonsText, {'opacity': 0.8}]}>{item}</Text>
+                )}
             </TouchableOpacity> 
         );
     };
@@ -106,7 +114,7 @@ export default function EntriesCalendar() {
             <View style={styles.body}>
                 <View style={styles.dateContainer}>
                     <Text style={styles.date}>
-                        { selectedYear }
+                        { selectedMonthYear }
                     </Text>
                     
                     <TouchableOpacity onPress={() => {setModalVisible(true)}}>
@@ -149,6 +157,8 @@ export default function EntriesCalendar() {
                 
 
                 <Calendar
+                    current={selectedDate.toISOString()}
+                    key={selectedDate.toISOString()}
                     style={styles.calendar}
                     theme={{
                         calendarBackground: '#F0ECE0',
