@@ -6,7 +6,7 @@ import { signOut } from 'firebase/auth';
 import { TouchableWithoutFeedback } from 'react-native';
 import { FIREBASE_AUTH } from '../../../FirebaseConfig';
 import { FIRESTORE_DB } from '../../../FirebaseConfig';
-import { getFirestore } from '@react-native-firebase/firestore';
+import { collection, getDocs, query, where } from 'firebase/firestore';
 
 export default function EntriesCalendar() {
     const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
@@ -33,7 +33,7 @@ export default function EntriesCalendar() {
         const updateCalendar = async () => {
             try {
                 const currUser = FIREBASE_AUTH.currentUser;
-                const snapshot = await getFirestore().collection('daily-question-responses').where('userId', '==', currUser?.uid).get();
+                const snapshot = await getDocs(query(collection(FIRESTORE_DB, 'daily-question-responses'), where('userId', '==', currUser?.uid)));
 
                 snapshot.docs.forEach(doc => {
                     console.log(doc.id, doc.data());
