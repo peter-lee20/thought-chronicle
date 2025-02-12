@@ -309,13 +309,9 @@ export default function HomePage() {
                 resizeMode="contain"
               />
             </TouchableOpacity>
-            <TouchableOpacity>
-              <Image
-                source={require('../../../assets/images/entries.png')}
-                style={styles.footerImage}
-                resizeMode="contain"
-              />
-            </TouchableOpacity>
+            <TouchableOpacity onPress = {(navEntries)}>
+                <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
+              </TouchableOpacity>
             <TouchableOpacity onPress={goToJournal}>
               <Image
                 source={require('../../../assets/images/circle.png')}
