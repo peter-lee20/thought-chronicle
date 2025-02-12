@@ -1,20 +1,23 @@
 import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView, Alert, SafeAreaView, Modal, FlatList } from 'react-native'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Calendar } from 'react-native-calendars';
 import { router } from 'expo-router'
-import { FIREBASE_AUTH } from '@/FirebaseConfig';
 import { signOut } from 'firebase/auth';
 import { TouchableWithoutFeedback } from 'react-native';
-import { select } from 'firebase-functions/params';
+import { FIREBASE_AUTH } from '../../../FirebaseConfig';
+import { FIRESTORE_DB } from '../../../FirebaseConfig';
+import { getFirestore } from '@react-native-firebase/firestore';
 
 export default function EntriesCalendar() {
     const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
 
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const selectedMonth: string = selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'long' })
-    const selectedMonthYear: string = selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: 'long'})
-    const selectedYear: string = selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric'});
+    const [currentDate, setCurrentDate] = useState(new Date());
+    const currentMonth: string = currentDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'long' });
+    const currentYear: string = currentDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric'});
 
+    const [selectedDate, setSelectedDate] = useState(new Date());
+    const selectedMonth: string = currentDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'long' });
+    const selectedMonthYear: string = selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: 'long'})
 
     const [modalVisible, setModalVisible] = useState(false);
     const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
@@ -24,7 +27,24 @@ export default function EntriesCalendar() {
         month: "2-digit",
         day: "2-digit",
     }
-    const pstDateString = new Intl.DateTimeFormat("en-CA", options).format(selectedDate);
+    const pstDateString = new Intl.DateTimeFormat("en-CA", options).format(currentDate);
+
+    useEffect(() => {
+        const updateCalendar = async () => {
+            try {
+                const currUser = FIREBASE_AUTH.currentUser;
+                const snapshot = await getFirestore().collection('daily-question-responses').where('userId', '==', currUser?.uid).get();
+
+                snapshot.docs.forEach(doc => {
+                    console.log(doc.id, doc.data());
+                });
+            } catch (error) {
+                console.log("Error fetching entries: ", error);
+            }
+        };
+
+        updateCalendar();
+    }, []);
     
 
     const toggleDropdown = () => {
@@ -43,27 +63,32 @@ export default function EntriesCalendar() {
         }
     };
 
-    const handleMonthPress = (month: string) => {
-        const monthIndex = months.indexOf(month);
-        // const newDate = `${selectedYear}-${monthIndex.toString().padStart(2, "0")}-01`;
-        const newDate = new Date(parseInt(selectedYear), monthIndex);
-        setSelectedDate(newDate);
-        setModalVisible(false);
-    };
+    // const handleMonthPress = (month: string) => {
+    //     const monthIndex = months.indexOf(month);
+    //     // const newDate = `${selectedYear}-${monthIndex.toString().padStart(2, "0")}-01`;
+    //     const newDate = new Date(parseInt(currentYear), monthIndex);
+    //     setSelectedMonth(newDate);
+    //     setModalVisible(false);
+    // };
 
-    const MonthButton = ({item}: {item: string}) => {
-        const monthIndex = months.indexOf(item);
+    // const MonthButton = ({item}: {item: string}) => {
+    //     const monthIndex = months.indexOf(item);
+    //     const currMonthIndex = currentDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'numeric' });
 
-        return (
-            <TouchableOpacity style={styles.monthButtons} onPress={() => handleMonthPress(item)}>
-                {monthIndex > parseInt(selectedMonth) ? (
-                    <Text style={styles.monthButtonsText}>{item}</Text>
-                ) : (
-                    <Text style={[styles.monthButtonsText, {'opacity': 0.8}]}>{item}</Text>
-                )}
-            </TouchableOpacity> 
-        );
-    };
+    //     return (     
+    //         <View>
+    //             {monthIndex+1 <= parseInt(currMonthIndex) ? (
+    //                 <TouchableOpacity style={styles.monthButtons} onPress={() => handleMonthPress(item)}>
+    //                     <Text style={styles.monthButtonsText}>{item}</Text>
+    //                 </TouchableOpacity> 
+    //             ) : (
+    //                 <TouchableOpacity style={styles.monthButtons}>
+    //                     <Text style={[styles.monthButtonsText, {'opacity': 0.1}]}>{item}</Text>
+    //                 </TouchableOpacity>
+    //             )}
+    //         </View>
+    //     );
+    // };
 
     const dayComponent = ({ date }: {date: any}) => {
         return (
@@ -85,6 +110,75 @@ export default function EntriesCalendar() {
                 </View>
             )}
           </View>
+        );
+    };
+
+    const HeaderComponent = ({ date }: {date: any}) => {
+        const monthName = (new Date(date)).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'long', year: 'numeric' })
+
+        return (
+            <View style={styles.dateContainer}>
+                <TouchableOpacity style={styles.dateChangeButton}onPress={() => {setModalVisible(true)}}>
+                    <Text style={styles.date}>
+                        { monthName }
+                    </Text>
+                
+                    <Image
+                        style={{ width: 20, height: 20 }} 
+                        source={require("../../../assets/images/caret-down-solid.png")}
+                    />
+                </TouchableOpacity>
+
+                <Modal
+                    visible={modalVisible}
+                    transparent={true}
+                >
+                    <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
+                        <TouchableWithoutFeedback>
+                            <View style={styles.modalContent}>
+                                <View style={styles.modalHeader}>
+                                    <Text style={styles.modalYear}>Choose a timeframe</Text>
+                                    {/* <View style={styles.modalButtons}>
+                                        <TouchableOpacity>
+                                            <Image source={require("../../../assets/images/angle-left-solid.png")} style={styles.modalArrows}/>
+                                        </TouchableOpacity>
+                                        <TouchableOpacity>
+                                            <Image source={require("../../../assets/images/angle-right-solid.png")} style={styles.modalArrows}/>
+                                        </TouchableOpacity>
+                                    </View> */}
+                                </View>
+
+                                {/* <FlatList
+                                    data={months}
+                                    renderItem={({item}) => <MonthButton item={item}/>}
+                                    numColumns={4}
+                                    contentContainerStyle={styles.monthGrid}
+                                /> */}
+                                <View>
+                                    {/* <Picker
+                                        selectedValue={selectedMonth}
+                                        //onValueChange={(itemValue) => setSelectedDate(itemValue)}
+                                    >
+                                        {months.map((month, index) => (
+                                            <Picker.Item key={index} label={month} value={index}/>
+                                        ))}
+                                    </Picker> */}
+                                </View>
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </TouchableOpacity>
+                </Modal>
+            </View>
+        );
+    }
+    
+    const Arrow = ({direction}:{direction: string}) => {
+        return (
+            direction == 'left' ? (
+                <Image source={require("../../../assets/images/angle-left-solid.png")} style={styles.modalArrows}/>
+            ) : (
+                <Image source={require("../../../assets/images/angle-right-solid.png")} style={styles.modalArrows}/>
+            )
         );
     };
 
@@ -111,51 +205,7 @@ export default function EntriesCalendar() {
                 </View>
             </View>
             
-            <View style={styles.body}>
-                <View style={styles.dateContainer}>
-                    <Text style={styles.date}>
-                        { selectedMonthYear }
-                    </Text>
-                    
-                    <TouchableOpacity onPress={() => {setModalVisible(true)}}>
-                        <Image
-                            style={{ width: 20, height: 20 }} 
-                            source={require("../../../assets/images/caret-down-solid.png")}
-                        />
-                    </TouchableOpacity>
-
-                    <Modal
-                        visible={modalVisible}
-                        transparent={true}
-                    >
-                        <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-                            <TouchableWithoutFeedback>
-                                <View style={styles.modalContent}>
-                                    <View style={styles.modalHeader}>
-                                        <Text style={styles.modalYear}>{selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric' })}</Text>
-                                        <View style={styles.modalButtons}>
-                                            <TouchableOpacity>
-                                                <Image source={require("../../../assets/images/angle-left-solid.png")} style={styles.modalArrows}/>
-                                            </TouchableOpacity>
-                                            <TouchableOpacity>
-                                                <Image source={require("../../../assets/images/angle-right-solid.png")} style={styles.modalArrows}/>
-                                            </TouchableOpacity>
-                                        </View>
-                                    </View>
-
-                                    <FlatList
-                                        data={months}
-                                        renderItem={({item}) => <MonthButton item={item}/>}
-                                        numColumns={4}
-                                        contentContainerStyle={styles.monthGrid}
-                                    />
-                                </View>
-                            </TouchableWithoutFeedback>
-                        </TouchableOpacity>
-                    </Modal>
-                </View>
-                
-
+            <View style={styles.body}>                
                 <Calendar
                     current={selectedDate.toISOString()}
                     key={selectedDate.toISOString()}
@@ -166,11 +216,11 @@ export default function EntriesCalendar() {
                         textSectionTitleColor: '#706645',
                         textDayHeaderFontFamily: 'Poppins',
                     }}
-                    disableMonthChange={true}
-                    enableSwipeMonths={false}
-                    hideArrows={true}
+                    enableSwipeMonths={true}
+                    // hideArrows={true}
                     hideExtraDays={true}
-                    renderHeader={()=>null}
+                    renderHeader={(date: any) => <HeaderComponent date={date}/>}
+                    renderArrow={(direction: string) => <Arrow direction={direction}/>}
                     dayComponent={dayComponent}
                 />
             </View>
@@ -258,7 +308,11 @@ const styles = StyleSheet.create({
         flexDirection: "row",
         alignItems: "center",
         justifyContent: "center",
-        marginBottom: 19,
+    },
+
+    dateChangeButton: {
+        flexDirection: "row",
+        alignItems: "center",
     },
 
     date: {
@@ -268,7 +322,7 @@ const styles = StyleSheet.create({
         fontSize: 24, 
         fontWeight: 600,
         lineHeight: 36,
-        marginRight: 20,
+        marginRight: 7,
     },
 
     modalOverlay: {
@@ -287,6 +341,7 @@ const styles = StyleSheet.create({
         paddingRight: 23,
         paddingTop: 18,
         paddingBottom: 18,
+        alignItems: "center",
     },
 
     modalHeader: {
@@ -298,7 +353,7 @@ const styles = StyleSheet.create({
 
     modalYear: {
         fontFamily: "Poppins",
-        fontSize: 32,
+        fontSize: 24,
         fontWeight: 700,
         lineHeight: 48,
         color: "#706645",
@@ -318,6 +373,7 @@ const styles = StyleSheet.create({
 
     monthGrid: {
         flexDirection: "column",
+        gap: 10,
         //flexWrap: "wrap",
         justifyContent: "space-evenly",
     },
