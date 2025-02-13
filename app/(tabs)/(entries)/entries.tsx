@@ -10,6 +10,7 @@ import { useLocalSearchParams } from 'expo-router';
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface JournalEntry {
+  id: string;
   response: string;
   timestamp: Date | null;
 }
@@ -33,6 +34,14 @@ export default function EntryPage() {
 
   const auth = getAuth();
   const currentUser = auth.currentUser;
+
+  const goToJournal = () => {
+    router.replace("/(add-journal)/");
+  }
+
+  const goHome = () => {
+    router.replace("/(tabs)/(home)/homepage");
+  }
 
   const toggleDropdown = () => {
     setShowDropdown((prev) => !prev);
@@ -99,6 +108,7 @@ export default function EntryPage() {
       }
 
       // Fetch Journal Entries
+      // Fetch Journal Entries
       const journalQuery = query(
         collection(FIRESTORE_DB, "journal-responses"),
         where("date", "==", firestoreDate),
@@ -110,11 +120,13 @@ export default function EntryPage() {
       journalSnapshot.forEach((doc) => {
         const docData = doc.data();
         journalEntriesData.push({
-          response: docData.response || "",
-          timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
+            id: doc.id, // Add this line to store the document ID
+            response: docData.response || "",
+            timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
         });
       });
       setJournalEntries(journalEntriesData);
+
 
     } catch (error) {
       console.error("Error fetching responses:", error);
@@ -216,9 +228,9 @@ export default function EntryPage() {
                 <TouchableOpacity
                   style={styles.entryContainer}
                   onPress={() => {
-                    // Handle press event
-                    console.log("Journal Entry Pressed!");
-                  }}
+                    router.push(`/(add-journal)/journal-entry/${entry.id}`); // Navigate to the new page
+                    console.log("pressed journal entry")
+                }}
                 >
                   <Image
                     source={require('../../../assets/images/journal.png')}
