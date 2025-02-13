@@ -5,6 +5,7 @@ import { signOut, getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { doc, getDoc, getDocs, collection, query, where } from 'firebase/firestore';
 import { format } from "date-fns";
+import { useLocalSearchParams } from 'expo-router';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
 
@@ -19,8 +20,11 @@ interface DailyResponse {
 }
 
 export default function EntryPage() {
+  const { date } = useLocalSearchParams();
+  const pstDateString = `${date}T00:00:00-08:00`; 
+
   const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(new Date(pstDateString));
   const [dailyResponse, setDailyResponse] = useState<DailyResponse | null>(null);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
@@ -52,10 +56,10 @@ export default function EntryPage() {
     setIsDatePickerVisible(false);
   };
 
-  const openDatePicker = (type: string) => {
-    setCurrentPickerType(type);
-    setIsDatePickerVisible(true);
-  };
+  // const openDatePicker = (type: string) => {
+  //   setCurrentPickerType(type);
+  //   setIsDatePickerVisible(true);
+  // };
 
   const formatDateForFirestore = (date: Date): string => {
     return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
@@ -123,21 +127,21 @@ export default function EntryPage() {
     fetchResponses();
   }, [selectedDate]);
 
-  const renderDateDropdowns = () => {
-    return (
-      <View style={styles.dateDropdownContainer}>
-        <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('month')}>
-          <Text style={styles.pickerText}>{selectedDate.toLocaleString('default', { month: 'long' })}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('day')}>
-          <Text style={styles.pickerText}>{selectedDate.getDate()}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('year')}>
-          <Text style={styles.pickerText}>{selectedDate.getFullYear()}</Text>
-        </TouchableOpacity>
-      </View>
-    );
-  };
+  // const renderDateDropdowns = () => {
+  //   return (
+  //     <View style={styles.dateDropdownContainer}>
+  //       <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('month')}>
+  //         <Text style={styles.pickerText}>{selectedDate.toLocaleString('default', { month: 'long' })}</Text>
+  //       </TouchableOpacity>
+  //       <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('day')}>
+  //         <Text style={styles.pickerText}>{selectedDate.getDate()}</Text>
+  //       </TouchableOpacity>
+  //       <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('year')}>
+  //         <Text style={styles.pickerText}>{selectedDate.getFullYear()}</Text>
+  //       </TouchableOpacity>
+  //     </View>
+  //   );
+  // };
 
   const formatTime = (timestamp: Date | null) => {
     if (!timestamp) return '';
@@ -275,7 +279,7 @@ export default function EntryPage() {
           </View>
 
           {/* Date Dropdowns */}
-          {renderDateDropdowns()}
+          {/* {renderDateDropdowns()} */}
 
           {/* Date Picker */}
           {isDatePickerVisible && (
@@ -298,22 +302,26 @@ export default function EntryPage() {
 
           {/* Footer */}
           <View style={styles.footer}>
-            <TouchableOpacity>
-              <Image source={require('../../../assets/images/today.png')} style={styles.footerImage} resizeMode="contain" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain" />
-              <Text style={styles.plusSign}>+</Text>
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
-            </TouchableOpacity>
+              <TouchableOpacity onPress={() => {router.replace('/(home)/homepage')}}>
+                <Image source={require('../../../assets/images/today.png')} style={styles.footerImage}resizeMode="contain" />
+              </TouchableOpacity>
+                  
+              <TouchableOpacity>
+                <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
+              </TouchableOpacity>
+
+              <TouchableOpacity onPress={() => {router.replace('/(add-journal)/')}}>
+                <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain"/>
+                <Text style = {styles.plusSign}>+</Text>
+              </TouchableOpacity>
+                  
+              <TouchableOpacity>
+                <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain"/>
+              </TouchableOpacity>
+              
+              <TouchableOpacity>
+                <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
+              </TouchableOpacity>
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -333,34 +341,34 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    marginBottom: 20,
+    //marginBottom: 20,
     justifyContent: 'flex-end',
     padding: 20,
   },
-  dateDropdownContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-around',
-    backgroundColor: '#F0ECE0',
-    borderRadius: 10,
-    marginHorizontal: 20,
-    marginBottom: 10,
+  // dateDropdownContainer: {
+  //   flexDirection: 'row',
+  //   justifyContent: 'space-around',
+  //   backgroundColor: '#F0ECE0',
+  //   borderRadius: 10,
+  //   marginHorizontal: 20,
+  //   marginBottom: 10,
 
 
-  },
-  dropdownButton: {
-    padding: 15,
-    backgroundColor: "#706645",
-    borderRadius: 5,
-  },
-  dateContainer: {
-    marginBottom: 20,
+  // },
+  // dropdownButton: {
+  //   padding: 15,
+  //   backgroundColor: "#706645",
+  //   borderRadius: 5,
+  // },
+  // dateContainer: {
+  //   marginBottom: 20,
 
-  },
+  // },
   dateEntryContainer: {
-    marginBottom: 20, // Add space between date entries
+    marginBottom: 10, // Add space between date entries
   },
   dateText: {
-    fontSize: 24,
+    fontSize: 20,
     fontWeight: '400',
     marginBottom: 10,
     color: "#706645",
@@ -436,12 +444,12 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
-  pickerText: {
-    color: '#FFF',
-    fontWeight: '600',
-    fontFamily: "Poppins",
-    fontSize: 16,
-  },
+  // pickerText: {
+  //   color: '#FFF',
+  //   fontWeight: '600',
+  //   fontFamily: "Poppins",
+  //   fontSize: 16,
+  // },
   scrollView: {
     flex: 1, // Ensure the ScrollView takes up available space
   },

@@ -1,5 +1,5 @@
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView, Alert, SafeAreaView, Modal, FlatList } from 'react-native'
-import React, { useEffect, useState } from 'react'
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView, Alert, SafeAreaView, Modal, FlatList } from 'react-native';
+import React, { useEffect, useState } from 'react';
 import { Calendar } from 'react-native-calendars';
 import { router } from 'expo-router'
 import { signOut } from 'firebase/auth';
@@ -7,37 +7,65 @@ import { TouchableWithoutFeedback } from 'react-native';
 import { FIREBASE_AUTH } from '../../../FirebaseConfig';
 import { FIRESTORE_DB } from '../../../FirebaseConfig';
 import { collection, getDocs, query, where } from 'firebase/firestore';
+import moment from 'moment';
 
 export default function EntriesCalendar() {
     const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
-
     const [currentDate, setCurrentDate] = useState(new Date());
-    const currentMonth: string = currentDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'long' });
-    const currentYear: string = currentDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric'});
-
-    const [selectedDate, setSelectedDate] = useState(new Date());
-    const selectedMonth: string = currentDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'long' });
-    const selectedMonthYear: string = selectedDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', year: 'numeric', month: 'long'})
-
+    const [markedDates, setMarkedDates] = useState<Record<string, any>>({}); // Keeps track of days with entries written by the user
     const [modalVisible, setModalVisible] = useState(false);
-    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+    // Current date string formatted in PST (local time)
     const options: Intl.DateTimeFormatOptions = {
         timeZone: "America/Los_Angeles",
         year: "numeric",
         month: "2-digit",
         day: "2-digit",
-    }
+    };
     const pstDateString = new Intl.DateTimeFormat("en-CA", options).format(currentDate);
 
+    // Converts date string formatted in MM/DD/YYYY to YYYY-MM-DD
+    const convertDate = (dateStr: string) => {
+        const [month, day, year] = dateStr.split('/'); 
+        return `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}`;
+    };
+
+    // On render, queries all the daily question responses and journal entries written by the user and marks the dates on the calendar
     useEffect(() => {
         const updateCalendar = async () => {
             try {
                 const currUser = FIREBASE_AUTH.currentUser;
-                const snapshot = await getDocs(query(collection(FIRESTORE_DB, 'daily-question-responses'), where('userId', '==', currUser?.uid)));
+                const questionSnapshot = await getDocs(query(collection(FIRESTORE_DB, 'daily-question-responses'), where('userId', '==', currUser?.uid)));
+                const entrySnapshot = await getDocs(query(collection(FIRESTORE_DB, 'journal-responses'), where('userId', '==', currUser?.uid)))
 
-                snapshot.docs.forEach(doc => {
-                    console.log(doc.id, doc.data());
-                });
+                if (!questionSnapshot.empty || !entrySnapshot.empty) {
+                    const dates: Record<string, { marked: boolean }> = {};
+                    questionSnapshot.docs.forEach(doc => {
+                        //console.log(doc.id, doc.data());
+                        const date: string = doc.data().date;
+                        const formattedDate: string = convertDate(date);
+
+                        if (date) {
+                            dates[formattedDate] = {
+                                marked: true,
+                            };
+                        }
+                    });
+
+                    entrySnapshot.docs.forEach(doc => {
+                        //console.log(doc.id, doc.data());
+                        const date: string = doc.data().date;
+                        const formattedDate: string = convertDate(date);
+
+                        if (date) {
+                            dates[formattedDate] = {
+                                marked: true,
+                            };
+                        }
+                    });
+
+                    setMarkedDates(dates);
+                }
             } catch (error) {
                 console.log("Error fetching entries: ", error);
             }
@@ -45,7 +73,6 @@ export default function EntriesCalendar() {
 
         updateCalendar();
     }, []);
-    
 
     const toggleDropdown = () => {
         setShowDropdown((prev) => !prev);
@@ -63,115 +90,87 @@ export default function EntriesCalendar() {
         }
     };
 
-    // const handleMonthPress = (month: string) => {
-    //     const monthIndex = months.indexOf(month);
-    //     // const newDate = `${selectedYear}-${monthIndex.toString().padStart(2, "0")}-01`;
-    //     const newDate = new Date(parseInt(currentYear), monthIndex);
-    //     setSelectedMonth(newDate);
-    //     setModalVisible(false);
-    // };
+    // Routes to the page containing the entries for the given day
+    const goToEntries = (dateString: string) => {
+        const hasEntry: boolean = markedDates[dateString];
 
-    // const MonthButton = ({item}: {item: string}) => {
-    //     const monthIndex = months.indexOf(item);
-    //     const currMonthIndex = currentDate.toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'numeric' });
+        if (hasEntry) {
+            router.replace(`/(entries)/entries?date=${dateString}`);
+        }
+    };
 
-    //     return (     
-    //         <View>
-    //             {monthIndex+1 <= parseInt(currMonthIndex) ? (
-    //                 <TouchableOpacity style={styles.monthButtons} onPress={() => handleMonthPress(item)}>
-    //                     <Text style={styles.monthButtonsText}>{item}</Text>
-    //                 </TouchableOpacity> 
-    //             ) : (
-    //                 <TouchableOpacity style={styles.monthButtons}>
-    //                     <Text style={[styles.monthButtonsText, {'opacity': 0.1}]}>{item}</Text>
-    //                 </TouchableOpacity>
-    //             )}
-    //         </View>
-    //     );
-    // };
-
+    // Custom day component for each day in the calendar (shows whether the user completed some entry on that specific day)
     const dayComponent = ({ date }: {date: any}) => {
+        const isSelected: boolean = pstDateString == date.dateString;
+        const hasEntry: boolean = markedDates[date.dateString];
+
         return (
-          <View style={styles.dayContainer}>
-            {(pstDateString == date.dateString) ? (
-                <View>
-                    <Image
-                        style={{ borderWidth: 2, borderColor: '#706645', borderRadius: 25}}
-                        source={require('../../../assets/images/blank-circle-icon.png')} // Replace with your icon path 
-                    />
-                    <Text style={styles.selectedDayText}>{parseInt(date.dateString.split('-')[2],10)}</Text>
-                </View>
-            ) : (
-                <View>
-                    <Image
-                        source={require('../../../assets/images/blank-circle-icon.png')} // Replace with your icon path
-                    />
-                    <Text style={styles.dayText}>{parseInt(date.dateString.split('-')[2],10)}</Text>
-                </View>
-            )}
+          <View>
+            <TouchableOpacity onPress={() => goToEntries(date.dateString)} style={[styles.dayIconContainer, {
+                borderWidth: isSelected || hasEntry ? 2 : 0,
+                borderColor: isSelected || hasEntry ? "#706645" : "transparent",
+                borderStyle: isSelected ? "solid" : "dashed",
+            }]}>
+                {hasEntry && (
+                    <Image style={{width: 23, height: 23}} source={require("../../../assets/images/journal-check.png")}></Image>
+                )}
+            </TouchableOpacity>
+
+            <Text style={isSelected ? styles.selectedDayText : styles.dayText}>{parseInt(date.dateString.split('-')[2],10)}</Text>
           </View>
         );
     };
 
+    // Custom header component with a modal to select a certain year
     const HeaderComponent = ({ date }: {date: any}) => {
         const monthName = (new Date(date)).toLocaleDateString('en-US', { timeZone: 'America/Los_Angeles', month: 'long', year: 'numeric' })
 
         return (
             <View style={styles.dateContainer}>
-                <TouchableOpacity style={styles.dateChangeButton}onPress={() => {setModalVisible(true)}}>
+                <TouchableOpacity style={styles.dateChangeButton} onPress={() => {setModalVisible(true)}}>
                     <Text style={styles.date}>
                         { monthName }
                     </Text>
                 
-                    <Image
+                    {/* <Image
                         style={{ width: 20, height: 20 }} 
                         source={require("../../../assets/images/caret-down-solid.png")}
-                    />
+                    /> */}
                 </TouchableOpacity>
 
-                <Modal
+                {/* <Modal
                     visible={modalVisible}
                     transparent={true}
                 >
-                    <TouchableOpacity style={styles.modalOverlay} onPress={() => setModalVisible(false)}>
-                        <TouchableWithoutFeedback>
-                            <View style={styles.modalContent}>
-                                <View style={styles.modalHeader}>
-                                    <Text style={styles.modalYear}>Choose a timeframe</Text>
-                                    {/* <View style={styles.modalButtons}>
-                                        <TouchableOpacity>
-                                            <Image source={require("../../../assets/images/angle-left-solid.png")} style={styles.modalArrows}/>
-                                        </TouchableOpacity>
-                                        <TouchableOpacity>
-                                            <Image source={require("../../../assets/images/angle-right-solid.png")} style={styles.modalArrows}/>
-                                        </TouchableOpacity>
-                                    </View> */}
-                                </View>
+                    <View style={styles.modalOverlay}>
+                        <View style={styles.modalContent}>
+                            <Text style={styles.modalTitle}>Choose a year:</Text>
+                            <View style={styles.modalBody}>
+                                <TouchableOpacity onPress={() => {setYear(year - 1)}}>
+                                    <Image source={require("../../../assets/images/angle-left-solid.png")} style={styles.modalArrows}/>
+                                </TouchableOpacity>
 
-                                {/* <FlatList
-                                    data={months}
-                                    renderItem={({item}) => <MonthButton item={item}/>}
-                                    numColumns={4}
-                                    contentContainerStyle={styles.monthGrid}
-                                /> */}
-                                <View>
-                                    {/* <Picker
-                                        selectedValue={selectedMonth}
-                                        //onValueChange={(itemValue) => setSelectedDate(itemValue)}
-                                    >
-                                        {months.map((month, index) => (
-                                            <Picker.Item key={index} label={month} value={index}/>
-                                        ))}
-                                    </Picker> */}
-                                </View>
+                                <Text style={styles.modalYearText}>{year}</Text>
+
+                                <TouchableOpacity onPress={() => {setYear(year + 1)}}>
+                                    <Image source={require("../../../assets/images/angle-right-solid.png")} style={styles.modalArrows}/>
+                                </TouchableOpacity>
                             </View>
-                        </TouchableWithoutFeedback>
-                    </TouchableOpacity>
-                </Modal>
+                            <TouchableOpacity 
+                                onPress={() => {
+                                setSelectedYear(year)
+                                setModalVisible(false)}} 
+                                style={styles.modalDone}>
+                                <Text style={styles.modalDoneText}>Done</Text>
+                            </TouchableOpacity>
+                        </View>
+                    </View>
+                </Modal> */}
             </View>
         );
     }
     
+    // Custom arrow component to navigate between months on calendar
     const Arrow = ({direction}:{direction: string}) => {
         return (
             direction == 'left' ? (
@@ -190,7 +189,7 @@ export default function EntriesCalendar() {
                 <TouchableOpacity onPress={toggleDropdown}>
                     <Image
                     source={require('../../../assets/images/profile.png')}
-                    style={styles.image}
+                    style={styles.headerImage}
                     resizeMode="contain"
                     />
                 </TouchableOpacity>
@@ -207,9 +206,6 @@ export default function EntriesCalendar() {
             
             <View style={styles.body}>                
                 <Calendar
-                    current={selectedDate.toISOString()}
-                    key={selectedDate.toISOString()}
-                    style={styles.calendar}
                     theme={{
                         calendarBackground: '#F0ECE0',
                         dayTextColor: '#706645',
@@ -227,7 +223,7 @@ export default function EntriesCalendar() {
 
             <View style={styles.footer}>
                 <TouchableOpacity onPress={() => {router.replace('/(home)/homepage')}}>
-                    <Image source={require('../../../assets/images/today.png')} style={styles.footerImage}resizeMode="contain" />
+                    <Image source={require('../../../assets/images/today.png')} style={styles.footerImage} resizeMode="contain" />
                 </TouchableOpacity>
                     
                 <TouchableOpacity>
@@ -257,8 +253,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#F0ECE0',
         padding: 20,
     },
-    
-    // header styling
+
     header: {
         flexDirection: 'row',
         justifyContent: 'flex-end',
@@ -267,7 +262,7 @@ const styles = StyleSheet.create({
         marginBottom: 20,
     },
     
-    image: {
+    headerImage: {
         width: 40,
         height: 40,
     },
@@ -299,7 +294,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Poppins',
     },
 
-    // body styling
     body: {
         paddingHorizontal: 10,
     },
@@ -333,6 +327,7 @@ const styles = StyleSheet.create({
     },
 
     modalContent: {
+        flexDirection: "column",
         width: 352,
         height: 242,
         borderRadius: 20,
@@ -344,14 +339,7 @@ const styles = StyleSheet.create({
         alignItems: "center",
     },
 
-    modalHeader: {
-        flex: 1,
-        flexDirection: "row",
-        alignItems: "flex-start",
-        justifyContent: "space-between"
-    },
-
-    modalYear: {
+    modalTitle: {
         fontFamily: "Poppins",
         fontSize: 24,
         fontWeight: 700,
@@ -359,46 +347,47 @@ const styles = StyleSheet.create({
         color: "#706645",
     },
 
-    modalButtons: {
+    modalBody: {
         flex: 1,
+        width: "100%",
         flexDirection: "row",
-        gap: 8,
-        justifyContent: "center",
+        alignItems: "center",
+        justifyContent: "space-between",
+    },
+
+    modalYearText: {
+        fontFamily: "Poppins",
+        fontSize: 48,
+        fontWeight: 600,
+        color: "#706645",
+        textAlign: "center",
     },
 
     modalArrows: {
         width: 20,
-        height: 40
+        height: 40,
     },
 
-    monthGrid: {
-        flexDirection: "column",
-        gap: 10,
-        //flexWrap: "wrap",
-        justifyContent: "space-evenly",
-    },
-
-    monthButtons: {
+    modalDone: {
         backgroundColor: "#F0ECE0",
-        width: 69,
-        height: 38,
+        borderRadius: 10,
+    },
+
+    modalDoneText: {
+        fontFamily: "Poppins",
+        color: "#706645",
+        fontSize: 20,
+        fontWeight: 600,
+        padding: 10,
+    },
+
+    dayIconContainer: {
+        width: 45,
+        height: 45,
+        borderRadius: 22,
+        backgroundColor: "#FDFCF3",
         alignItems: "center",
         justifyContent: "center",
-        borderRadius: 15,
-    },
-
-    monthButtonsText: {
-        color: "#706645",
-        fontSize: 16, 
-        fontWeight: 600,
-    },
-
-    calendar: {
-
-    },
-
-    dayContainer: {
-        
     },
 
     selectedDayText: {
@@ -417,10 +406,6 @@ const styles = StyleSheet.create({
         color: "#706645",
         textAlign: "center",
         marginTop: 8,
-    },
-
-    dayIcon: {
-        
     },
 
     // footer styling

@@ -23,7 +23,7 @@ import { Link, router } from 'expo-router';
 import { ReactNativeAsyncStorage } from 'firebase/auth';
 
 const navEntries = async () => {
-  router.replace("/(entries)/entries");
+  router.replace("/(entries)/");
 }
 
 export default function HomePage() {
@@ -308,7 +308,7 @@ export default function HomePage() {
             <TouchableOpacity onPress = {(navEntries)}>
                 <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
               </TouchableOpacity>
-            <TouchableOpacity onPress={goToJournal}>
+            <TouchableOpacity onPress={() => { router.replace("/(add-journal)/") }}>
               <Image
                 source={require('../../../assets/images/circle.png')}
                 style={styles.footerImage}
