@@ -5,11 +5,12 @@ import { signOut, getAuth } from 'firebase/auth';
 import { router } from 'expo-router';
 import { doc, getDoc, getDocs, collection, query, where } from 'firebase/firestore';
 import { format } from "date-fns";
-import { useLocalSearchParams } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 
 import DateTimePicker from '@react-native-community/datetimepicker';
 
 interface JournalEntry {
+  id: string;
   response: string;
   timestamp: Date | null;
 }
@@ -30,6 +31,7 @@ export default function EntryPage() {
   const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
   const [currentPickerType, setCurrentPickerType] = useState('');
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const auth = getAuth();
   const currentUser = auth.currentUser;
@@ -55,11 +57,6 @@ export default function EntryPage() {
     }
     setIsDatePickerVisible(false);
   };
-
-  // const openDatePicker = (type: string) => {
-  //   setCurrentPickerType(type);
-  //   setIsDatePickerVisible(true);
-  // };
 
   const formatDateForFirestore = (date: Date): string => {
     return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
@@ -99,6 +96,7 @@ export default function EntryPage() {
       }
 
       // Fetch Journal Entries
+      // Fetch Journal Entries
       const journalQuery = query(
         collection(FIRESTORE_DB, "journal-responses"),
         where("date", "==", firestoreDate),
@@ -110,11 +108,13 @@ export default function EntryPage() {
       journalSnapshot.forEach((doc) => {
         const docData = doc.data();
         journalEntriesData.push({
-          response: docData.response || "",
-          timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
+            id: doc.id, // Add this line to store the document ID
+            response: docData.response || "",
+            timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
         });
       });
       setJournalEntries(journalEntriesData);
+
 
     } catch (error) {
       console.error("Error fetching responses:", error);
@@ -126,22 +126,6 @@ export default function EntryPage() {
   useEffect(() => {
     fetchResponses();
   }, [selectedDate]);
-
-  // const renderDateDropdowns = () => {
-  //   return (
-  //     <View style={styles.dateDropdownContainer}>
-  //       <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('month')}>
-  //         <Text style={styles.pickerText}>{selectedDate.toLocaleString('default', { month: 'long' })}</Text>
-  //       </TouchableOpacity>
-  //       <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('day')}>
-  //         <Text style={styles.pickerText}>{selectedDate.getDate()}</Text>
-  //       </TouchableOpacity>
-  //       <TouchableOpacity style={styles.dropdownButton} onPress={() => openDatePicker('year')}>
-  //         <Text style={styles.pickerText}>{selectedDate.getFullYear()}</Text>
-  //       </TouchableOpacity>
-  //     </View>
-  //   );
-  // };
 
   const formatTime = (timestamp: Date | null) => {
     if (!timestamp) return '';
@@ -216,9 +200,9 @@ export default function EntryPage() {
                 <TouchableOpacity
                   style={styles.entryContainer}
                   onPress={() => {
-                    // Handle press event
-                    console.log("Journal Entry Pressed!");
-                  }}
+                    router.push(`../(add-journal)/journal-entry/${entry.id}`); // Navigate to the new page
+                    console.log("pressed journal entry")
+                }}
                 >
                   <Image
                     source={require('../../../assets/images/journal.png')}
@@ -260,6 +244,19 @@ export default function EntryPage() {
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
+            {/* Back Arrow */}
+            <TouchableOpacity onPress={() => {
+        router.push({
+          pathname: "/(entries)",
+          params: {},
+        });
+      }}  style={styles.backButton}>
+              <Image
+                source={require('../../../assets/images/back_arrow.png')} // Replace with your back arrow icon
+                style={styles.backButtonImage}
+                resizeMode="contain"
+              />
+            </TouchableOpacity>
             <View>
               <TouchableOpacity onPress={toggleDropdown}>
                 <Image
@@ -277,7 +274,6 @@ export default function EntryPage() {
               )}
             </View>
           </View>
-
           {/* Date Dropdowns */}
           {/* {renderDateDropdowns()} */}
 
@@ -341,31 +337,12 @@ const styles = StyleSheet.create({
   },
   header: {
     flexDirection: 'row',
-    //marginBottom: 20,
-    justifyContent: 'flex-end',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     padding: 20,
   },
-  // dateDropdownContainer: {
-  //   flexDirection: 'row',
-  //   justifyContent: 'space-around',
-  //   backgroundColor: '#F0ECE0',
-  //   borderRadius: 10,
-  //   marginHorizontal: 20,
-  //   marginBottom: 10,
-
-
-  // },
-  // dropdownButton: {
-  //   padding: 15,
-  //   backgroundColor: "#706645",
-  //   borderRadius: 5,
-  // },
-  // dateContainer: {
-  //   marginBottom: 20,
-
-  // },
   dateEntryContainer: {
-    marginBottom: 10, // Add space between date entries
+    marginBottom: 10, 
   },
   dateText: {
     fontSize: 20,
@@ -502,5 +479,13 @@ const styles = StyleSheet.create({
   },
   boldDay: {
     fontWeight: 'bold',
-  }
+  },
+  backButton: {
+    padding: 10,
+    borderRadius: 20,
+  },
+  backButtonImage: {
+    width: 30,
+    height: 30,
+  },
 });
