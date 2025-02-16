@@ -15,7 +15,9 @@ interface JournalEntry {
   timestamp: Date | null;
 }
 
+// Updated DailyResponse to include an "id" for navigation
 interface DailyResponse {
+  id: string;
   response: string;
   timestamp: Date | null;
 }
@@ -85,9 +87,10 @@ export default function EntryPage() {
 
       const dailyQuestionSnapshot = await getDocs(dailyQuestionQuery);
       if (dailyQuestionSnapshot.docs.length > 0) {
-        const doc = dailyQuestionSnapshot.docs[0]; // Assuming only one response per day
-        const docData = doc.data();
+        const docSnap = dailyQuestionSnapshot.docs[0]; // Assuming only one response per day
+        const docData = docSnap.data();
         setDailyResponse({
+          id: docSnap.id,
           response: docData.response || "",
           timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
         });
@@ -95,7 +98,6 @@ export default function EntryPage() {
         setDailyResponse(null);
       }
 
-      // Fetch Journal Entries
       // Fetch Journal Entries
       const journalQuery = query(
         collection(FIRESTORE_DB, "journal-responses"),
@@ -108,13 +110,12 @@ export default function EntryPage() {
       journalSnapshot.forEach((doc) => {
         const docData = doc.data();
         journalEntriesData.push({
-            id: doc.id, // Add this line to store the document ID
-            response: docData.response || "",
-            timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
+          id: doc.id, // Store the document ID
+          response: docData.response || "",
+          timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
         });
       });
       setJournalEntries(journalEntriesData);
-
 
     } catch (error) {
       console.error("Error fetching responses:", error);
@@ -161,76 +162,76 @@ export default function EntryPage() {
         </Text>
 
         {hasContent ? (
-          <>
-            {/* Daily Question Response */}
-            {dailyResponse && (
-              <View style={styles.dateEntryContainer}>
-                <TouchableOpacity 
-                  style={styles.entryContainer}
-                  onPress={() => {
-                    // Handle press event
-                    console.log("Daily Question Pressed!");
-                  }}
-                >
-                  <Image
-                    source={require('../../../assets/images/question_mark.png')}
-                    style={styles.entryImage}
-                    resizeMode='contain'
-                  />
-                  <View style={styles.textContainer}>
-                    <View style={styles.titleRow}>
-                      <Text style={styles.entryLabel}>DAILY QUESTION</Text>
-                      {dailyResponse.timestamp && (
-                        <Text style={styles.timestampText}>
-                          {formatTime(dailyResponse.timestamp)}
-                        </Text>
-                      )}
-                    </View>
-                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
-                      {dailyResponse.response}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            )}
-
-            {/* Journal Entries */}
-            {journalEntries.map((entry, index) => (
-              <View style={styles.dateEntryContainer} key={index}>
-                <TouchableOpacity
-                  style={styles.entryContainer}
-                  onPress={() => {
-                    router.push(`../(add-journal)/journal-entry/${entry.id}`); // Navigate to the new page
-                    console.log("pressed journal entry")
-                }}
-                >
-                  <Image
-                    source={require('../../../assets/images/journal.png')}
-                    style={styles.entryImage}
-                    resizeMode='contain'
-                  />
-                  <View style={styles.textContainer}>
-                    <View style={styles.titleRow}>
-                      <Text style={styles.entryLabel}>JOURNAL</Text>
-                      {entry.timestamp && (
-                        <Text style={styles.timestampText}>
-                          {formatTime(entry.timestamp)}
-                        </Text>
-                      )}
-                    </View>
-                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
-                      {entry.response}
-                    </Text>
-                  </View>
-                </TouchableOpacity>
-              </View>
-            ))}
-          </>
-        ) : (
-          <View style={styles.noContentContainer}>
-            <Text style={styles.noContentText}>No responses or journal entries for this day.</Text>
+  <>
+    {/* Daily Question Response */}
+    {dailyResponse && (
+      <View style={styles.dateEntryContainer}>
+        <TouchableOpacity 
+          style={styles.entryContainer}
+          onPress={() => {
+            router.push(`../(add-journal)/daily-response/${dailyResponse.id}`);
+          }}
+        >
+          <Image
+            source={require('../../../assets/images/question_mark.png')}
+            style={styles.entryImage}
+            resizeMode="contain"
+          />
+          <View style={styles.textContainer}>
+            <View style={styles.titleRow}>
+              <Text style={styles.entryLabel}>DAILY QUESTION</Text>
+              {dailyResponse.timestamp && (
+                <Text style={styles.timestampText}>
+                  {formatTime(dailyResponse.timestamp)}
+                </Text>
+              )}
+            </View>
+            <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
+              {dailyResponse.response}
+            </Text>
           </View>
-        )}
+        </TouchableOpacity>
+      </View>
+    )}
+
+    {/* Journal Entries */}
+    {journalEntries.map((entry, index) => (
+      <View style={styles.dateEntryContainer} key={index}>
+        <TouchableOpacity
+          style={styles.entryContainer}
+          onPress={() => {
+            router.push(`../(add-journal)/journal-entry/${entry.id}`);
+            console.log("pressed journal entry");
+          }}
+        >
+          <Image
+            source={require('../../../assets/images/journal.png')}
+            style={styles.entryImage}
+            resizeMode="contain"
+          />
+          <View style={styles.textContainer}>
+            <View style={styles.titleRow}>
+              <Text style={styles.entryLabel}>JOURNAL</Text>
+              {entry.timestamp && (
+                <Text style={styles.timestampText}>
+                  {formatTime(entry.timestamp)}
+                </Text>
+              )}
+            </View>
+            <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
+              {entry.response}
+            </Text>
+          </View>
+        </TouchableOpacity>
+      </View>
+    ))}
+  </>
+) : (
+  <View style={styles.noContentContainer}>
+    <Text style={styles.noContentText}>No responses or journal entries for this day.</Text>
+  </View>
+)}
+
       </ScrollView>
     );
   };
@@ -246,13 +247,13 @@ export default function EntryPage() {
           <View style={styles.header}>
             {/* Back Arrow */}
             <TouchableOpacity onPress={() => {
-        router.push({
-          pathname: "/(entries)",
-          params: {},
-        });
-      }}  style={styles.backButton}>
+              router.push({
+                pathname: "/(entries)",
+                params: {},
+              });
+            }}  style={styles.backButton}>
               <Image
-                source={require('../../../assets/images/back_arrow.png')} // Replace with your back arrow icon
+                source={require('../../../assets/images/back_arrow.png')}
                 style={styles.backButtonImage}
                 resizeMode="contain"
               />
@@ -274,9 +275,6 @@ export default function EntryPage() {
               )}
             </View>
           </View>
-          {/* Date Dropdowns */}
-          {/* {renderDateDropdowns()} */}
-
           {/* Date Picker */}
           {isDatePickerVisible && (
             <DateTimePicker
@@ -289,7 +287,6 @@ export default function EntryPage() {
           )}
 
           {/* Scrollable Content */}
-
           <View style={{ flex: 1 }}>
             <ScrollView>
               {renderDateContent()}
@@ -298,26 +295,22 @@ export default function EntryPage() {
 
           {/* Footer */}
           <View style={styles.footer}>
-              <TouchableOpacity onPress={() => {router.replace('/(home)/homepage')}}>
-                <Image source={require('../../../assets/images/today.png')} style={styles.footerImage}resizeMode="contain" />
-              </TouchableOpacity>
-                  
-              <TouchableOpacity>
-                <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
-              </TouchableOpacity>
-
-              <TouchableOpacity onPress={() => {router.replace('/(add-journal)/')}}>
-                <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain"/>
-                <Text style = {styles.plusSign}>+</Text>
-              </TouchableOpacity>
-                  
-              <TouchableOpacity>
-                <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain"/>
-              </TouchableOpacity>
-              
-              <TouchableOpacity>
-                <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
-              </TouchableOpacity>
+            <TouchableOpacity onPress={() => {router.replace('/(home)/homepage')}}>
+              <Image source={require('../../../assets/images/today.png')} style={styles.footerImage} resizeMode="contain" />
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain"/>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => {router.replace('/(add-journal)/')}}>
+              <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain"/>
+              <Text style={styles.plusSign}>+</Text>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain"/>
+            </TouchableOpacity>
+            <TouchableOpacity>
+              <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
+            </TouchableOpacity>
           </View>
         </View>
       </TouchableWithoutFeedback>
@@ -342,7 +335,7 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   dateEntryContainer: {
-    marginBottom: 10, 
+    marginBottom: 10,
   },
   dateText: {
     fontSize: 20,
@@ -402,7 +395,7 @@ const styles = StyleSheet.create({
     width: 30,
     height: 30,
     marginRight: 20,
-    marginTop: 40, // Added to align with the text
+    marginTop: 40,
     marginLeft: 10,
   },
   footer: {
@@ -421,14 +414,8 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
   },
-  // pickerText: {
-  //   color: '#FFF',
-  //   fontWeight: '600',
-  //   fontFamily: "Poppins",
-  //   fontSize: 16,
-  // },
   scrollView: {
-    flex: 1, // Ensure the ScrollView takes up available space
+    flex: 1,
   },
   loadingContainer: {
     flex: 1,
@@ -442,7 +429,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 5, // Added space between title and content
+    marginBottom: 5,
   },
   timestampText: {
     position: 'absolute',
@@ -458,7 +445,7 @@ const styles = StyleSheet.create({
     color: "#888",
     marginTop: 10,
   },
-    noContentContainer: {
+  noContentContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
