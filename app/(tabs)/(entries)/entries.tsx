@@ -336,6 +336,7 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   header: {
+    marginTop: 20,
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -410,8 +411,6 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingVertical: 20,
     backgroundColor: '#F0ECE0',
-    borderTopWidth: 1,
-    borderTopColor: '#70664533',
   },
   footerImage: {
     width: 50,

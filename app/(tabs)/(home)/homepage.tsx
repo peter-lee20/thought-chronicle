@@ -148,7 +148,6 @@ export default function HomePage() {
     try {
       // Get the current user.
       const user = FIREBASE_AUTH.currentUser;
-
       if (user) {
         const todayStr = currentDate.toLocaleDateString();
         const yesterday = new Date(currentDate);
@@ -226,7 +225,11 @@ export default function HomePage() {
       contentContainerStyle={{ flexGrow: 1 }}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-        <ScrollView style={styles.container}>
+        <View style = {{flex: 1}}>
+        <ScrollView
+          style={styles.container}
+          contentContainerStyle={styles.scrollContentContainer}
+        >
           {/* Header */}
           <View style={styles.header}>
             <View style={styles.streakContainer}>
@@ -295,9 +298,9 @@ export default function HomePage() {
               </TouchableOpacity>
             </View>
           </View>
-
+          </ScrollView>
           {/* Footer */}
-          <View style={styles.footer}>
+          <View style={[styles.footer, {position: 'absolute', bottom: 0, left: 0, right: 0}]}>
             <TouchableOpacity>
               <Image
                 source={require('../../../assets/images/today.png')}
@@ -331,7 +334,7 @@ export default function HomePage() {
               />
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </View>
       </TouchableWithoutFeedback>
     </KeyboardAvoidingView>
   );
@@ -343,11 +346,16 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0ECE0',
     padding: 20,
   },
+  scrollContentContainer: {
+    flexGrow: 1,
+    justifyContent: 'space-between',
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: 20,
+    marginTop: 20,
   },
   streakCounter: {
     flexDirection: 'row', // Align image and number
@@ -442,7 +450,6 @@ const styles = StyleSheet.create({
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-around',
-    marginTop: 'auto', // Push footer to the bottom
     paddingVertical: 20,
     backgroundColor: '#F0ECE0',
   },
