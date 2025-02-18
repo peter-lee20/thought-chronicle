@@ -21,6 +21,7 @@ import { addDoc, collection, doc, getDoc, setDoc, updateDoc, getDocs } from 'fir
 import { signOut } from 'firebase/auth';
 import { Link, router } from 'expo-router';
 import { ReactNativeAsyncStorage } from 'firebase/auth';
+import ShareModal from './shareModal';
 
 const navEntries = async () => {
   router.replace("/(entries)/");
@@ -32,6 +33,7 @@ export default function HomePage() {
   const [streak, setStreak] = useState(0);
   const [question, setQuestion] = useState('');
   const [responded, setResponded] = useState<boolean>(false);
+  const [modalVisible, setModalVisible] = useState(false);
   const currentDate = new Date();
   const maxCharacters = 1500;
 
@@ -132,6 +134,20 @@ export default function HomePage() {
 
   const toggleDropdown = () => {
     setShowDropdown((prev) => !prev);
+  }
+
+  const openVisiblityModal = () => {
+    if (response.trim() === '') {
+      Alert.alert("Please enter a response.");
+      return;
+    }
+
+    if (response.length > maxCharacters) {
+      Alert.alert(`Response exceeds the maximum limit of ${maxCharacters} characters.`);
+      return;
+    } 
+
+    setModalVisible(true);
   }
 
   const handleSubmitResponse = async () => {
@@ -290,9 +306,14 @@ export default function HomePage() {
               <Text style={styles.characterCounter}>
                 {response.length}/{maxCharacters} characters
               </Text>
-              <TouchableOpacity style={responded === true ? styles.grayButton : styles.respondButton} onPress={handleSubmitResponse} disabled={responded}>
+              {/* <TouchableOpacity style={responded === true ? styles.grayButton : styles.respondButton} onPress={handleSubmitResponse} disabled={responded}>
+                <Text style={styles.buttonText}>Submit Response</Text>
+              </TouchableOpacity> */}
+              <TouchableOpacity style={responded === true ? styles.grayButton : styles.respondButton} onPress={openVisiblityModal} disabled={responded}>
                 <Text style={styles.buttonText}>Submit Response</Text>
               </TouchableOpacity>
+
+              <ShareModal isVisible={modalVisible} onClose={() => setModalVisible(false)}/>
             </View>
           </View>
 
