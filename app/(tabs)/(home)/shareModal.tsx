@@ -1,33 +1,34 @@
-import { Image, Modal, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { Image, ImageSourcePropType, Modal, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { useState } from "react";
 
 interface OptionProps {
-    image?: string | null;
+    disabled: boolean,
+    image: ImageSourcePropType | null;
     optionTitle: string;
     optionText: string;
     currVal: boolean;
-    toggleSwitch: () => void;
+    onPress: () => void;
 }
 
-const Option: React.FC<OptionProps> = ({ image, optionTitle, optionText, currVal, toggleSwitch}) => {
+const Option: React.FC<OptionProps> = ({ disabled, image, optionTitle, optionText, currVal, onPress}) => {
     return (
         <View style={styles.optionContainer}>
-
-            {image != null && 
-            <Image 
-                style={styles.optionImage}
-                source={require("../../../assets/images/global-icon.png")}
-            />}
+            {image && <Image style={styles.optionImage} source={image} />}
 
             <View>
-                <Text style={styles.optionTitle}>{ optionTitle }</Text>
-                <Text style={styles.optionText}>{ optionText }</Text>
+                <Text style={[styles.optionTitle, disabled && {opacity: 0.5}]}>
+                    { optionTitle }
+                </Text>
+
+                <Text style={[styles.optionText, disabled && {opacity: 0.5}]}>
+                    { optionText }
+                </Text>
             </View>
 
             <Switch
                 value={currVal}
-                onValueChange={toggleSwitch}
+                onValueChange={disabled ? undefined : onPress}
+                disabled={disabled}
             />
         </View>
     );
@@ -65,62 +66,61 @@ const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose, onSubmit }) => {
     }
 
     return (
-        <SafeAreaProvider>
-            <SafeAreaView>
-                <Modal
-                    animationType="slide"
-                    transparent={true}
-                    visible={isVisible}
-                    onDismiss={() => setModalOverlayColor("rgba(0, 0, 0, 0.2)")}
-                >
-                    <TouchableWithoutFeedback onPress={handleModalClose}>
-                        <View style={[styles.modalOverlay, {backgroundColor: modalOverlayColor}]}>
-                            <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
-                                <View style={styles.modalContainer}>
-                                    {/* <View style={styles.modalSliderIndicator} /> */}
+        <SafeAreaView>
+            <Modal
+                animationType="slide"
+                transparent={true}
+                visible={isVisible}
+                onDismiss={() => setModalOverlayColor("rgba(0, 0, 0, 0.2)")}
+            >
+                <TouchableWithoutFeedback onPress={handleModalClose}>
+                    <View style={[styles.modalOverlay, {backgroundColor: modalOverlayColor}]}>
+                        <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
+                            <View style={styles.modalContainer}>
+                                <Text style={styles.modalTitle}>Share</Text>
+                                
+                                <View style={styles.modalBody}>
+                                    <Option 
+                                        disabled={false}
+                                        image={require("../../../assets/images/global-icon.png")}
+                                        optionTitle="Global Feed"
+                                        optionText="Share your entry with the world"
+                                        currVal={options.globalFeed}
+                                        onPress={() => toggleOption("globalFeed")}
+                                    />
 
-                                    <Text style={styles.modalTitle}>Share</Text>
-                                    
-                                    <View style={styles.modalBody}>
-                                        <Option 
-                                            image="../../../assets/images/global-icon.png"
-                                            optionTitle="Global Feed"
-                                            optionText="Share your entry with the world"
-                                            currVal={true}
-                                            toggleSwitch={() => toggleOption("globalFeed")}
-                                        />
+                                    <Option
+                                        disabled={!options.globalFeed}
+                                        image={null}
+                                        optionTitle="Anonymous"
+                                        optionText="Share without giving your name"
+                                        currVal={options.anonymous}
+                                        onPress={() => toggleOption("anonymous")}
+                                    />
 
-                                        <Option
-                                            image={null}
-                                            optionTitle="Anonymous"
-                                            optionText="Share without giving your name"
-                                            currVal={false}
-                                            toggleSwitch={() => toggleOption("anonymous")}
-                                        />
-
-                                        <Option
-                                            image="../../../assets/images/friends-icon.png"
-                                            optionTitle="Friends"
-                                            optionText="Share your entry with your friends"
-                                            currVal={true}
-                                            toggleSwitch={() => toggleOption("friends")}
-                                        />
-                                    </View>
-
-                                    <View style={styles.modalFooter}>
-                                        <Text style={styles.modalWarning}>*Your entry will be saved even if you don't share.</Text>
-
-                                        <TouchableOpacity style={styles.modalSubmit} onPress={handleModalSubmit}>
-                                            <Text style={styles.modalSubmitText}>Submit</Text> 
-                                        </TouchableOpacity>
-                                    </View>
+                                    <Option
+                                        disabled={false}
+                                        image={require("../../../assets/images/friends-icon.png")}
+                                        optionTitle="Friends"
+                                        optionText="Share your entry with your friends"
+                                        currVal={options.friends}
+                                        onPress={() => toggleOption("friends")}
+                                    />
                                 </View>
-                            </TouchableWithoutFeedback>
-                        </View>
-                    </TouchableWithoutFeedback>
-                </Modal>
-            </SafeAreaView>
-        </SafeAreaProvider>
+
+                                <View style={styles.modalFooter}>
+                                    <Text style={styles.modalWarning}>*Your entry will be saved even if you don't share.</Text>
+
+                                    <TouchableOpacity style={styles.modalSubmit} onPress={handleModalSubmit}>
+                                        <Text style={styles.modalSubmitText}>Submit</Text> 
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                        </TouchableWithoutFeedback>
+                    </View>
+                </TouchableWithoutFeedback>
+            </Modal>
+        </SafeAreaView>
     );
 };
 
@@ -140,15 +140,6 @@ const styles = StyleSheet.create({
         borderRadius: 20,
         padding: 30,
     }, 
-
-    modalSliderIndicator: {
-        alignSelf: "center",
-        backgroundColor: "#706645",
-        borderRadius: 10,
-        height: 4,
-        marginBottom: 15,
-        width: 60,
-    },
 
     modalSubmit: {
         alignItems: "center",
