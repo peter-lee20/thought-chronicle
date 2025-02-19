@@ -6,12 +6,11 @@ interface OptionProps {
     image?: string | null;
     optionTitle: string;
     optionText: string;
-    initValue: boolean;
+    currVal: boolean;
+    toggleSwitch: () => void;
 }
 
-const Option: React.FC<OptionProps> = ({ image, optionTitle, optionText, initValue }) => {
-    const [isEnabled, setIsEnabled] = useState(initValue);
-
+const Option: React.FC<OptionProps> = ({ image, optionTitle, optionText, currVal, toggleSwitch}) => {
     return (
         <View style={styles.optionContainer}>
 
@@ -27,8 +26,8 @@ const Option: React.FC<OptionProps> = ({ image, optionTitle, optionText, initVal
             </View>
 
             <Switch
-                value={isEnabled}
-                onValueChange={() => setIsEnabled(!isEnabled)}
+                value={currVal}
+                onValueChange={toggleSwitch}
             />
         </View>
     );
@@ -37,9 +36,33 @@ const Option: React.FC<OptionProps> = ({ image, optionTitle, optionText, initVal
 interface ModalProps {
     isVisible: boolean,
     onClose: () => void,
+    onSubmit: (options: { globalFeed: boolean, anonymous: boolean, friends: boolean}) => void,
 }
 
-const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose }) => {
+const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose, onSubmit }) => {
+    const [modalOverlayColor, setModalOverlayColor] = useState("rgba(0, 0, 0, 0.2)");
+    const [options, setOptions] = useState({
+        globalFeed: true,
+        anonymous: false,
+        friends: true,
+    })
+
+    const toggleOption = (key: keyof typeof options) => {
+        setOptions((prev) => ({
+            ...prev,
+            [key]: !prev[key],
+        }));
+    };
+
+    const handleModalClose = () => {
+        setModalOverlayColor("transparent");
+        onClose();
+    }
+
+    const handleModalSubmit = () => {
+        onSubmit(options);
+        onClose();
+    }
 
     return (
         <SafeAreaProvider>
@@ -48,9 +71,10 @@ const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose }) => {
                     animationType="slide"
                     transparent={true}
                     visible={isVisible}
+                    onDismiss={() => setModalOverlayColor("rgba(0, 0, 0, 0.2)")}
                 >
-                    <TouchableWithoutFeedback onPress={onClose}>
-                        <View style={styles.modalOverlay}>
+                    <TouchableWithoutFeedback onPress={handleModalClose}>
+                        <View style={[styles.modalOverlay, {backgroundColor: modalOverlayColor}]}>
                             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
                                 <View style={styles.modalContainer}>
                                     {/* <View style={styles.modalSliderIndicator} /> */}
@@ -62,28 +86,31 @@ const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose }) => {
                                             image="../../../assets/images/global-icon.png"
                                             optionTitle="Global Feed"
                                             optionText="Share your entry with the world"
-                                            initValue={true}
+                                            currVal={true}
+                                            toggleSwitch={() => toggleOption("globalFeed")}
                                         />
 
                                         <Option
                                             image={null}
                                             optionTitle="Anonymous"
                                             optionText="Share without giving your name"
-                                            initValue={false}
+                                            currVal={false}
+                                            toggleSwitch={() => toggleOption("anonymous")}
                                         />
 
                                         <Option
                                             image="../../../assets/images/friends-icon.png"
                                             optionTitle="Friends"
                                             optionText="Share your entry with your friends"
-                                            initValue={true}
+                                            currVal={true}
+                                            toggleSwitch={() => toggleOption("friends")}
                                         />
                                     </View>
 
                                     <View style={styles.modalFooter}>
                                         <Text style={styles.modalWarning}>*Your entry will be saved even if you don't share.</Text>
 
-                                        <TouchableOpacity style={styles.modalSubmit}>
+                                        <TouchableOpacity style={styles.modalSubmit} onPress={handleModalSubmit}>
                                             <Text style={styles.modalSubmitText}>Submit</Text> 
                                         </TouchableOpacity>
                                     </View>
@@ -148,16 +175,8 @@ const styles = StyleSheet.create({
     },
 
     modalOverlay: {
-        backgroundColor: "rgba(0,0,0,0.2)",
-        borderColor: "black",
-        borderWidth: 1,
-        bottom: 0,
         flex: 1,
         justifyContent: "flex-end",
-        left: 0,
-        position: "absolute",
-        right: 0,
-        top: 0,
     },
 
     modalFooter: {
