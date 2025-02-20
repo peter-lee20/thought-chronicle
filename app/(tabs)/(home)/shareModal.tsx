@@ -1,5 +1,5 @@
 import { Image, ImageSourcePropType, Modal, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface OptionProps {
     disabled: boolean,
@@ -12,24 +12,28 @@ interface OptionProps {
 
 const Option: React.FC<OptionProps> = ({ disabled, image, optionTitle, optionText, currVal, onPress}) => {
     return (
-        <View style={styles.optionContainer}>
-            {image && <Image style={styles.optionImage} source={image} />}
-
-            <View>
-                <Text style={[styles.optionTitle, disabled && {opacity: 0.5}]}>
-                    { optionTitle }
-                </Text>
-
-                <Text style={[styles.optionText, disabled && {opacity: 0.5}]}>
-                    { optionText }
-                </Text>
+        <View style={styles.optionContainer}> 
+            <View style={styles.optionImageContainer}>
+                {image && <Image style={styles.optionImage} source={image} />}
             </View>
 
-            <Switch
-                value={currVal}
-                onValueChange={disabled ? undefined : onPress}
-                disabled={disabled}
-            />
+            <View style={styles.optionTextContainer}>
+                <View>
+                    <Text style={[styles.optionTitle, disabled && {opacity: 0.5}]}>
+                        { optionTitle }
+                    </Text>
+
+                    <Text style={[styles.optionText, disabled && {opacity: 0.5}]}>
+                        { optionText }
+                    </Text>
+                </View>
+
+                <Switch
+                    value={currVal}
+                    onValueChange={onPress}
+                    disabled={disabled}
+                />
+            </View>
         </View>
     );
 };
@@ -68,7 +72,7 @@ const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose, onSubmit }) => {
     return (
         <SafeAreaView>
             <Modal
-                animationType="slide"
+                animationType="none"
                 transparent={true}
                 visible={isVisible}
                 onDismiss={() => setModalOverlayColor("rgba(0, 0, 0, 0.2)")}
@@ -86,14 +90,20 @@ const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose, onSubmit }) => {
                                         optionTitle="Global Feed"
                                         optionText="Share your entry with the world"
                                         currVal={options.globalFeed}
-                                        onPress={() => toggleOption("globalFeed")}
+                                        onPress={() => { 
+                                            toggleOption("globalFeed");
+                                            setOptions((prev) => ({
+                                                ...prev,
+                                                anonymous: false,
+                                            }))
+                                        }}
                                     />
 
                                     <Option
                                         disabled={!options.globalFeed}
                                         image={null}
                                         optionTitle="Anonymous"
-                                        optionText="Share without giving your name"
+                                        optionText="Remain completely anonymous"
                                         currVal={options.anonymous}
                                         onPress={() => toggleOption("anonymous")}
                                     />
@@ -138,7 +148,10 @@ const styles = StyleSheet.create({
     modalContainer: {
         backgroundColor: "#F0ECE0",
         borderRadius: 20,
-        padding: 30,
+        paddingBottom: 30,
+        paddingLeft: 5,
+        paddingRight: 5,
+        paddingTop: 30,
     }, 
 
     modalSubmit: {
@@ -185,13 +198,18 @@ const styles = StyleSheet.create({
     optionContainer: {
         alignItems: "center",
         flexDirection: "row",
-        justifyContent: "space-between"
+        justifyContent: "space-between",
     },
 
     optionImage: {
         height: "100%",
         resizeMode: "contain",
-        width: "10%",
+        width: 50,
+    },
+
+    optionImageContainer: {
+        width: 65,
+        height: 50,
     },
 
     optionText: {
@@ -199,6 +217,12 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins",
         fontSize: 11,
         lineHeight: 17,
+    },
+
+    optionTextContainer: {
+        flex: 1,
+        flexDirection: "row",
+        justifyContent: "space-between",
     },
 
     optionTitle: {
