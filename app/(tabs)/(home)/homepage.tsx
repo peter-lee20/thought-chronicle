@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-require-imports */
 import React, { useEffect, useState } from 'react';
 import {
   StyleSheet,
@@ -16,11 +17,9 @@ import {
 import WeekCalendar from './weekCalendar';
 import { FIREBASE_AUTH } from '../../../FirebaseConfig';
 import { FIRESTORE_DB } from '../../../FirebaseConfig';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
 import { addDoc, collection, doc, getDoc, setDoc, updateDoc, getDocs } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
-import { Link, router } from 'expo-router';
-import { ReactNativeAsyncStorage } from 'firebase/auth';
+import { router } from 'expo-router';
 
 const navEntries = async () => {
   router.replace("/(entries)/");
@@ -86,21 +85,6 @@ export default function HomePage() {
     };
     fetchUserStreak();
   }, []);
-
-  const getWeekRange = () => {
-    const startOfWeek = new Date(currentDate);
-    const endOfWeek = new Date(currentDate);
-
-    startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
-    endOfWeek.setDate(currentDate.getDate() + (6 - currentDate.getDay()));
-
-    return {
-      start: startOfWeek.toLocaleDateString(),
-      end: endOfWeek.toLocaleDateString(),
-    };
-  };
-
-  const weekRange = getWeekRange();
 
     // Check if user has already responded
   const checkResponse = async () => {
@@ -275,7 +259,7 @@ export default function HomePage() {
 
             {/* Daily Question */}
             <View style={styles.dailyQuestion}>
-              <Text style={styles.subtitle}>TODAY'S DAILY QUESTION</Text>
+              <Text style={styles.subtitle}>TODAY&apos;S DAILY QUESTION</Text>
               <Text style={styles.question}>{question}</Text>
               <TextInput
                 style={styles.responseField}
