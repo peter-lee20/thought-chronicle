@@ -12,6 +12,7 @@ import { useLocalSearchParams, router } from 'expo-router';
 import { FIRESTORE_DB } from '../../../../FirebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { format } from "date-fns";
+import { Stack } from "expo-router"
 
 interface JournalEntry {
     response: string;
