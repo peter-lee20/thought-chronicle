@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Alert, View, Text, StyleSheet, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView } from 'react-native'
+import { Alert, View, Text, StyleSheet, TextInput, TouchableOpacity, Image, KeyboardAvoidingView, ScrollView, SafeAreaView } from 'react-native'
 import { router } from 'expo-router'
 import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
 import { FIREBASE_AUTH } from '../../../FirebaseConfig';
@@ -82,6 +82,7 @@ export default function JournalEntry() {
       }
 
     return (
+        <SafeAreaView style={{flex: 1, backgroundColor: "#F0ECE0"}}>
         <KeyboardAvoidingView style={styles.container} behavior="height" keyboardVerticalOffset={100}>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <TouchableOpacity onPress={backHome}>
@@ -119,6 +120,7 @@ export default function JournalEntry() {
                 </View>  
             </ScrollView>
         </KeyboardAvoidingView>
+        </SafeAreaView>
     )
 }
 

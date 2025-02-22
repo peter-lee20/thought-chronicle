@@ -239,7 +239,7 @@ export default function EntriesCalendar() {
                     <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain"/>
                 </TouchableOpacity>
                 
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => {router.replace('/(friends)')}}>
                     <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
                 </TouchableOpacity>
             </View>
