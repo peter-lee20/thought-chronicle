@@ -110,19 +110,19 @@ export default function FriendsPage(): JSX.Element {
         id: '1',
         username: 'johndoe',
         name: 'John Doe',
-        buttons: [{ label: 'Friends', onPress: () => console.log('Added') }],
+        buttons: [{ label: 'Remove', onPress: () => removeFriend() }],
       },
       {
         id: '2',
         username: 'janesmith',
         name: 'Jane Smith',
-        buttons: [{ label: 'Friends', onPress: () => console.log('Added') }],
+        buttons: [{ label: 'Remove', onPress: () => removeFriend() }],
       },
       {
         id: '3',
         username: 'alicejones',
         name: 'Alice Jones',
-        buttons: [{ label: 'Friends', onPress: () => console.log('Added') }],
+        buttons: [{ label: 'Remove', onPress: () => removeFriend() }],
       },
     ],
     Requests: [
@@ -186,6 +186,13 @@ export default function FriendsPage(): JSX.Element {
         return null;
     }
   };
+
+  /**
+   * Remove friend from friend list
+   */
+  const removeFriend = () => {
+    console.log("GET BANNED NERD");
+  }
 
   return (
     <View style={{ flex: 1 }}>
