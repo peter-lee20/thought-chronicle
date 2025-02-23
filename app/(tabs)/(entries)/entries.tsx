@@ -343,7 +343,7 @@ export default function EntryPage() {
             <TouchableOpacity>
               <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain" />
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => {router.replace('/(home)/homepage')}}>
               <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
             </TouchableOpacity>
           </View>
@@ -450,6 +450,7 @@ const styles: StylesProps = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 20,
+    marginTop: 25,
   },
   image: {
     height: 40,
