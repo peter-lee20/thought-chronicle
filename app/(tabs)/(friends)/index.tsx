@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
@@ -16,6 +16,8 @@ import FindTab from './FindTab';
 import FriendsTab from './FriendsTab';
 import RequestsTab from './RequestsTab';
 import SentTab from './SentTab';
+import { collection, getDocs } from 'firebase/firestore';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '@/FirebaseConfig';
 
 /**
  * Represents a person with basic information and optional interaction buttons.
@@ -58,6 +60,33 @@ interface TabContentType {
  */
 export default function FriendsPage(): JSX.Element {
   const [activeTab, setActiveTab] = useState<TabName>('Find');
+  const [findUsers, setFindUsers] = useState<Person[]>([]);
+
+
+  /**
+   * React Native effect for creating a list of Person objects from user data stored in the Firebase
+   */
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const snapshot = await getDocs(collection(FIRESTORE_DB, "names"));
+        const users = snapshot.docs.map(doc => {
+          const data = doc.data();
+          return {
+            id: data.userId,
+            username: data.username,
+            name: `${data.firstname} ${data.lastname}`,
+            buttons: [{ label: '+ Add Friend', onPress: () => console.log('Added') }]
+          };
+        }).sort((a, b) => a.name.localeCompare(b.name));
+        setFindUsers(users);
+      } catch (error) {
+        console.error("Error fetching users:", error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   /**
    * An array of tab items, each representing a tab in the FriendsPage.
@@ -85,46 +114,8 @@ export default function FriendsPage(): JSX.Element {
    * Data for each tab.
    */
   const tabContent: TabContentType = {
-    Find: [
-      {
-        id: '1',
-        username: 'johndoe',
-        name: 'John Doe',
-        buttons: [{ label: 'Add Friend', onPress: () => console.log('Added') }],
-      },
-      {
-        id: '2',
-        username: 'janesmith',
-        name: 'Jane Smith',
-        buttons: [{ label: 'Add Friend', onPress: () => console.log('Added') }],
-      },
-      {
-        id: '3',
-        username: 'alicejones',
-        name: 'Alice Jones',
-        buttons: [{ label: 'Add Friend', onPress: () => console.log('Added') }],
-      },
-    ],
-    Friends: [
-      {
-        id: '1',
-        username: 'johndoe',
-        name: 'John Doe',
-        buttons: [{ label: 'Friends', onPress: () => console.log('Added') }],
-      },
-      {
-        id: '2',
-        username: 'janesmith',
-        name: 'Jane Smith',
-        buttons: [{ label: 'Friends', onPress: () => console.log('Added') }],
-      },
-      {
-        id: '3',
-        username: 'alicejones',
-        name: 'Alice Jones',
-        buttons: [{ label: 'Friends', onPress: () => console.log('Added') }],
-      },
-    ],
+    Find: findUsers,
+    Friends: findUsers,
     Requests: [
       {
         id: '1',
@@ -289,7 +280,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#F0ECE0',
     flexDirection: 'row',
     justifyContent: 'space-around',
-    paddingVertical: 20,
+    paddingBottom: 20,
   },
   footerImage: {
     height: 50,
