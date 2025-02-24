@@ -55,6 +55,7 @@ import React, {
     router.replace("/(global-board)");
   }
  
+ 
  // Main component for the home page.
  export default function HomePage() {
   // State variables:
@@ -324,168 +325,160 @@ import React, {
  
  
   return (
-      <KeyboardAvoidingView
-          style={{ flex: 1 }}
-          contentContainerStyle={{ flexGrow: 1 }}
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-      >
-          <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
-              <View style={{ flex: 1 }}>
-                  <ScrollView
-                      style={styles.container}
-                      contentContainerStyle={styles.scrollContentContainer}
-                  >
-                      <View style={styles.header}>
-                          <View style={styles.streakContainer}>
-                              <Image
-                                  source={require('../../../assets/images/fire.png')}
-                                  style={styles.fireImage}
-                                  resizeMode="contain"
-                              />
-                              <Text style={styles.days}>{streak}</Text>
-                          </View>
- 
- 
-                          <View>
-                              <TouchableOpacity onPress={toggleDropdown}>
-                                  <Image
-                                      source={require('../../../assets/images/profile.png')}
-                                      style={styles.image}
-                                      resizeMode="contain"
-                                  />
-                              </TouchableOpacity>
- 
- 
-                              {showDropdown && (
-                                  <View style={styles.dropdownMenu}>
-                                      <TouchableOpacity
-                                          style={styles.dropdownItem}
-                                          onPress={handleSignOut}
-                                      >
-                                          <Text style={styles.dropdownText}>Sign Out</Text>
-                                      </TouchableOpacity>
-                                  </View>
-                              )}
-                          </View>
-                      </View>
-                      {/* Main Content */}
-                      <View style={styles.mainContent}>
-                          <Text style={styles.title}>Today</Text>
-                          <Text style={styles.date}>
-                              {currentDate.toLocaleDateString('en-US', {
-                                  weekday: 'long',
-                                  year: 'numeric',
-                                  month: 'long',
-                                  day: 'numeric',
-                              })}
-                          </Text>
- 
- 
-                          <View style={styles.weekDisplay}>
-                              <WeekCalendar />
-                          </View>
- 
- 
-                          <View style={styles.dailyQuestion}>
-                              <Text style={styles.subtitle}>TODAY'S DAILY QUESTION</Text>
-                              <Text style={styles.question}>{question}</Text>
-                              <TextInput
-                                  style={styles.responseField}
-                                  placeholder={
-                                      responded === true
-                                          ? "You've already responded! Come back tomorrow!"
-                                          : 'Type your response here...'
-                                  }
-                                  editable={!responded}
-                                  placeholderTextColor="#70664550"
-                                  multiline
-                                  maxLength={maxCharacters}
-                                  value={response}
-                                  onChangeText={setResponse}
-                              />
-                              <Text style={styles.characterCounter}>
-                                  {response.length}/{maxCharacters} characters
-                              </Text>
- 
- 
-                              <TouchableOpacity
-                                  style={
-                                      responded === true
-                                          ? styles.grayButton
-                                          : styles.respondButton
-                                  }
-                                  onPress={openVisiblityModal}
-                                  disabled={responded}
-                              >
-                                  <Text style={styles.buttonText}>Submit Response</Text>
-                              </TouchableOpacity>
- 
- 
-                              <ShareModal
-                                  isVisible={modalVisible}
-                                  onClose={() => setModalVisible(false)}
-                                  onSubmit={handleSubmitResponse}
-                              />
-                          </View>
-                      </View>
-                  </ScrollView>
- 
- 
-                  <View
-                      style={[
-                          styles.footer,
-                          { position: 'absolute', bottom: 0, left: 0, right: 0 },
-                      ]}
-                  >
-                      <TouchableOpacity>
-                          <Image
-                              source={require('../../../assets/images/today.png')}
-                              style={styles.footerImage}
-                              resizeMode="contain"
-                          />
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={navEntries}>
-                          <Image
-                              source={require('../../../assets/images/entries.png')}
-                              style={styles.footerImage}
-                              resizeMode="contain"
-                          />
-                      </TouchableOpacity>
-                      <TouchableOpacity
-                          onPress={() => {
-                              router.replace('/(add-journal)/');
-                          }}
-                      >
-                          <Image
-                              source={require('../../../assets/images/circle.png')}
-                              style={styles.footerImage}
-                              resizeMode="contain"
-                          />
-                          <Text style={styles.plusSign}>+</Text>
-                      </TouchableOpacity>
-                      <TouchableOpacity onPress={navBoard}>
-                          <Image
-                              source={require('../../../assets/images/feed.png')}
-                              style={styles.footerImage}
-                              resizeMode="contain"
-                          />
-                      </TouchableOpacity>
-                      <TouchableOpacity>
-                          <Image
-                              source={require('../../../assets/images/friends.png')}
-                              style={styles.footerImage}
-                              resizeMode="contain"
-                          />
-                      </TouchableOpacity>
-                  </View>
-              </View>
-          </TouchableWithoutFeedback>
-      </KeyboardAvoidingView>
-  );
- }
- 
- 
- const styles: StylesProps = StyleSheet.create({
+    <View style={{ flex: 1 }}>
+        <KeyboardAvoidingView
+            style={{ flex: 1 }}
+            contentContainerStyle={{ flexGrow: 1 }}
+            behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+            <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+                <ScrollView
+                    style={styles.container}
+                    contentContainerStyle={styles.scrollContentContainer}
+                >
+                    <View style={styles.header}>
+                        <View style={styles.streakContainer}>
+                            <Image
+                                source={require('../../../assets/images/fire.png')}
+                                style={styles.fireImage}
+                                resizeMode="contain"
+                            />
+                            <Text style={styles.days}>{streak}</Text>
+                        </View>
+
+                        <View>
+                            <TouchableOpacity onPress={toggleDropdown}>
+                                <Image
+                                    source={require('../../../assets/images/profile.png')}
+                                    style={styles.image}
+                                    resizeMode="contain"
+                                />
+                            </TouchableOpacity>
+
+                            {showDropdown && (
+                                <View style={styles.dropdownMenu}>
+                                    <TouchableOpacity
+                                        style={styles.dropdownItem}
+                                        onPress={handleSignOut}
+                                    >
+                                        <Text style={styles.dropdownText}>Sign Out</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            )}
+                        </View>
+                    </View>
+                    
+                    {/* Main Content */}
+                    <View style={styles.mainContent}>
+                        <Text style={styles.title}>Today</Text>
+                        <Text style={styles.date}>
+                            {currentDate.toLocaleDateString('en-US', {
+                                weekday: 'long',
+                                year: 'numeric',
+                                month: 'long',
+                                day: 'numeric',
+                            })}
+                        </Text>
+
+                        <View style={styles.weekDisplay}>
+                            <WeekCalendar />
+                        </View>
+
+                        <View style={styles.dailyQuestion}>
+                            <Text style={styles.subtitle}>TODAY'S DAILY QUESTION</Text>
+                            <Text style={styles.question}>{question}</Text>
+                            <TextInput
+                                style={styles.responseField}
+                                placeholder={
+                                    responded
+                                        ? "You've already responded! Come back tomorrow!"
+                                        : 'Type your response here...'
+                                }
+                                editable={!responded}
+                                placeholderTextColor="#70664550"
+                                multiline
+                                maxLength={maxCharacters}
+                                value={response}
+                                onChangeText={setResponse}
+                            />
+                            <Text style={styles.characterCounter}>
+                                {response.length}/{maxCharacters} characters
+                            </Text>
+
+                            <TouchableOpacity
+                                style={
+                                    responded ? styles.grayButton : styles.respondButton
+                                }
+                                onPress={openVisiblityModal}
+                                disabled={responded}
+                            >
+                                <Text style={styles.buttonText}>Submit Response</Text>
+                            </TouchableOpacity>
+
+                            <ShareModal
+                                isVisible={modalVisible}
+                                onClose={() => setModalVisible(false)}
+                                onSubmit={handleSubmitResponse}
+                            />
+                        </View>
+                    </View>
+                </ScrollView>
+            </TouchableWithoutFeedback>
+        </KeyboardAvoidingView>
+
+        {/* Footer outside KeyboardAvoidingView */}
+        <View style={styles.footer}>
+            <TouchableOpacity>
+                <Image
+                    source={require('../../../assets/images/today.png')}
+                    style={styles.footerImage}
+                    resizeMode="contain"
+                />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => {
+                    router.replace('/(entries)/');
+                }}>
+                <Image
+                    source={require('../../../assets/images/entries.png')}
+                    style={styles.footerImage}
+                    resizeMode="contain"
+                />
+            </TouchableOpacity>
+            <TouchableOpacity
+                onPress={() => {
+                    router.replace('/(add-journal)/');
+                }}
+            >
+                <Image
+                    source={require('../../../assets/images/circle.png')}
+                    style={styles.footerImage}
+                    resizeMode="contain"
+                />
+                <Text style={styles.plusSign}>+</Text>
+            </TouchableOpacity>
+            <TouchableOpacity>
+                <Image
+                    source={require('../../../assets/images/feed.png')}
+                    style={styles.footerImage}
+                    resizeMode="contain"
+                />
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => {
+                    router.replace('/(friends)');
+                }}>
+                <Image
+                    source={require('../../../assets/images/friends.png')}
+                    style={styles.footerImage}
+                    resizeMode="contain"
+                />
+            </TouchableOpacity>
+        </View>
+    </View>
+);
+
+}
+
+const styles: StylesProps = StyleSheet.create({
   buttonText: {
       color: '#FFF',
       fontFamily: 'Poppins',
@@ -582,7 +575,7 @@ import React, {
       flexDirection: 'row',
       justifyContent: 'space-between',
       marginBottom: 20,
-      marginTop: 20,
+      marginTop: 25,
   },
   image: {
       height: 40,
@@ -622,18 +615,24 @@ import React, {
   },
   scrollContentContainer: {
       flexGrow: 1,
-      justifyContent: 'flex-start',
+      justifyContent: 'space-between',
   },
   streakContainer: {
-      alignItems: 'center',
-      flexDirection: 'row',
+    flexDirection: 'row',
+    alignItems: 'center', // Optional: aligns items vertically in the center
+    borderColor: '#706645CC',
+    borderWidth: 2,
+    borderRadius: 20,
+    backgroundColor: '#F0ECE0',
+    paddingVertical: 3,
+    paddingHorizontal: 9,
   },
   subtitle: {
       color: '#706645',
       fontFamily: 'Poppins',
       fontSize: 13,
-      fontWeight: 'bold',
-      marginBottom: 5,
+      fontWeight: '400',
+      marginBottom: 10,
   },
   title: {
       color: '#706645',
