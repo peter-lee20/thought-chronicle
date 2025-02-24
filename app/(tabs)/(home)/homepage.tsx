@@ -456,7 +456,7 @@ import React, {
                 />
                 <Text style={styles.plusSign}>+</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={(navBoard)}>
                 <Image
                     source={require('../../../assets/images/feed.png')}
                     style={styles.footerImage}

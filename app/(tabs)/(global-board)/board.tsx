@@ -30,8 +30,10 @@ interface Entry {
   type: 'daily-question' | 'journal';
   anonymous: boolean;
   userId: string;
-  displayName: string; // new optional property for first and last name
+  displayName: string; // full name (first and last)
+  username: string; // actual username from Firestore
 }
+
 
 export default function Board() {
   const [question, setQuestion] = useState('');
@@ -73,26 +75,32 @@ export default function Board() {
   };
 
   // Helper function to fetch a user's name document
-  const fetchNameByUserId = async (userId: string) => {
+  // Helper function to fetch a user's first and last name from the "users" collection
+  interface UserData {
+    fullName: string;
+    username: string;
+  }
+  
+  const fetchUserDataByUserId = async (userId: string): Promise<UserData | null> => {
     try {
-      // Create a query on the 'names' collection where the userId field matches the provided userId.
-      const namesQuery = query(
-        collection(FIRESTORE_DB, 'names'),
+      const usersQuery = query(
+        collection(FIRESTORE_DB, 'users'),
         where('userId', '==', userId)
       );
-      const querySnapshot = await getDocs(namesQuery);
+      const querySnapshot = await getDocs(usersQuery);
       if (!querySnapshot.empty) {
-        // Since userId should be unique, grab the first matching document
         const docData = querySnapshot.docs[0].data();
-        const { firstname, lastname } = docData;
-        return `${firstname} ${lastname}`;
+        const { firstname, lastname, username } = docData;
+        return { fullName: `${firstname} ${lastname}`, username };
       }
     } catch (error) {
-      console.error('Error fetching name for userId:', userId, error);
+      console.error('Error fetching user data for userId:', userId, error);
     }
     return null;
   };
+  
 
+  
   const fetchEntries = async () => {
     try {
       setLoading(true);
@@ -108,42 +116,45 @@ export default function Board() {
         .map((doc) => ({
           id: doc.id,
           response: doc.data().response || '',
-          timestamp: doc.data().timestamp
-            ? doc.data().timestamp.toDate()
-            : null,
+          timestamp: doc.data().timestamp ? doc.data().timestamp.toDate() : null,
           type: 'daily-question' as const,
           anonymous: doc.data().anonymous || false,
           userId: doc.data().userId || '',
-          displayName: '', // placeholder; we'll replace it below
+          displayName: '', // placeholder
+          username: '',    // placeholder
         }))
         .filter((entry) => {
+          // Optionally filter by date or remove filter for debugging:
           if (!entry.timestamp) return false;
           const entryDate = new Date(entry.timestamp);
           entryDate.setHours(0, 0, 0, 0);
           return entryDate.getTime() === today.getTime();
         })
-        // Sort in ascending order by time
+        // Sort in ascending order by time (earlier posts first)
         .sort(
           (a, b) => (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0)
         );
   
-      const entriesWithNames = await Promise.all(
+      const entriesWithUserData = await Promise.all(
         fetchedEntries.map(async (entry) => {
           if (entry.anonymous) {
-            // For anonymous, we set displayName to "ANONYMOUS"
-            return { ...entry, displayName: 'ANONYMOUS' };
+            return {
+              ...entry,
+              displayName: 'ANONYMOUS',
+              username: 'ANONYMOUS',
+            };
           }
-          const displayName = await fetchNameByUserId(entry.userId);
-          // If no display name is found, return null so we can filter it out.
-          if (!displayName) {
+          const userData = await fetchUserDataByUserId(entry.userId);
+          if (!userData) {
+            // Skip the entry if no matching user document is found
             return null;
           }
-          return { ...entry, displayName };
+          return { ...entry, displayName: userData.fullName, username: userData.username };
         })
       );
-      
-      // Filter out null entries. Now, each entry is guaranteed to have displayName as string.
-      const filteredEntries = entriesWithNames.filter(
+  
+      // Filter out any entries that returned null
+      const filteredEntries = entriesWithUserData.filter(
         (entry): entry is Entry => entry !== null
       );
   
@@ -154,6 +165,8 @@ export default function Board() {
       setLoading(false);
     }
   };
+  
+
   
   const formatTime = (timestamp: Date | null): string => {
     if (!timestamp) return '';
@@ -177,7 +190,7 @@ export default function Board() {
             resizeMode="contain"
           />
           <Text style={styles.entryLabel}>
-            {item.displayName} @USERNAME
+            {item.displayName} @{item.username}
           </Text>
           {item.timestamp && (
             <Text style={styles.timeText}>{formatTime(item.timestamp)}</Text>
@@ -192,6 +205,7 @@ export default function Board() {
       </View>
     </TouchableOpacity>
   );
+  
   
   
 
