@@ -93,10 +93,13 @@ export default function Signup() {
     try {
       setLoading(true);
       const response = await createUserWithEmailAndPassword(auth, email, password);
+      const userId = response.user.uid;
       Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
+      
 
       // Store first and last name to Firestore
       await addDoc(collection(FIRESTORE_DB, "names"), {
+        userId,
         email,
         firstname: firstName,
         lastname: lastName,

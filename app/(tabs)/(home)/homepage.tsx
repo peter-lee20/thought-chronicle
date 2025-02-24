@@ -51,7 +51,9 @@ import React, {
  const navEntries = async () => {
   router.replace('/(entries)/');
  };
- 
+ const navBoard = async () => {
+    router.replace("/(global-board)");
+  }
  
  // Main component for the home page.
  export default function HomePage() {
@@ -461,7 +463,7 @@ import React, {
                           />
                           <Text style={styles.plusSign}>+</Text>
                       </TouchableOpacity>
-                      <TouchableOpacity>
+                      <TouchableOpacity onPress={navBoard}>
                           <Image
                               source={require('../../../assets/images/feed.png')}
                               style={styles.footerImage}
