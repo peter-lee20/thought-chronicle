@@ -10,6 +10,16 @@ import {
   Platform,
   TouchableWithoutFeedback,
 } from 'react-native';
+import {
+  collection,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  where,
+} from 'firebase/firestore';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
+import { getAuth, signOut } from 'firebase/auth';
 import { router } from 'expo-router';
 
 import FindTab from './FindTab';
@@ -58,6 +68,9 @@ interface TabContentType {
  */
 export default function FriendsPage(): JSX.Element {
   const [activeTab, setActiveTab] = useState<TabName>('Find');
+  const auth = getAuth();
+  const currentUser = auth.currentUser;
+  const id = currentUser?.uid;
 
   /**
    * An array of tab items, each representing a tab in the FriendsPage.
@@ -188,11 +201,83 @@ export default function FriendsPage(): JSX.Element {
   };
 
   /**
+   * Helper function for friend removal
+   */
+
+  const findAndDelete = (list: Array<string>, friend: string) => {
+    // Find friendName in list and remove it
+    const index = list.indexOf(friend);
+
+    if (index !== -1){ // This check should never fail in normal app use
+      list.splice(index, 1);
+      return list;
+    } else {
+      console.log("Your friend is FAKE.")
+      return null;
+    }
+  }
+
+  /**
    * Remove friend from friend list
    */
-  const removeFriend = () => {
-    console.log("GET BANNED NERD");
-  }
+  const removeFriend = async (friendName: string) => {
+    // Fetch caller's username
+    const userQuery = query(
+      collection(FIRESTORE_DB, "names"),
+      where("userID", "==", id),
+    );
+    const userData = await getDocs(userQuery);
+
+    // If userID is not in database at this point, something is wrong
+    if (userData.empty){
+      console.log("USER NOT FOUND. HOUSTON WE HAVE A PROBLEM.");
+      return null;
+    }
+
+    // There should only be 1 document in userData
+    const document = userData.docs[0];
+    const username = document.data()["username"];
+
+    // Use username to fetch friend list
+    const selfQuery = query(
+            collection(FIRESTORE_DB, "users"),
+            where("username", "==", username),
+          );
+    const selfSnapshot = await getDocs(selfQuery);
+
+    // selfSnapshot should not be empty
+    if (selfSnapshot.empty){
+      console.log("FriendSnapshot is empty.")
+      return null;
+    }
+
+    // Get friend list from friendSnapshot
+    const selfListDoc = selfSnapshot.docs[0];
+    const selfList = findAndDelete(selfListDoc.data()["friends"], friendName);
+      // Remove caller from friend's friend list
+      const friendQuery = query(
+        collection(FIRESTORE_DB, "users"),
+        where("username", "==", friendName),
+      );
+
+      const friendSnapshot = await getDocs(friendQuery);
+
+      // friendSnapshot should not be empty
+      if (friendSnapshot.empty){
+        console.log("FriendSnapshot is empty.")
+        return null;
+      }
+
+      const friendListDoc = friendSnapshot.docs[0];
+      const friendList = friendListDoc.data()["friends"];
+
+      // Find username in friend list and remove it
+      const friendIndex = friendList.indexOf(username);
+      friendList.splice(friendIndex, 1);
+
+      // TODO: Edit doc
+
+    }
 
   return (
     <View style={{ flex: 1 }}>
