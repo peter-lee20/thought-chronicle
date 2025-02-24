@@ -340,7 +340,9 @@ export default function EntryPage() {
               <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain" />
               <Text style={styles.plusSign}>+</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={() => {
+            router.replace('/(global-board)');
+          }}>
               <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain" />
             </TouchableOpacity>
             <TouchableOpacity onPress={() => {router.replace('/(home)/homepage')}}>

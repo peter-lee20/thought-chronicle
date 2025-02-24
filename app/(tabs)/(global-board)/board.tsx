@@ -348,7 +348,9 @@ export default function Board() {
             resizeMode="contain"
           />
         </TouchableOpacity>
-        <TouchableOpacity>
+        <TouchableOpacity onPress={() => {
+            router.replace('/(friends)/');
+          }}>
           <Image
             source={require('../../../assets/images/friends.png')}
             style={styles.footerImage}
