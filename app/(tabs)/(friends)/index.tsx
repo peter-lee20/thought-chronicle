@@ -62,14 +62,14 @@ export default function FriendsPage(): JSX.Element {
   const [activeTab, setActiveTab] = useState<TabName>('Find');
   const [findUsers, setFindUsers] = useState<Person[]>([]);
 
-
-  /**
-   * React Native effect for creating a list of Person objects from user data stored in the Firebase
-   */
   useEffect(() => {
+
+    /**
+     * Fetches users from the Firebase and creates a list of Person objects from the data.
+     */
     const fetchUsers = async () => {
       try {
-        const snapshot = await getDocs(collection(FIRESTORE_DB, "names"));
+        const snapshot = await getDocs(collection(FIRESTORE_DB, "users"));
         const users = snapshot.docs.map(doc => {
           const data = doc.data();
           return {
@@ -81,7 +81,7 @@ export default function FriendsPage(): JSX.Element {
         }).sort((a, b) => a.name.localeCompare(b.name));
         setFindUsers(users);
       } catch (error) {
-        console.error("Error fetching users:", error);
+        console.error("Server error: unable to fetch current users.", error);
       }
     };
 
@@ -115,7 +115,26 @@ export default function FriendsPage(): JSX.Element {
    */
   const tabContent: TabContentType = {
     Find: findUsers,
-    Friends: findUsers,
+    Friends: [
+      {
+        id: '1',
+        username: 'johndoe',
+        name: 'John Doe',
+        buttons: [{ label: 'Confirm', onPress: () => console.log('Added') }],
+      },
+      {
+        id: '2',
+        username: 'janesmith',
+        name: 'Jane Smith',
+        buttons: [{ label: 'Confirm', onPress: () => console.log('Added') }],
+      },
+      {
+        id: '3',
+        username: 'alicejones',
+        name: 'Alice Jones',
+        buttons: [{ label: 'Confirm', onPress: () => console.log('Added') }],
+      },
+    ],
     Requests: [
       {
         id: '1',

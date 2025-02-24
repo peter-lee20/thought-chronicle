@@ -19,7 +19,7 @@ import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
 
 const isUniqueUser = async (username: string) => {
   try {
-    const sameUsername = await getDocs(query(collection(FIRESTORE_DB, "names"), where("username", "==", username)));
+    const sameUsername = await getDocs(query(collection(FIRESTORE_DB, "users"), where("username", "==", username)));
 
     if (sameUsername.empty) {
       return true;
@@ -139,13 +139,12 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      const currUser = auth.currentUser;
       const response = await createUserWithEmailAndPassword(auth, email, password);
       Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
 
       // Store first and last name to Firestore
-      await addDoc(collection(FIRESTORE_DB, "names"), {
-        userId: currUser?.uid,
+      await addDoc(collection(FIRESTORE_DB, "users"), {
+        userId: response.user.uid,
         email: email,
         firstname: firstName,
         lastname: lastName,

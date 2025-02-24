@@ -30,10 +30,10 @@ interface FindTabProps {
 const FindTab: React.FC<FindTabProps> = ({ items }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Filters users alphabetically by whether their username contains the search query
   const filteredItems = items.filter((item) => 
     item.id != FIREBASE_AUTH.currentUser?.uid && 
     (item.name.toLowerCase().includes(searchQuery.toLowerCase()))
-    // item.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
@@ -52,6 +52,7 @@ const FindTab: React.FC<FindTabProps> = ({ items }) => {
         />
       </View>
       <FlatList
+        // if searchQuery is empty, no results are dipslayed
         data={searchQuery != '' ? filteredItems: null}
         renderItem={({ item }) => (
           <PersonCard username={item.username} name={item.name} buttons={item.buttons} />
@@ -67,8 +68,14 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 20,
-    // paddingVertical: 20,
     width: '100%',
+  },
+
+  listItem: {
+    color: '#706645',
+    fontFamily: 'Poppins',
+    fontSize: 16,
+    marginBottom: 5,
   },
 
   tabContent: {
@@ -96,13 +103,6 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 10,
-  },
-
-  listItem: {
-    color: '#706645',
-    fontFamily: 'Poppins',
-    fontSize: 16,
-    marginBottom: 5,
   },
 });
 
