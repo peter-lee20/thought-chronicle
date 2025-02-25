@@ -17,6 +17,7 @@ import {
   getDocs,
   query,
   where,
+  updateDoc,
 } from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
 import { getAuth, signOut } from 'firebase/auth';
@@ -210,11 +211,10 @@ export default function FriendsPage(): JSX.Element {
 
     if (index !== -1){ // This check should never fail in normal app use
       list.splice(index, 1);
-      return list;
     } else {
       console.log("Your friend is FAKE.")
-      return null;
     }
+    return list;
   }
 
   /**
@@ -222,9 +222,10 @@ export default function FriendsPage(): JSX.Element {
    */
   const removeFriend = async (friendName: string) => {
     // Fetch caller's username
+    const userCollection = collection(FIRESTORE_DB, "users");
     const userQuery = query(
-      collection(FIRESTORE_DB, "names"),
-      where("userID", "==", id),
+      userCollection,
+      where("userId", "==", id),
     );
     const userData = await getDocs(userQuery);
 
@@ -236,46 +237,43 @@ export default function FriendsPage(): JSX.Element {
 
     // There should only be 1 document in userData
     const document = userData.docs[0];
+    const friendsList = document.data()["friends"];
     const username = document.data()["username"];
 
-    // Use username to fetch friend list
-    const selfQuery = query(
-            collection(FIRESTORE_DB, "users"),
-            where("username", "==", username),
-          );
-    const selfSnapshot = await getDocs(selfQuery);
+    const modifiedList = findAndDelete(friendsList, friendName);
 
-    // selfSnapshot should not be empty
-    if (selfSnapshot.empty){
+    // Update document in firebase
+    const docRef = doc(FIRESTORE_DB, "users", document.id);
+    await updateDoc(docRef, {
+      friends: friendsList
+    });
+
+
+    // Remove caller from friend's friend list
+    const friendQuery = query(
+      userCollection,
+      where("username", "==", friendName),
+    );
+
+    const friendSnapshot = await getDocs(friendQuery);
+
+    // friendSnapshot should not be empty
+    if (friendSnapshot.empty){
       console.log("FriendSnapshot is empty.")
       return null;
     }
 
-    // Get friend list from friendSnapshot
-    const selfListDoc = selfSnapshot.docs[0];
-    const selfList = findAndDelete(selfListDoc.data()["friends"], friendName);
-      // Remove caller from friend's friend list
-      const friendQuery = query(
-        collection(FIRESTORE_DB, "users"),
-        where("username", "==", friendName),
-      );
+    const friendDoc = friendSnapshot.docs[0];
+    const friendList = friendDoc.data()["friends"];
 
-      const friendSnapshot = await getDocs(friendQuery);
+    // Find username in friend list and remove it
+    const modifiedFriendList = findAndDelete(friendList, username);
 
-      // friendSnapshot should not be empty
-      if (friendSnapshot.empty){
-        console.log("FriendSnapshot is empty.")
-        return null;
-      }
-
-      const friendListDoc = friendSnapshot.docs[0];
-      const friendList = friendListDoc.data()["friends"];
-
-      // Find username in friend list and remove it
-      const friendIndex = friendList.indexOf(username);
-      friendList.splice(friendIndex, 1);
-
-      // TODO: Edit doc
+    // Update document in firebase
+    const friendDocRef = doc(FIRESTORE_DB, "users", friendDoc.id);
+    await updateDoc(friendDocRef, {
+      friends: modifiedFriendList
+    });
 
     }
 
