@@ -441,6 +441,14 @@ export default function FriendsPage(): JSX.Element {
     });
 
     }
+  
+  /**
+   * Add friend to friend list
+   */
+
+  const addFriend = async (friendName: string) => {
+    return;
+  }
 
   return (
     <View style={{ flex: 1 }}>
