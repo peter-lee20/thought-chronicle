@@ -27,9 +27,6 @@ import FindTab from './FindTab';
 import FriendsTab from './FriendsTab';
 import RequestsTab from './RequestsTab';
 import SentTab from './SentTab';
-import { collection, getDocs } from 'firebase/firestore';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '@/FirebaseConfig';
-
 /**
  * Represents a person with basic information and optional interaction buttons.
  */
@@ -72,6 +69,7 @@ interface TabContentType {
 export default function FriendsPage(): JSX.Element {
   const [activeTab, setActiveTab] = useState<TabName>('Find');
   const [findUsers, setFindUsers] = useState<Person[]>([]);
+  const [findFriends, setFriends] = useState<Person[]>([]);
 
   useEffect(() => {
 
@@ -135,19 +133,19 @@ export default function FriendsPage(): JSX.Element {
         id: '1',
         username: 'johndoe',
         name: 'John Doe',
-        buttons: [{ label: 'Confirm', onPress: () => console.log('Added') }],
+        buttons: [{ label: 'Remove', onPress: () => console.log('Added') }],
       },
       {
         id: '2',
         username: 'janesmith',
         name: 'Jane Smith',
-        buttons: [{ label: 'Confirm', onPress: () => console.log('Added') }],
+        buttons: [{ label: 'Remove', onPress: () => console.log('Added') }],
       },
       {
         id: '3',
         username: 'alicejones',
         name: 'Alice Jones',
-        buttons: [{ label: 'Confirm', onPress: () => console.log('Added') }],
+        buttons: [{ label: 'Remove', onPress: () => console.log('Added') }],
       },
     ],
     Requests: [
