@@ -47,6 +47,15 @@ import React, {
  const maxCharacters = 1500;
  
  
+ // Function to navigate to the entries page.
+ const navEntries = async () => {
+  router.replace('/(entries)/');
+ };
+ const navBoard = async () => {
+    router.replace("/(global-board)");
+  }
+ 
+ 
  // Main component for the home page.
  export default function HomePage() {
   // State variables:
@@ -447,7 +456,7 @@ import React, {
                 />
                 <Text style={styles.plusSign}>+</Text>
             </TouchableOpacity>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={(navBoard)}>
                 <Image
                     source={require('../../../assets/images/feed.png')}
                     style={styles.footerImage}
