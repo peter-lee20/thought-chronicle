@@ -15,7 +15,48 @@ import {
 import { FIREBASE_AUTH } from "../../FirebaseConfig";
 import { FIRESTORE_DB } from "../../FirebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { addDoc, collection } from "firebase/firestore";
+import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
+
+const isUniqueUser = async (username: string) => {
+  try {
+    const sameUsername = await getDocs(query(collection(FIRESTORE_DB, "users"), where("username", "==", username)));
+
+    if (sameUsername.empty) {
+      return true;
+    } else {
+      Alert.alert("Error", "This username has been taken");
+      return false;
+    }
+  } catch (error) {
+    Alert.alert("Error", "There was an error validating your username.");
+    return false;
+  }
+}
+
+// const UsernameRequirements = async (username: string) => {
+//   const uniqueUser = await isUniqueUser(username);
+
+//   const requirements = [
+//     { label: "8+ characters", validator: (_ : string) => uniqueUser},
+//   ];
+
+//   return (
+//     <View style={styles.requirementsGrid}>
+//       {requirements.map((req, index) => (
+//         <View key={index} style={styles.requirementItem}>
+//           <Text
+//             style={{
+//               color: req.validator(username) ? "green" : "#7E948C", //#7E948C
+//               fontSize: 14,
+//             }}
+//           >
+//             {req.validator(username) ? "✓" : "✗"} {req.label}
+//           </Text>
+//         </View>
+//       ))}
+//     </View>
+//   );
+// }
 
 const PasswordRequirements = ({ password }) => {
   const requirements = [
@@ -48,6 +89,7 @@ export default function Signup() {
   const [email, setEmail] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -70,8 +112,13 @@ export default function Signup() {
   };
 
   const handleSignUp = async () => {
-    if (!email || !firstName || !lastName || !password || !confirmPassword) {
+    if (!email || !firstName || !lastName || !username || !password || !confirmPassword) {
       Alert.alert("Error", "Missing fields");
+      return;
+    }
+
+    const uniqueUser = await isUniqueUser(username);
+    if (!uniqueUser) {
       return;
     }
 
@@ -96,10 +143,12 @@ export default function Signup() {
       Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
 
       // Store first and last name to Firestore
-      await addDoc(collection(FIRESTORE_DB, "names"), {
-        email,
+      await addDoc(collection(FIRESTORE_DB, "users"), {
+        userId: response.user.uid,
+        email: email,
         firstname: firstName,
         lastname: lastName,
+        username: username
       });
 
       router.replace("/verification");
@@ -152,6 +201,15 @@ export default function Signup() {
           />
         </View>
 
+        <TextInput
+          style={styles.input}
+          placeholder="Username"
+          placeholderTextColor="#7E948C"
+          value={username}
+          onChangeText={setUsername}
+        />
+
+        {/* <UsernameRequirements username={username} /> */}
         
         <TextInput
           style={styles.input}
