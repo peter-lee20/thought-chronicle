@@ -35,7 +35,7 @@ const SentTab: React.FC<SentTabProps> = ({ items }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   const filteredItems = items.filter((item) =>
-    item.name.toLowerCase().includes(searchQuery.toLowerCase())
+    item.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
