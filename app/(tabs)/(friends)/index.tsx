@@ -245,7 +245,7 @@ export default function FriendsPage(): JSX.Element {
     // Update document in firebase
     const docRef = doc(FIRESTORE_DB, "users", document.id);
     await updateDoc(docRef, {
-      friends: friendsList
+      friends: modifiedList
     });
 
 
