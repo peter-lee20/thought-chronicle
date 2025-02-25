@@ -33,7 +33,7 @@ const FindTab: React.FC<FindTabProps> = ({ items }) => {
   // Filters users alphabetically by whether their username contains the search query
   const filteredItems = items.filter((item) => 
     item.id != FIREBASE_AUTH.currentUser?.uid && 
-    (item.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    (item.username.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   return (
