@@ -10,15 +10,6 @@ import {
     Platform,
     TouchableWithoutFeedback,
 } from 'react-native';
-import {
-  collection,
-  doc,
-  getDoc,
-  getDocs,
-  query,
-  where,
-  updateDoc,
-} from 'firebase/firestore';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
 import { getAuth, signOut } from 'firebase/auth';
 import { router } from 'expo-router';
@@ -27,7 +18,7 @@ import FindTab from './FindTab';
 import FriendsTab from './FriendsTab';
 import RequestsTab from './RequestsTab';
 import SentTab from './SentTab';
-import { collection, getDocs, addDoc, serverTimestamp, query, where } from 'firebase/firestore';
+import { collection, getDocs, addDoc, serverTimestamp, query, where, doc, getDoc, updateDoc, } from 'firebase/firestore';
 
 /**
  * Represents a person with basic information and optional interaction buttons.
@@ -73,6 +64,7 @@ export default function FriendsPage(): JSX.Element {
     const [findUsers, setFindUsers] = useState<Person[]>([]);
     const [sentRequests, setSentRequests] = useState<Person[]>([]);
     const [receivedRequests, setReceivedRequests] = useState<Person[]>([]);
+    const [friends, setFriends] = useState<Person[]>([]);
     const currentUserId = FIREBASE_AUTH.currentUser?.uid;
     const [loading, setLoading] = useState(true);
 
@@ -254,9 +246,71 @@ export default function FriendsPage(): JSX.Element {
             }
         };
 
+        const fetchFriends = async () => {
+          try {
+            const userQuery = query(
+              collection(FIRESTORE_DB, "users"),
+              where("userId", "==", currentUserId)
+            )
+
+            const userSnapshot = await getDocs(userQuery);
+            
+            // Get friends list
+            const document = userSnapshot.docs[0]; // There should only be 1 doc in the snapshot
+            const friendsList = document.data()["friends"];
+
+            // Fetch all user documents that are in the friends list
+            if (!friendsList.empty){
+                const friendQuery = query(
+                    collection(FIRESTORE_DB, "users"),
+                    where("username", "in", friendsList)
+                  );
+                
+                const friendSnapshot = await getDocs(friendQuery);
+                const friendPromises = friendSnapshot.docs.map(async (doc) => {
+                    const data = doc.data();
+                    const friendId = data.userId;
+
+                    // Fetch user data for the sender
+                    const userQuery = query(
+                        collection(FIRESTORE_DB, "users"),
+                        where("userId", "==", friendId)
+                    );
+                    const userSnapshot = await getDocs(userQuery);
+
+                    if (!userSnapshot.empty) {
+                        const userData = userSnapshot.docs[0].data();
+                        return {
+                            id: userData.userId,
+                            username: userData.username,
+                            name: `${userData.firstname} ${userData.lastname}`,
+                            buttons: [{ label: 'Remove', onPress: () => removeFriend(userData.username) }], // Or any other relevant action
+                        };
+                    } else {
+                        console.log(`No user found with ID: ${friendId}`);
+                        return null; // Or handle the case where the user is not found
+                    }
+            
+            });
+                // Resolve all promises and filter out any null values
+                const friends = (await Promise.all(friendPromises)).filter(
+                    (user) => user !== null
+                ) as Person[];
+                setFriends(friends.sort((a, b) => a.name.localeCompare(b.name)));
+            }
+            
+
+        } catch (error) {
+            console.error("Server error: unable to fetch current friends.", error);
+        } finally {
+            setLoading(false); // Set loading to false after fetching
+        }
+        }
+
         fetchUsers();
         fetchReceivedRequests();
         fetchSentRequests();
+        fetchFriends();
     }, []);
 
     /**
@@ -286,26 +340,7 @@ export default function FriendsPage(): JSX.Element {
      */
     const tabContent: TabContentType = {
         Find: findUsers,
-        Friends: [
-            {
-                id: '1',
-                username: 'johndoe',
-                name: 'John Doe',
-                buttons: [{ label: 'Confirm', onPress: () => console.log('Added') }],
-            },
-            {
-                id: '2',
-                username: 'janesmith',
-                name: 'Jane Smith',
-                buttons: [{ label: 'Confirm', onPress: () => console.log('Added') }],
-            },
-            {
-                id: '3',
-                username: 'alicejones',
-                name: 'Alice Jones',
-                buttons: [{ label: 'Confirm', onPress: () => console.log('Added') }],
-            },
-        ],
+        Friends: friends,
         Requests: receivedRequests,
         Sent: sentRequests
     };
@@ -354,8 +389,9 @@ export default function FriendsPage(): JSX.Element {
     const userCollection = collection(FIRESTORE_DB, "users");
     const userQuery = query(
       userCollection,
-      where("userId", "==", id),
+      where("userId", "==", currentUserId),
     );
+
     const userData = await getDocs(userQuery);
 
     // If userID is not in database at this point, something is wrong
