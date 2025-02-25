@@ -259,8 +259,8 @@ export default function FriendsPage(): JSX.Element {
             const document = userSnapshot.docs[0]; // There should only be 1 doc in the snapshot
             const friendsList = document.data()["friends"];
 
-            // Fetch all user documents that are in the friends list
-            if (!friendsList.empty){
+            // If friendsList is empty, the query will be invalid
+            if (friendsList.length){
                 const friendQuery = query(
                     collection(FIRESTORE_DB, "users"),
                     where("username", "in", friendsList)
