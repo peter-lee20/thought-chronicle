@@ -38,7 +38,7 @@ const isValidUser = async (username: string) => {
     if (!sameUsernames.empty) {
       Alert.alert("Error", "This username has been taken");
       return false;
-    } else if (!meetsCharReqs) {
+    } else if (!meetsCharReqs.test(username)) {
       Alert.alert("Error", "Username does not meet all requirements");
       return false;
     }
