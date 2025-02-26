@@ -385,7 +385,6 @@ export default function FriendsPage(): JSX.Element {
    * Remove friend from friend list
    */
   const removeFriend = async (friendId: string) => {
-    console.log(friendId, currentUserId);
 
     // Fetch documents
     const userCollection = collection(FIRESTORE_DB, "users");
@@ -403,33 +402,39 @@ export default function FriendsPage(): JSX.Element {
       return null;
     }
 
+    // Manipulate elements such that the first element is self, second element is friend
+    let masterDoc = userData.docs;
+    if (masterDoc[0].data()["userId"] !== currentUserId){
+        let temp = masterDoc[0];
+        masterDoc[0] = masterDoc[1];
+        masterDoc[1] = temp;
+    }
     // Fetch user data for both users
-    const document = userData.docs[0];
-    const friendDocument = userData.docs[1];
+    const document = masterDoc[0];
+    const friendDocument = masterDoc[1];
     let friendsList = document.data()["friends"];
     let friendsList2 = friendDocument.data()["friends"];
     const username = document.data()["username"];
     const friendName = friendDocument.data()["username"];
-
-    if (!(friendName in friendsList)){
-        console.log("Friend is not here!")
-      } else {
+    
+    if (friendsList.some((friend: string) => friend === friendName)){
         friendsList = findAndDelete(friendsList, friendName);
+      } else {
+        console.log("Friend is not here!");
       }
     
-      if (!(username in friendsList2)){
-        console.log("Friend is not here!")
+      if (friendsList2.some((friend: string) => friend === username)){
+        friendsList2 = findAndDelete(friendsList2, username);
       } else {
-        friendsList2 = findAndDelete(friendsList2, username)
+        console.log("Friend is not here!");
       }
-
     // Update documents in firebase
     await updateDoc(document.ref, {
       friends: friendsList
     });
 
     await updateDoc(friendDocument.ref, {
-        friends: friendsList2
+      friends: friendsList2
     });
 
     // Update UI
@@ -437,8 +442,6 @@ export default function FriendsPage(): JSX.Element {
     setFriends(prevFriends => 
         prevFriends.filter(friend => friend.id !== friendId)
     );
-
-    console.log("Nuked", friendName);
 
     }
   
@@ -483,21 +486,29 @@ export default function FriendsPage(): JSX.Element {
       return null;
     }
 
+    // Manipulate elements such that the first element is self, second element is friend
+    let masterDoc = userData.docs;
+    if (masterDoc[0].data()["userId"] !== currentUserId){
+        let temp = masterDoc[0];
+        masterDoc[0] = masterDoc[1];
+        masterDoc[1] = temp;
+    }
+
     // Fetch user data for both users
-    const document = userData.docs[0];
-    const friendDocument = userData.docs[1];
+    const document = masterDoc[0];
+    const friendDocument = masterDoc[1];
     let friendsList = document.data()["friends"];
     let friendsList2 = friendDocument.data()["friends"];
     const username = document.data()["username"];
     const friendName = friendDocument.data()["username"];
 
-    if (friendName in friendsList){
+    if (friendsList.some((friend: string) => friend === friendName)){
         console.log("Friend is already here!")
       } else {
         friendsList.push(friendName);
       }
     
-      if (username in friendsList2){
+    if (friendsList2.some((friend: string) => friend === username)){
         console.log("Friend is already here!")
       } else {
         friendsList2.push(username);
@@ -526,8 +537,6 @@ export default function FriendsPage(): JSX.Element {
     setReceivedRequests(prevRequests => 
         prevRequests.filter(friend => friend.id !== friendId)
     );
-
-    console.log("Added", friendName, "as friend, user id = ", friendId);
   }
 
   return (
