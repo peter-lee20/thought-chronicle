@@ -93,6 +93,16 @@ export default function FriendsPage(): JSX.Element {
 
                     const existingRequestSnapshot = await getDocs(existingRequestQuery);
 
+                    // Check if the user is already your friend
+                    const friendQuery = query(
+                        collection(FIRESTORE_DB, "users"),
+                        where("userId", "==", currentUserId),
+                        where("friends", "array-contains", data.username)
+
+                    )
+
+                    const friendSnapshot = await getDocs(friendQuery);
+
                     let buttonLabel = '+ Add Friend';
                     let buttonPressHandler: () => Promise<void> = async () => {
                         try {
@@ -141,6 +151,9 @@ export default function FriendsPage(): JSX.Element {
                     if (!existingRequestSnapshot.empty) {
                         buttonLabel = 'Sent';
                         buttonPressHandler = async () => { };
+                    } else if (!friendSnapshot.empty){
+                        buttonLabel = 'Remove';
+                        buttonPressHandler = async () => {removeFriend(data.userId);}
                     }
 
                     return {
@@ -416,7 +429,7 @@ export default function FriendsPage(): JSX.Element {
     let friendsList2 = friendDocument.data()["friends"];
     const username = document.data()["username"];
     const friendName = friendDocument.data()["username"];
-    
+
     if (friendsList.some((friend: string) => friend === friendName)){
         friendsList = findAndDelete(friendsList, friendName);
       } else {
