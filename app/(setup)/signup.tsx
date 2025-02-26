@@ -17,21 +17,41 @@ import { FIRESTORE_DB } from "../../FirebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
 
-const isUniqueUser = async (username: string) => {
+/**
+ * Function that checks whether a provided username is valid (meaning that
+ * it is unique from other usernames in the database and only contains
+ * lowercase letters and numbers.
+ *
+ * @param username the string containing the username to be checked
+ * @returns a boolean representign whether the username is valid
+ */
+const isValidUser = async (username: string) => {
   try {
-    const sameUsername = await getDocs(query(collection(FIRESTORE_DB, "users"), where("username", "==", username)));
+    const sameUsernames = await getDocs(
+      query(
+        collection(FIRESTORE_DB, "users"),
+        where("username", "==", username)
+      )
+    );
+    const meetsCharReqs = /^[a-z0-9]{5,15}$/;
 
-    if (sameUsername.empty) {
-      return true;
-    } else {
+    if (!sameUsernames.empty) {
       Alert.alert("Error", "This username has been taken");
       return false;
+    } else if (!meetsCharReqs.test(username)) {
+      Alert.alert("Error", "Username does not meet all requirements");
+      return false;
     }
+
+    return true;
   } catch (error) {
-    Alert.alert("Error", "There was an error validating your username.");
+    Alert.alert(
+      "Error",
+      "There was an error validating your username. Please try again later."
+    );
     return false;
   }
-}
+};
 
 // const UsernameRequirements = async (username: string) => {
 //   const uniqueUser = await isUniqueUser(username);
@@ -58,12 +78,45 @@ const isUniqueUser = async (username: string) => {
 //   );
 // }
 
+const UsernameRequirements = ({ username }: { username: string }) => {
+  const requirements = [
+    {
+      label: "5-15 characters",
+      validator: (user: string) => user.length >= 5 && user.length <= 15,
+    },
+    {
+      label: "Contains only lowercase letters and numbers",
+      validator: (user: string) => /^[a-z0-9]*$/.test(user),
+    },
+  ];
+
+  return (
+    <View style={styles.requirementsGrid}>
+      {requirements.map((req, index) => (
+        <View key={index} style={styles.requirementItem}>
+          <Text
+            style={{
+              color: req.validator(username) ? "green" : "#7E948C", //#7E948C
+              fontSize: 14,
+            }}
+          >
+            {req.validator(username) ? "✓" : "✗"} {req.label}
+          </Text>
+        </View>
+      ))}
+    </View>
+  );
+};
+
 const PasswordRequirements = ({ password }) => {
   const requirements = [
     { label: "8+ characters", validator: (pwd) => pwd.length >= 8 },
     { label: "Uppercase letter", validator: (pwd) => /[A-Z]/.test(pwd) },
     { label: "Numeric character", validator: (pwd) => /[0-9]/.test(pwd) },
-    { label: "Special character", validator: (pwd) => /[^a-zA-Z0-9]/.test(pwd) },
+    {
+      label: "Special character",
+      validator: (pwd) => /[^a-zA-Z0-9]/.test(pwd),
+    },
   ];
 
   return (
@@ -83,7 +136,6 @@ const PasswordRequirements = ({ password }) => {
     </View>
   );
 };
-
 
 export default function Signup() {
   const [email, setEmail] = useState("");
@@ -112,13 +164,20 @@ export default function Signup() {
   };
 
   const handleSignUp = async () => {
-    if (!email || !firstName || !lastName || !username || !password || !confirmPassword) {
+    if (
+      !email ||
+      !firstName ||
+      !lastName ||
+      !username ||
+      !password ||
+      !confirmPassword
+    ) {
       Alert.alert("Error", "Missing fields");
       return;
     }
 
-    const uniqueUser = await isUniqueUser(username);
-    if (!uniqueUser) {
+    const validUser = await isValidUser(username);
+    if (!validUser) {
       return;
     }
 
@@ -139,7 +198,11 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      const response = await createUserWithEmailAndPassword(auth, email, password);
+      const response = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
 
       // Store first and last name to Firestore
@@ -148,7 +211,8 @@ export default function Signup() {
         email: email,
         firstname: firstName,
         lastname: lastName,
-        username: username
+        username: username,
+        friends: [],
       });
 
       router.replace("/verification");
@@ -164,17 +228,13 @@ export default function Signup() {
   };
 
   return (
+    <SafeAreaView style={styles.container}>
+      <Text style={styles.heading}>Sign Up</Text>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        keyboardVerticalOffset={Platform.OS === "ios" ? 100 : 0}
-        style={styles.container}
+        // keyboardVerticalOffset={Platform.OS === "ios" ?  : 20}
+        style={styles.formContainer}
       >
-        <Image
-          source={require("../../assets/images/signup-image.png")}
-          style={styles.image}
-        />
-        <Text style={styles.heading}>Sign Up</Text>
-
         <TextInput
           style={styles.input}
           placeholder="Email"
@@ -209,8 +269,8 @@ export default function Signup() {
           onChangeText={setUsername}
         />
 
-        {/* <UsernameRequirements username={username} /> */}
-        
+        <UsernameRequirements username={username} />
+
         <TextInput
           style={styles.input}
           placeholder="Password"
@@ -231,22 +291,23 @@ export default function Signup() {
           onChangeText={setConfirmPassword}
           secureTextEntry
         />
-
-        <TouchableOpacity
-          style={[styles.button, loading && styles.disabledButton]}
-          onPress={() => handleSignUp()}
-          disabled={loading}
-        >
-          <Text style={styles.buttonText}>Create Account</Text>
-        </TouchableOpacity>
-
-        <View style={styles.footer}>
-          <Text style={styles.footerText}>Already have an account? </Text>
-          <Link href="/(setup)" style={styles.link}>
-            Sign In
-          </Link>
-        </View>
       </KeyboardAvoidingView>
+
+      <TouchableOpacity
+        style={[styles.button, loading && styles.disabledButton]}
+        onPress={() => handleSignUp()}
+        disabled={loading}
+      >
+        <Text style={styles.buttonText}>Create Account</Text>
+      </TouchableOpacity>
+
+      <View style={styles.footer}>
+        <Text style={styles.footerText}>Already have an account? </Text>
+        <Link href="/(setup)" style={styles.link}>
+          Sign In
+        </Link>
+      </View>
+    </SafeAreaView>
   );
 }
 
@@ -254,15 +315,17 @@ const styles = StyleSheet.create({
   requirementsGrid: {
     width: "100%",
     flexDirection: "row",
-    flexWrap: "wrap", 
+    flexWrap: "wrap",
     justifyContent: "space-between",
     marginTop: -5,
     marginBottom: 2,
   },
+
   requirementItem: {
     width: "48%",
-    marginBottom: 10, 
+    marginBottom: 10,
   },
+
   container: {
     flex: 1,
     justifyContent: "center",
@@ -270,18 +333,27 @@ const styles = StyleSheet.create({
     padding: 20,
     backgroundColor: "#F0ECE0",
   },
+
+  formContainer: {
+    alignItems: "center",
+    // flexGrow: 1,
+    padding: 20,
+    width: "100%",
+  },
+
   image: {
     width: 150,
     height: 150,
     marginBottom: 20,
   },
+
   heading: {
     fontSize: 24,
-    marginBottom: 20,
     color: "#333",
     fontFamily: "Poppins",
     fontWeight: "bold",
   },
+
   input: {
     width: "100%",
     padding: 15,
@@ -292,14 +364,17 @@ const styles = StyleSheet.create({
     backgroundColor: "#F0ECE0",
     fontFamily: "Poppins",
   },
+
   rowContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
   },
+
   halfInput: {
     width: "48%",
   },
+
   button: {
     backgroundColor: "#7E948C",
     paddingVertical: 20,
@@ -308,35 +383,40 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#7E948C",
     alignItems: "center",
-    width: "100%",
+    width: "90%",
     marginTop: 20,
   },
+
   buttonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
     fontFamily: "Poppins",
   },
+
   footer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     marginTop: 20,
   },
+
   footerText: {
     fontSize: 14,
-    color:"#333",
+    color: "#333",
     fontFamily: "Poppins",
-   },
-   link: {
+  },
+
+  link: {
     fontSize: 14,
     color: "#7E948C",
     fontWeight: "bold",
-    textDecorationLine: "underline"},
-    
-    requirementsContainer: {
-      width: "100%",
-      marginTop: -5, 
-      marginBottom: 10,
-    },
+    textDecorationLine: "underline",
+  },
+
+  requirementsContainer: {
+    width: "100%",
+    marginTop: -5,
+    marginBottom: 10,
+  },
 });
