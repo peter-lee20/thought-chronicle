@@ -33,7 +33,7 @@ const isValidUser = async (username: string) => {
         where("username", "==", username)
       )
     );
-    const meetsCharReqs = /^[a-z1-9]{5,15}$/;
+    const meetsCharReqs = /^[a-z0-9]{5,15}$/;
 
     if (!sameUsernames.empty) {
       Alert.alert("Error", "This username has been taken");
@@ -86,7 +86,7 @@ const UsernameRequirements = ({ username }: { username: string }) => {
     },
     {
       label: "Contains only lowercase letters and numbers",
-      validator: (user: string) => /^[a-z1-9]*$/.test(user),
+      validator: (user: string) => /^[a-z0-9]*$/.test(user),
     },
   ];
 
