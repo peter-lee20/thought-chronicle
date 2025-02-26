@@ -284,7 +284,7 @@ export default function FriendsPage(): JSX.Element {
                             id: userData.userId,
                             username: userData.username,
                             name: `${userData.firstname} ${userData.lastname}`,
-                            buttons: [{ label: 'Remove', onPress: () => removeFriend(userData.username) }], // Or any other relevant action
+                            buttons: [{ label: 'Remove', onPress: () => removeFriend(userData.userId) }], // Or any other relevant action
                         };
                     } else {
                         console.log(`No user found with ID: ${friendId}`);
@@ -384,61 +384,61 @@ export default function FriendsPage(): JSX.Element {
   /**
    * Remove friend from friend list
    */
-  const removeFriend = async (friendName: string) => {
-    // Fetch caller's username
+  const removeFriend = async (friendId: string) => {
+    console.log(friendId, currentUserId);
+
+    // Fetch documents
     const userCollection = collection(FIRESTORE_DB, "users");
+    const ids = [currentUserId, friendId]
     const userQuery = query(
       userCollection,
-      where("userId", "==", currentUserId),
+      where("userId", "in", ids),
     );
 
     const userData = await getDocs(userQuery);
 
     // If userID is not in database at this point, something is wrong
-    if (userData.empty){
-      console.log("USER NOT FOUND. HOUSTON WE HAVE A PROBLEM.");
+    if (userData.size != 2){
+      console.log("WRONG NUMBER OF USERS. HOUSTON WE HAVE A PROBLEM.");
       return null;
     }
 
-    // There should only be 1 document in userData
+    // Fetch user data for both users
     const document = userData.docs[0];
-    const friendsList = document.data()["friends"];
+    const friendDocument = userData.docs[1];
+    let friendsList = document.data()["friends"];
+    let friendsList2 = friendDocument.data()["friends"];
     const username = document.data()["username"];
+    const friendName = friendDocument.data()["username"];
 
-    const modifiedList = findAndDelete(friendsList, friendName);
+    if (!(friendName in friendsList)){
+        console.log("Friend is not here!")
+      } else {
+        friendsList = findAndDelete(friendsList, friendName);
+      }
+    
+      if (!(username in friendsList2)){
+        console.log("Friend is not here!")
+      } else {
+        friendsList2 = findAndDelete(friendsList2, username)
+      }
 
-    // Update document in firebase
-    const docRef = doc(FIRESTORE_DB, "users", document.id);
-    await updateDoc(docRef, {
-      friends: modifiedList
+    // Update documents in firebase
+    await updateDoc(document.ref, {
+      friends: friendsList
     });
 
+    await updateDoc(friendDocument.ref, {
+        friends: friendsList2
+    });
 
-    // Remove caller from friend's friend list
-    const friendQuery = query(
-      userCollection,
-      where("username", "==", friendName),
+    // Update UI
+
+    setFriends(prevFriends => 
+        prevFriends.filter(friend => friend.id !== friendId)
     );
 
-    const friendSnapshot = await getDocs(friendQuery);
-
-    // friendSnapshot should not be empty
-    if (friendSnapshot.empty){
-      console.log("FriendSnapshot is empty.")
-      return null;
-    }
-
-    const friendDoc = friendSnapshot.docs[0];
-    const friendList = friendDoc.data()["friends"];
-
-    // Find username in friend list and remove it
-    const modifiedFriendList = findAndDelete(friendList, username);
-
-    // Update document in firebase
-    const friendDocRef = doc(FIRESTORE_DB, "users", friendDoc.id);
-    await updateDoc(friendDocRef, {
-      friends: modifiedFriendList
-    });
+    console.log("Nuked", friendName);
 
     }
   
@@ -512,7 +512,22 @@ export default function FriendsPage(): JSX.Element {
     friends: friendsList2
     });
 
-    
+    // Update UI
+    setFriends(prevFriends => [
+        ...prevFriends,
+        {
+            id: friendId,
+            username: friendName,
+            name: `${friendDocument.data().firstname} ${friendDocument.data().lastname}`,
+            buttons: [{ label: 'Remove', onPress: () => removeFriend(friendId) }] // Or any other relevant action
+        }
+    ]);
+
+    setReceivedRequests(prevRequests => 
+        prevRequests.filter(friend => friend.id !== friendId)
+    );
+
+    console.log("Added", friendName, "as friend, user id = ", friendId);
   }
 
   return (
