@@ -1,30 +1,24 @@
 import React, { useEffect, useState } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  Image,
-  Keyboard,
-  KeyboardAvoidingView,
-  Platform,
-  TouchableWithoutFeedback,
-} from "react-native";
-import { router } from "expo-router";
+    View,
+    Text,
+    TouchableOpacity,
+    StyleSheet,
+    Image,
+    Keyboard,
+    KeyboardAvoidingView,
+    Platform,
+    TouchableWithoutFeedback,
+} from 'react-native';
+import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
+import { getAuth, signOut } from 'firebase/auth';
+import { router } from 'expo-router';
 
-import FindTab from "./FindTab";
-import FriendsTab from "./FriendsTab";
-import RequestsTab from "./RequestsTab";
-import SentTab from "./SentTab";
-import {
-  collection,
-  getDocs,
-  addDoc,
-  serverTimestamp,
-  query,
-  where,
-} from "firebase/firestore";
-import { FIREBASE_AUTH, FIRESTORE_DB } from "@/FirebaseConfig";
+import FindTab from './FindTab';
+import FriendsTab from './FriendsTab';
+import RequestsTab from './RequestsTab';
+import SentTab from './SentTab';
+import { collection, getDocs, addDoc, serverTimestamp, query, where, doc, getDoc, updateDoc, deleteDoc} from 'firebase/firestore';
 
 /**
  * Represents a person with basic information and optional interaction buttons.
@@ -66,12 +60,13 @@ interface TabContentType {
  * @returns {JSX.Element} - The rendered FriendsPage component.
  */
 export default function FriendsPage(): JSX.Element {
-  const [activeTab, setActiveTab] = useState<TabName>("Find");
-  const [findUsers, setFindUsers] = useState<Person[]>([]);
-  const [sentRequests, setSentRequests] = useState<Person[]>([]);
-  const [receivedRequests, setReceivedRequests] = useState<Person[]>([]);
-  const currentUserId = FIREBASE_AUTH.currentUser?.uid;
-  const [loading, setLoading] = useState(true);
+    const [activeTab, setActiveTab] = useState<TabName>('Find');
+    const [findUsers, setFindUsers] = useState<Person[]>([]);
+    const [sentRequests, setSentRequests] = useState<Person[]>([]);
+    const [receivedRequests, setReceivedRequests] = useState<Person[]>([]);
+    const [friends, setFriends] = useState<Person[]>([]);
+    const currentUserId = FIREBASE_AUTH.currentUser?.uid;
+    const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!currentUserId) {
@@ -96,7 +91,17 @@ export default function FriendsPage(): JSX.Element {
               where("receiverID", "==", data.userId)
             );
 
-            const existingRequestSnapshot = await getDocs(existingRequestQuery);
+                    const existingRequestSnapshot = await getDocs(existingRequestQuery);
+
+                    // Check if the user is already your friend
+                    const friendQuery = query(
+                        collection(FIRESTORE_DB, "users"),
+                        where("userId", "==", currentUserId),
+                        where("friends", "array-contains", data.username)
+
+                    )
+
+                    const friendSnapshot = await getDocs(friendQuery);
 
             let buttonLabel = "+ Add Friend";
             let buttonPressHandler: () => Promise<void> = async () => {
@@ -142,10 +147,15 @@ export default function FriendsPage(): JSX.Element {
               }
             };
 
-            if (!existingRequestSnapshot.empty) {
-              buttonLabel = "Sent";
-              buttonPressHandler = async () => {};
-            }
+                    if (!existingRequestSnapshot.empty) {
+                        buttonLabel = 'Sent';
+                        buttonPressHandler = async () => { };
+                    } else if (!friendSnapshot.empty){
+                        buttonLabel = 'Remove';
+                        buttonPressHandler = async () => {
+                            removeFriend(data.userId);
+                        }
+                    }
 
             return {
               id: data.userId,
@@ -227,34 +237,96 @@ export default function FriendsPage(): JSX.Element {
           );
           const userSnapshot = await getDocs(userQuery);
 
-          if (!userSnapshot.empty) {
-            const userData = userSnapshot.docs[0].data();
-            return {
-              id: userData.userId,
-              username: userData.username,
-              name: `${userData.firstname} ${userData.lastname}`,
-              buttons: [{ label: "Accept", onPress: () => {} }], // Or any other relevant action
-            };
-          } else {
-            console.log(`No user found with ID: ${senderId}`);
-            return null; // Or handle the case where the user is not found
-          }
-        });
+                    if (!userSnapshot.empty) {
+                        const userData = userSnapshot.docs[0].data();
+                        return {
+                            id: userData.userId,
+                            username: userData.username,
+                            name: `${userData.firstname} ${userData.lastname}`,
+                            buttons: [{ label: 'Accept', onPress: () => addFriend(userData.userId) }], // Or any other relevant action
+                        };
+                    } else {
+                        console.log(`No user found with ID: ${senderId}`);
+                        return null; // Or handle the case where the user is not found
+                    }
+                });
 
-        // Resolve all promises and filter out any null values
-        const receivedUsers = (await Promise.all(receivedUsersPromises)).filter(
-          (user) => user !== null
-        ) as Person[];
-        setReceivedRequests(receivedUsers);
-      } catch (error) {
-        console.error("Error fetching received requests:", error);
-      }
-    };
+                // Resolve all promises and filter out any null values
+                const receivedUsers = (await Promise.all(receivedUsersPromises)).filter(
+                    (user) => user !== null
+                ) as Person[];
+                setReceivedRequests(receivedUsers);
+            } catch (error) {
+                console.error("Error fetching received requests:", error);
+            }
+        };
 
-    fetchUsers();
-    fetchReceivedRequests();
-    fetchSentRequests();
-  }, []);
+        const fetchFriends = async () => {
+          try {
+            const userQuery = query(
+              collection(FIRESTORE_DB, "users"),
+              where("userId", "==", currentUserId)
+            )
+
+            const userSnapshot = await getDocs(userQuery);
+            
+            // Get friends list
+            const document = userSnapshot.docs[0]; // There should only be 1 doc in the snapshot
+            const friendsList = document.data()["friends"];
+
+            // If friendsList is empty, the query will be invalid
+            if (friendsList.length){
+                const friendQuery = query(
+                    collection(FIRESTORE_DB, "users"),
+                    where("username", "in", friendsList)
+                  );
+                
+                const friendSnapshot = await getDocs(friendQuery);
+                const friendPromises = friendSnapshot.docs.map(async (doc) => {
+                    const data = doc.data();
+                    const friendId = data.userId;
+
+                    // Fetch user data for the sender
+                    const userQuery = query(
+                        collection(FIRESTORE_DB, "users"),
+                        where("userId", "==", friendId)
+                    );
+                    const userSnapshot = await getDocs(userQuery);
+
+                    if (!userSnapshot.empty) {
+                        const userData = userSnapshot.docs[0].data();
+                        return {
+                            id: userData.userId,
+                            username: userData.username,
+                            name: `${userData.firstname} ${userData.lastname}`,
+                            buttons: [{ label: 'Remove', onPress: () => removeFriend(userData.userId) }], // Or any other relevant action
+                        };
+                    } else {
+                        console.log(`No user found with ID: ${friendId}`);
+                        return null; // Or handle the case where the user is not found
+                    }
+            
+            });
+                // Resolve all promises and filter out any null values
+                const friends = (await Promise.all(friendPromises)).filter(
+                    (user) => user !== null
+                ) as Person[];
+                setFriends(friends.sort((a, b) => a.name.localeCompare(b.name)));
+            }
+            
+
+        } catch (error) {
+            console.error("Server error: unable to fetch current friends.", error);
+        } finally {
+            setLoading(false); // Set loading to false after fetching
+        }
+        }
+
+        fetchUsers();
+        fetchReceivedRequests();
+        fetchSentRequests();
+        fetchFriends();
+    }, []);
 
   /**
    * An array of tab items, each representing a tab in the FriendsPage.
@@ -281,36 +353,15 @@ export default function FriendsPage(): JSX.Element {
     },
   ];
 
-  /**
-   * Data for each tab.
-   */
-  const tabContent: TabContentType = {
-    Find: findUsers,
-    Friends: [
-      {
-        id: "1",
-        username: "johndoe",
-        name: "John Doe",
-        buttons: [{ label: "Confirm", onPress: () => console.log("Added") }],
-      },
-
-      {
-        id: "2",
-        username: "janesmith",
-        name: "Jane Smith",
-        buttons: [{ label: "Confirm", onPress: () => console.log("Added") }],
-      },
-
-      {
-        id: "3",
-        username: "alicejones",
-        name: "Alice Jones",
-        buttons: [{ label: "Confirm", onPress: () => console.log("Added") }],
-      },
-    ],
-    Requests: receivedRequests,
-    Sent: sentRequests,
-  };
+    /**
+     * Data for each tab.
+     */
+    const tabContent: TabContentType = {
+        Find: findUsers,
+        Friends: friends,
+        Requests: receivedRequests,
+        Sent: sentRequests
+    };
 
   /**
    * Renders the content for the currently active tab.
@@ -332,12 +383,240 @@ export default function FriendsPage(): JSX.Element {
     }
   };
 
+  /**
+   * Helper function for friend removal
+   */
+
+  const findAndDelete = (list: Array<string>, friend: string) => {
+    // Find friendName in list and remove it
+    const index = list.indexOf(friend);
+
+    if (index !== -1){ // This check should never fail in normal app use
+      list.splice(index, 1);
+    } else {
+      console.log("Your friend is FAKE.")
+    }
+    return list;
+  }
+
+  /**
+   * Remove friend from friend list
+   */
+  const removeFriend = async (friendId: string) => {
+
+    // Fetch documents
+    const userCollection = collection(FIRESTORE_DB, "users");
+    const ids = [currentUserId, friendId]
+    const userQuery = query(
+      userCollection,
+      where("userId", "in", ids),
+    );
+
+    const userData = await getDocs(userQuery);
+
+    // If userID is not in database at this point, something is wrong
+    if (userData.size != 2){
+      console.log("WRONG NUMBER OF USERS. HOUSTON WE HAVE A PROBLEM.");
+      return null;
+    }
+
+    // Manipulate elements such that the first element is self, second element is friend
+    let masterDoc = userData.docs;
+    if (masterDoc[0].data()["userId"] !== currentUserId){
+        let temp = masterDoc[0];
+        masterDoc[0] = masterDoc[1];
+        masterDoc[1] = temp;
+    }
+    // Fetch user data for both users
+    const document = masterDoc[0];
+    const friendDocument = masterDoc[1];
+    let friendsList = document.data()["friends"];
+    let friendsList2 = friendDocument.data()["friends"];
+    const username = document.data()["username"];
+    const friendName = friendDocument.data()["username"];
+
+    if (friendsList.some((friend: string) => friend === friendName)){
+        friendsList = findAndDelete(friendsList, friendName);
+      } else {
+        console.log("Friend is not here!");
+      }
+    
+      if (friendsList2.some((friend: string) => friend === username)){
+        friendsList2 = findAndDelete(friendsList2, username);
+      } else {
+        console.log("Friend is not here!");
+      }
+    // Update documents in firebase
+    await updateDoc(document.ref, {
+      friends: friendsList
+    });
+
+    await updateDoc(friendDocument.ref, {
+      friends: friendsList2
+    });
+
+    // Update UI
+
+    setFriends(prevFriends => 
+        prevFriends.filter(friend => friend.id !== friendId)
+    );
+
+    setFindUsers(prevUsers =>
+        prevUsers.map(user =>
+            user.id === friendId
+                ? {
+                    ...user,
+                    buttons: [{ label: '+ Add Friend', onPress: async () => {
+
+                        // Function to send friend requests
+                        await addDoc(collection(FIRESTORE_DB, "friendRequests"), {
+                            senderID: currentUserId,
+                            receiverID: friendId,
+                            status: "pending",
+                            timestamp: serverTimestamp(),
+                        });
+
+                        console.log(`Friend request sent to ${friendName}`);
+
+                        // Update the button on the Find tab immediately after sending the request
+                        setFindUsers(prevUsers => prevUsers.map(user =>
+                            user.id === friendId
+                                ? {
+                                    ...user,
+                                    buttons: [{ label: 'Sent', onPress: () => { } }]
+                                }
+                                : user
+                        ));
+
+                        // Update the Sent tab after sending a new request
+                        setSentRequests(prevSentRequests => [
+                            ...prevSentRequests,
+                            {
+                                id: friendId,
+                                username: friendName,
+                                name: `${friendDocument.data().firstname} ${friendDocument.data().lastname}`,
+                                buttons: [{ label: 'Pending', onPress: () => { } }] // Or any other relevant action
+                            }
+                        ]);
+                    } }]
+                }
+                : user
+        )
+    );
+
+    }
+  
+  /**
+   * Add friend to friend list
+   */
+
+  const addFriend = async (friendId: string) => {
+    // Delete friend request from firebase
+    const requests = collection(FIRESTORE_DB, "friendRequests");
+    const requestQuery = query(
+        requests,
+        where("receiverID", "==", currentUserId),
+        where("senderID", "==", friendId)
+    );
+
+    const requestData = await getDocs(requestQuery);
+
+    // If requestData is empty, the request doesn't exist
+    if (requestData.empty){
+        console.log("Request doesn't exist");
+        return null;
+    }
+
+    // Delete document
+    const request = requestData.docs[0];
+    await deleteDoc(request.ref);
+
+    // Fetch caller's username
+    const userCollection = collection(FIRESTORE_DB, "users");
+    const ids = [currentUserId, friendId]
+    const userQuery = query(
+      userCollection,
+      where("userId", "in", ids),
+    );
+
+    const userData = await getDocs(userQuery);
+
+    // If userID is not in database at this point, something is wrong
+    if (userData.size != 2){
+      console.log("WRONG NUMBER OF USERS. HOUSTON WE HAVE A PROBLEM.");
+      return null;
+    }
+
+    // Manipulate elements such that the first element is self, second element is friend
+    let masterDoc = userData.docs;
+    if (masterDoc[0].data()["userId"] !== currentUserId){
+        let temp = masterDoc[0];
+        masterDoc[0] = masterDoc[1];
+        masterDoc[1] = temp;
+    }
+
+    // Fetch user data for both users
+    const document = masterDoc[0];
+    const friendDocument = masterDoc[1];
+    let friendsList = document.data()["friends"];
+    let friendsList2 = friendDocument.data()["friends"];
+    const username = document.data()["username"];
+    const friendName = friendDocument.data()["username"];
+
+    if (friendsList.some((friend: string) => friend === friendName)){
+        console.log("Friend is already here!")
+      } else {
+        friendsList.push(friendName);
+      }
+    
+    if (friendsList2.some((friend: string) => friend === username)){
+        console.log("Friend is already here!")
+      } else {
+        friendsList2.push(username);
+      }
+
+    // Update documents in firebase
+    await updateDoc(document.ref, {
+      friends: friendsList
+    });
+
+    await updateDoc(friendDocument.ref, {
+    friends: friendsList2
+    });
+
+    // Update UI
+    setFriends(prevFriends => [
+        ...prevFriends,
+        {
+            id: friendId,
+            username: friendName,
+            name: `${friendDocument.data().firstname} ${friendDocument.data().lastname}`,
+            buttons: [{ label: 'Remove', onPress: () => removeFriend(friendId) }] // Or any other relevant action
+        }
+    ]);
+
+    setReceivedRequests(prevRequests => 
+        prevRequests.filter(friend => friend.id !== friendId)
+    );
+
+    setFindUsers(prevUsers =>
+        prevUsers.map(user =>
+            user.id === friendId
+                ? {
+                    ...user,
+                    buttons: [{ label: 'Remove', onPress: () => removeFriend(friendId) }]
+                }
+                : user
+        )
+    );
+  }
+
   return (
-    <View style={{ flex: 1, backgroundColor: "#F0ECE0" }}>
+    <View style={{ flex: 1 }}>
       <KeyboardAvoidingView
         style={{ flex: 1 }}
         contentContainerStyle={{ flexGrow: 1 }}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
         <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
           <View style={styles.container}>
