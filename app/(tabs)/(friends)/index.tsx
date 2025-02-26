@@ -153,7 +153,9 @@ export default function FriendsPage(): JSX.Element {
                         buttonPressHandler = async () => { };
                     } else if (!friendSnapshot.empty){
                         buttonLabel = 'Remove';
-                        buttonPressHandler = async () => {removeFriend(data.userId);}
+                        buttonPressHandler = async () => {
+                            removeFriend(data.userId);
+                        }
                     }
 
                     return {
@@ -456,6 +458,49 @@ export default function FriendsPage(): JSX.Element {
         prevFriends.filter(friend => friend.id !== friendId)
     );
 
+    setFindUsers(prevUsers =>
+        prevUsers.map(user =>
+            user.id === friendId
+                ? {
+                    ...user,
+                    buttons: [{ label: '+ Add Friend', onPress: async () => {
+
+                        // Function to send friend requests
+                        await addDoc(collection(FIRESTORE_DB, "friendRequests"), {
+                            senderID: currentUserId,
+                            receiverID: friendId,
+                            status: "pending",
+                            timestamp: serverTimestamp(),
+                        });
+
+                        console.log(`Friend request sent to ${friendName}`);
+
+                        // Update the button on the Find tab immediately after sending the request
+                        setFindUsers(prevUsers => prevUsers.map(user =>
+                            user.id === friendId
+                                ? {
+                                    ...user,
+                                    buttons: [{ label: 'Sent', onPress: () => { } }]
+                                }
+                                : user
+                        ));
+
+                        // Update the Sent tab after sending a new request
+                        setSentRequests(prevSentRequests => [
+                            ...prevSentRequests,
+                            {
+                                id: friendId,
+                                username: friendName,
+                                name: `${friendDocument.data().firstname} ${friendDocument.data().lastname}`,
+                                buttons: [{ label: 'Pending', onPress: () => { } }] // Or any other relevant action
+                            }
+                        ]);
+                    } }]
+                }
+                : user
+        )
+    );
+
     }
   
   /**
@@ -549,6 +594,17 @@ export default function FriendsPage(): JSX.Element {
 
     setReceivedRequests(prevRequests => 
         prevRequests.filter(friend => friend.id !== friendId)
+    );
+
+    setFindUsers(prevUsers =>
+        prevUsers.map(user =>
+            user.id === friendId
+                ? {
+                    ...user,
+                    buttons: [{ label: 'Remove', onPress: () => removeFriend(friendId) }]
+                }
+                : user
+        )
     );
   }
 
