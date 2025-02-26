@@ -18,7 +18,7 @@ import FindTab from './FindTab';
 import FriendsTab from './FriendsTab';
 import RequestsTab from './RequestsTab';
 import SentTab from './SentTab';
-import { collection, getDocs, addDoc, serverTimestamp, query, where, doc, getDoc, updateDoc, } from 'firebase/firestore';
+import { collection, getDocs, addDoc, serverTimestamp, query, where, doc, getDoc, updateDoc, deleteDoc} from 'firebase/firestore';
 
 /**
  * Represents a person with basic information and optional interaction buttons.
@@ -228,7 +228,7 @@ export default function FriendsPage(): JSX.Element {
                             id: userData.userId,
                             username: userData.username,
                             name: `${userData.firstname} ${userData.lastname}`,
-                            buttons: [{ label: 'Accept', onPress: () => addFriend(userData.username) }], // Or any other relevant action
+                            buttons: [{ label: 'Accept', onPress: () => addFriend(userData.userId) }], // Or any other relevant action
                         };
                     } else {
                         console.log(`No user found with ID: ${senderId}`);
@@ -446,60 +446,73 @@ export default function FriendsPage(): JSX.Element {
    * Add friend to friend list
    */
 
-  const addFriend = async (friendName: string) => {
+  const addFriend = async (friendId: string) => {
+    // Delete friend request from firebase
+    const requests = collection(FIRESTORE_DB, "friendRequests");
+    const requestQuery = query(
+        requests,
+        where("receiverID", "==", currentUserId),
+        where("senderID", "==", friendId)
+    );
+
+    const requestData = await getDocs(requestQuery);
+
+    // If requestData is empty, the request doesn't exist
+    if (requestData.empty){
+        console.log("Request doesn't exist");
+        return null;
+    }
+
+    // Delete document
+    const request = requestData.docs[0];
+    await deleteDoc(request.ref);
+
     // Fetch caller's username
     const userCollection = collection(FIRESTORE_DB, "users");
+    const ids = [currentUserId, friendId]
     const userQuery = query(
       userCollection,
-      where("userId", "==", currentUserId),
+      where("userId", "in", ids),
     );
 
     const userData = await getDocs(userQuery);
 
     // If userID is not in database at this point, something is wrong
-    if (userData.empty){
-      console.log("USER NOT FOUND. HOUSTON WE HAVE A PROBLEM.");
+    if (userData.size != 2){
+      console.log("WRONG NUMBER OF USERS. HOUSTON WE HAVE A PROBLEM.");
       return null;
     }
 
-    // There should only be 1 document in userData
+    // Fetch user data for both users
     const document = userData.docs[0];
+    const friendDocument = userData.docs[1];
     let friendsList = document.data()["friends"];
+    let friendsList2 = friendDocument.data()["friends"];
     const username = document.data()["username"];
+    const friendName = friendDocument.data()["username"];
 
-    friendsList.push(friendName);
+    if (friendName in friendsList){
+        console.log("Friend is already here!")
+      } else {
+        friendsList.push(friendName);
+      }
+    
+      if (username in friendsList2){
+        console.log("Friend is already here!")
+      } else {
+        friendsList2.push(username);
+      }
 
-    // Update document in firebase
-    const docRef = doc(FIRESTORE_DB, "users", document.id);
-    await updateDoc(docRef, {
+    // Update documents in firebase
+    await updateDoc(document.ref, {
       friends: friendsList
     });
 
-    // Add self to friend's friendlist
-    const friendQuery = query(
-        userCollection,
-        where("username", "==", friendName),
-      );
-  
-      const friendSnapshot = await getDocs(friendQuery);
-  
-      // friendSnapshot should not be empty
-      if (friendSnapshot.empty){
-        console.log("FriendSnapshot is empty.")
-        return null;
-      }
-  
-      const friendDoc = friendSnapshot.docs[0];
-      let friendsList2 = friendDoc.data()["friends"];
-  
-      // Find username in friend list and remove it
-      friendsList2.push(username);
-  
-      // Update document in firebase
-      const friendDocRef = doc(FIRESTORE_DB, "users", friendDoc.id);
-      await updateDoc(friendDocRef, {
-        friends: friendsList2
-      });
+    await updateDoc(friendDocument.ref, {
+    friends: friendsList2
+    });
+
+    
   }
 
   return (
