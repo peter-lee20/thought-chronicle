@@ -644,7 +644,24 @@ export default function FriendsPage(): JSX.Element {
                 id: friendId,
                 username: friendName,
                 name: `${friendDocument.data().firstname} ${friendDocument.data().lastname}`,
-                buttons: [{ label: 'Remove', onPress: () => removeFriend(friendId) }] // Or any other relevant action
+                buttons: [{
+                  label: 'Remove', onPress: () => {
+                      Alert.alert(
+                          "Remove Friend",
+                          `Are you sure you want to remove ${friendName} from your friends?`,
+                          [
+                              {
+                                  text: "Cancel",
+                                  style: "cancel",
+                              },
+                              {
+                                  text: "Confirm",
+                                  onPress: () => removeFriend(friendId),
+                              },
+                          ],
+                      );
+                  }
+              }], // Or any other relevant action
             }
         ]);
 
@@ -657,7 +674,24 @@ export default function FriendsPage(): JSX.Element {
                 user.id === friendId
                     ? {
                         ...user,
-                        buttons: [{ label: 'Remove', onPress: () => removeFriend(friendId) }]
+                        buttons: [{
+                          label: 'Remove', onPress: () => {
+                              Alert.alert(
+                                  "Remove Friend",
+                                  `Are you sure you want to remove ${friendName} from your friends?`,
+                                  [
+                                      {
+                                          text: "Cancel",
+                                          style: "cancel",
+                                      },
+                                      {
+                                          text: "Confirm",
+                                          onPress: () => removeFriend(friendId),
+                                      },
+                                  ],
+                              );
+                          }
+                      }], // Or any other relevant action
                     }
                     : user
             )
