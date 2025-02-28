@@ -235,7 +235,9 @@ export default function EntriesCalendar() {
                     <Text style = {styles.plusSign}>+</Text>
                 </TouchableOpacity>
                     
-                <TouchableOpacity>
+                <TouchableOpacity onPress={() => {
+                            router.replace('/(global-board)');
+                          }}>
                     <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain"/>
                 </TouchableOpacity>
                 

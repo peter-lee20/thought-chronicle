@@ -133,7 +133,7 @@ const styles = StyleSheet.create({
       padding: 20,
    },
    illustration: {
-      width: 200,
+      width: 250,
       height: 200,
       marginBottom: 20,
    },
