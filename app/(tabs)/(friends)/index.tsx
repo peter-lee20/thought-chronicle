@@ -699,7 +699,7 @@ export default function FriendsPage(): JSX.Element {
     }
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: "#F0ECE0" }}>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 contentContainerStyle={{ flexGrow: 1 }}

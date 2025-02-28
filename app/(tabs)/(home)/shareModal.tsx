@@ -40,11 +40,13 @@ const Option: React.FC<OptionProps> = ({ disabled, image, optionTitle, optionTex
 
 interface ModalProps {
     isVisible: boolean,
+    isFirstSubmit: boolean,
     onClose: () => void,
+    // onFirstSubmit: (options: { globalFeed: boolean, anonymous: boolean, friends: boolean}) => void,
     onSubmit: (options: { globalFeed: boolean, anonymous: boolean, friends: boolean}) => void,
 }
 
-const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose, onSubmit }) => {
+const ShareModal: React.FC<ModalProps> = ({ isVisible, isFirstSubmit, onClose, onSubmit}) => {
     const [modalOverlayColor, setModalOverlayColor] = useState("rgba(0, 0, 0, 0.2)");
     const [options, setOptions] = useState({
         globalFeed: true,
@@ -122,7 +124,12 @@ const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose, onSubmit }) => {
                                     <Text style={styles.modalWarning}>*Your entry will be saved even if you don't share.</Text>
 
                                     <TouchableOpacity style={styles.modalSubmit} onPress={handleModalSubmit}>
-                                        <Text style={styles.modalSubmitText}>Submit</Text> 
+                                        {isFirstSubmit ? 
+                                            (<Text style={styles.modalSubmitText}>Submit</Text>):
+                                            // text is different depending on whether the user is submitting their response
+                                            // or changing their settings
+                                            (<Text style={styles.modalSubmitText}>Save</Text>)
+                                        }
                                     </TouchableOpacity>
                                 </View>
                             </View>
