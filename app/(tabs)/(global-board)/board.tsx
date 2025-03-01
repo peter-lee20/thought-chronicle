@@ -332,7 +332,6 @@ export default function Board() {
           onPress={() => {
             router.replace('/(add-journal)/');
           }}
-          style={{ alignItems: 'center' }}
         >
           <Image
             source={require('../../../assets/images/circle.png')}
@@ -547,11 +546,13 @@ const styles = StyleSheet.create({
   },
   footer: {
     backgroundColor: '#F0ECE0',
-    borderTopColor: '#70664533',
-    borderTopWidth: 1,
     flexDirection: 'row',
     justifyContent: 'space-around',
     paddingVertical: 20,
+    position: 'absolute',
+    bottom: -34,
+    left: 0,
+    right: 0,
   },
   footerImage: {
     height: 50,
@@ -566,7 +567,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
   },
   entryTextContainer: {
-    marginLeft: 42, // Adjust this value to match the profileIcon width + marginRight (30 + 8 = 38)
+    marginLeft: 42,
     marginTop: -10,
   },
 });
