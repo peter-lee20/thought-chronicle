@@ -300,7 +300,11 @@ export default function HomePage() {
 
       if (user) {
         const todayStr = currentDate.toLocaleDateString();
-        const responseQuery = query(collection(FIRESTORE_DB, "daily-question-responses"), where('userId', '==', user.uid));
+        const responseQuery = query(
+          collection(FIRESTORE_DB, "daily-question-responses"), 
+          where('userId', '==', user.uid),
+          where('date', '==', todayStr)
+        );
         const snapshot = await getDocs(responseQuery);
 
         if (snapshot.empty) {
