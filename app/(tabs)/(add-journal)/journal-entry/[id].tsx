@@ -6,11 +6,12 @@ import {
     Text,
     ScrollView,
     TouchableOpacity,
-    Image
+    Image,
+    Alert
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { FIRESTORE_DB } from '../../../../FirebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, deleteDoc } from 'firebase/firestore';
 import { format } from "date-fns";
 import { Stack } from "expo-router"
 
@@ -60,6 +61,41 @@ export default function JournalEntryPage() {
         router.back(); // Navigates to the previous screen
     };
 
+    const handleDelete = async () => {
+        if (!id || !journalEntry) {
+          console.error("No journal question entry ID provided or entry not loaded.");
+          return;
+        }
+      
+        Alert.alert(
+          "Delete Entry",
+          "Are you sure you want to delete this entry?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel"
+            },
+            { 
+              text: "OK", 
+              onPress: async () => {
+                try {
+                  const docRef = doc(FIRESTORE_DB, "journal-responses", id);
+                  await deleteDoc(docRef);
+                  console.log("Document successfully deleted!");
+                  // Navigate back to the entries page for the same date
+                  const entryDate = journalEntry.timestamp 
+                    ? format(journalEntry.timestamp, "yyyy-MM-dd")
+                    : format(new Date(), "yyyy-MM-dd");
+                  router.replace(`/(entries)/entries?date=${entryDate}`);
+                } catch (error) {
+                  console.error("Error removing document: ", error);
+                }
+              }
+            }
+          ]
+        );
+      };
+
     const formatDateFull = (timestamp: Date | null) => {
         if (!timestamp) return '';
         const dayOfWeek = format(timestamp, "EEEE");
@@ -107,6 +143,22 @@ export default function JournalEntryPage() {
                         resizeMode="contain"
                     />
                 </TouchableOpacity>
+                <View style={styles.buttonContainer}>
+                    <TouchableOpacity onPress={() => { router.replace('/(friends)/'); }}>
+                        <Image
+                        source={require('../../../../assets/images/edit.png')}
+                        resizeMode="contain"
+                        style={styles.editImage}
+                        />
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={handleDelete}>
+                        <Image
+                        source={require('../../../../assets/images/delete.png')}
+                        resizeMode="contain"
+                        style={styles.deleteImage}
+                        />
+                    </TouchableOpacity>
+                    </View>
             </View>
 
             <ScrollView style={styles.content}>
@@ -134,6 +186,7 @@ const styles = StyleSheet.create({
     header: {
         flexDirection: 'row',
         alignItems: 'center',
+        justifyContent: 'space-between',
         paddingTop: 50,
         paddingBottom: 0,
         paddingHorizontal: 20,
@@ -146,6 +199,10 @@ const styles = StyleSheet.create({
         width: 24,
         height: 24,
     },
+    buttonContainer: {
+        flexDirection: 'row', 
+        gap: 10, 
+      },
     content: {
         flex: 1,
         padding: 20,
@@ -158,6 +215,14 @@ const styles = StyleSheet.create({
         fontFamily: "Poppins",
         flexDirection: 'row', // Added to ensure inline rendering
         alignItems: 'flex-start', // Align items to the top
+    },
+    deleteImage: {
+        height: 30,
+        width: 30,
+    },
+    editImage: {
+        height: 28,
+        width: 28,
     },
     boldDay: {
         fontWeight: 'bold',
