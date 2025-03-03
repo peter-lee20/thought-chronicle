@@ -104,7 +104,6 @@ export default function DailyQuestionEntryPage() {
         }
       ]
     );
-
     
   }
   const handleDelete = async () => {
@@ -234,7 +233,12 @@ export default function DailyQuestionEntryPage() {
         {/* Display the Response */}
         <Text style={styles.sectionResponse}>Your Response:</Text>
 
-        {editing ? <TextInput style={styles.editText} value={contents} onChangeText={setContents} multiline={true}/> 
+        {editing ? <TextInput 
+        style={styles.editText} 
+        value={contents} 
+        onChangeText={setContents} 
+        multiline
+        scrollEnabled={false}/> 
         : <Text style={styles.entryText}>{dailyEntry.response}</Text>}
       </ScrollView>
     </View>
@@ -331,6 +335,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Poppins',
   },
   editText: {
+    alignSelf: "center",
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 24,
