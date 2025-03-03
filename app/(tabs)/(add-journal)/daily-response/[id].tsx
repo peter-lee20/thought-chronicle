@@ -74,18 +74,37 @@ export default function DailyQuestionEntryPage() {
       console.error("No daily question entry ID provided or entry not loaded.");
       return;
     }
-    
-    const docRef = doc(FIRESTORE_DB, "daily-question-responses", id);
-    await updateDoc(docRef, {
-      response: contents,
-    });
+    Alert.alert(
+      "Edit Daily Question Response",
+      "These edits will be visible to everyone who can see this response. Are you sure you want to edit this entry?",
+      [
+        {
+          text: "Cancel",
+          style: "cancel"
+        },
+        { 
+          text: "OK", 
+          onPress: async () => {
+            try {
+              const docRef = doc(FIRESTORE_DB, "daily-question-responses", id);
+              await updateDoc(docRef, {
+                response: contents,
+              });
 
-    setEditing(false);
-    setDailyEntry({
-      question: dailyEntry.question,
-      response: contents,
-      timestamp: dailyEntry.timestamp,
-    });
+              setEditing(false);
+              setDailyEntry({
+                question: dailyEntry.question,
+                response: contents,
+                timestamp: dailyEntry.timestamp,
+              });
+            } catch (error) {
+              console.error("Error editing document: ", error);
+            }
+          }
+        }
+      ]
+    );
+
     
   }
   const handleDelete = async () => {
@@ -215,7 +234,7 @@ export default function DailyQuestionEntryPage() {
         {/* Display the Response */}
         <Text style={styles.sectionResponse}>Your Response:</Text>
 
-        {editing ? <TextInput style={styles.entryText} value={contents} onChangeText={setContents} multiline={true} textAlignVertical="top"/> 
+        {editing ? <TextInput style={styles.editText} value={contents} onChangeText={setContents} multiline={true}/> 
         : <Text style={styles.entryText}>{dailyEntry.response}</Text>}
       </ScrollView>
     </View>
@@ -310,6 +329,19 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     color: '#706645CC',
     fontFamily: 'Poppins',
+  },
+  editText: {
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 24,
+    fontFamily: 'Poppins',
+    color: "#3C4444",
+    paddingLeft: 9,
+    borderLeftColor: "#3C4444",
+    borderLeftWidth: 2,
+    width: 346,
+    textAlignVertical: "top",
+
   },
   loadingContainer: {
     flex: 1,
