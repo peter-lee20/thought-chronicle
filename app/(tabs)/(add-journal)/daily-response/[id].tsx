@@ -7,10 +7,11 @@ import {
   TouchableOpacity,
   Image,
   Alert,
+  TextInput,
 } from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
+import { useLocalSearchParams, router} from 'expo-router';
 import { FIRESTORE_DB } from '../../../../FirebaseConfig';
-import { doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { format } from 'date-fns';
 
 interface DailyQuestionEntry {
@@ -23,6 +24,8 @@ export default function DailyQuestionEntryPage() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [dailyEntry, setDailyEntry] = useState<DailyQuestionEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [editing, setEditing] = useState(false);
+  const [contents, setContents] = useState<string>("");
 
   useEffect(() => {
     const fetchDailyEntry = async () => {
@@ -61,6 +64,30 @@ export default function DailyQuestionEntryPage() {
     router.back();
   };
 
+  const enableEdit = async (entry: string) => {
+    setEditing(true);
+    setContents(entry);
+  }
+
+  const handleEdit = async () => {
+    if (!id || !dailyEntry) {
+      console.error("No daily question entry ID provided or entry not loaded.");
+      return;
+    }
+    
+    const docRef = doc(FIRESTORE_DB, "daily-question-responses", id);
+    await updateDoc(docRef, {
+      response: contents,
+    });
+
+    setEditing(false);
+    setDailyEntry({
+      question: dailyEntry.question,
+      response: contents,
+      timestamp: dailyEntry.timestamp,
+    });
+    
+  }
   const handleDelete = async () => {
     if (!id || !dailyEntry) {
       console.error("No daily question entry ID provided or entry not loaded.");
@@ -145,13 +172,22 @@ export default function DailyQuestionEntryPage() {
           />
         </TouchableOpacity>
         <View style={styles.buttonContainer}>
-          <TouchableOpacity onPress={() => { router.replace('/(friends)/'); }}>
+
+          {editing ? <TouchableOpacity onPress={handleEdit}>
+            <Image
+              source={require('../../../../assets/images/journal-check.png')}
+              resizeMode="contain"
+              style={styles.editImage}
+            />
+          </TouchableOpacity> 
+
+          : <TouchableOpacity onPress={() => enableEdit(dailyEntry.response)}>
             <Image
               source={require('../../../../assets/images/edit.png')}
               resizeMode="contain"
               style={styles.editImage}
             />
-          </TouchableOpacity>
+          </TouchableOpacity>}
           <TouchableOpacity onPress={handleDelete}>
             <Image
               source={require('../../../../assets/images/delete.png')}
@@ -178,7 +214,9 @@ export default function DailyQuestionEntryPage() {
 
         {/* Display the Response */}
         <Text style={styles.sectionResponse}>Your Response:</Text>
-        <Text style={styles.entryText}>{dailyEntry.response}</Text>
+
+        {editing ? <TextInput style={styles.entryText} value={contents} onChangeText={setContents} multiline={true} textAlignVertical="top"/> 
+        : <Text style={styles.entryText}>{dailyEntry.response}</Text>}
       </ScrollView>
     </View>
   );
