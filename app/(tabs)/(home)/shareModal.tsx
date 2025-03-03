@@ -1,5 +1,7 @@
 import { Image, ImageSourcePropType, Modal, SafeAreaView, StyleSheet, Switch, Text, TouchableOpacity, TouchableWithoutFeedback, View } from 'react-native';
 import { useEffect, useState } from "react";
+import { FIREBASE_AUTH, FIRESTORE_DB } from '@/FirebaseConfig';
+import { collection, doc, getDocs, query, where } from 'firebase/firestore';
 
 interface OptionProps {
     disabled: boolean,
@@ -40,17 +42,21 @@ const Option: React.FC<OptionProps> = ({ disabled, image, optionTitle, optionTex
 
 interface ModalProps {
     isVisible: boolean,
+    isFirstSubmit: boolean,
     onClose: () => void,
     onSubmit: (options: { globalFeed: boolean, anonymous: boolean, friends: boolean}) => void,
 }
 
-const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose, onSubmit }) => {
+const ShareModal: React.FC<ModalProps> = ({ isVisible, isFirstSubmit, onClose, onSubmit}) => {
     const [modalOverlayColor, setModalOverlayColor] = useState("rgba(0, 0, 0, 0.2)");
-    const [options, setOptions] = useState({
+    
+    const defaultOptions = {
         globalFeed: true,
         anonymous: false,
         friends: true,
-    })
+    };
+    const [options, setOptions] = useState(defaultOptions);
+ 
 
     const toggleOption = (key: keyof typeof options) => {
         setOptions((prev) => ({
@@ -68,6 +74,46 @@ const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose, onSubmit }) => {
         onSubmit(options);
         onClose();
     }
+
+    useEffect(() => {
+        const fetchOptions = async () => {
+            try {
+                const currUser = FIREBASE_AUTH.currentUser;
+
+                if (currUser) {
+                    const todayString = (new Date()).toLocaleDateString();
+                    const responseSnapshot = await getDocs(
+                        query(
+                            collection(FIRESTORE_DB, "daily-question-responses"), 
+                            where("userId", "==", currUser.uid),
+                            where("date", "==", todayString)
+                        )
+                    );
+                    
+                    if (!responseSnapshot.empty) {
+                        const responseData = responseSnapshot.docs[0].data();
+                        // console.log(responseData);
+                        
+                        setOptions({
+                            globalFeed: responseData.sharedGlobally,
+                            anonymous: responseData.anonymous,
+                            friends: responseData.sharedWithFriends,
+                        })
+                    } else {
+                        console.error("You have not responded to the daily question");
+                    }
+                } else {
+                    console.error("You need to be logged in to view your response settings");
+                }
+            } catch (error: any) {
+                console.error("There was a server error fetching your visibility options", error);
+            }
+        }
+        
+        if (!isFirstSubmit) {
+            fetchOptions();
+        }
+    }, [isFirstSubmit])
 
     return (
         <SafeAreaView>
@@ -122,7 +168,12 @@ const ShareModal: React.FC<ModalProps> = ({ isVisible, onClose, onSubmit }) => {
                                     <Text style={styles.modalWarning}>*Your entry will be saved even if you don't share.</Text>
 
                                     <TouchableOpacity style={styles.modalSubmit} onPress={handleModalSubmit}>
-                                        <Text style={styles.modalSubmitText}>Submit</Text> 
+                                        {isFirstSubmit ? 
+                                            (<Text style={styles.modalSubmitText}>Submit</Text>):
+                                            // text is different depending on whether the user is submitting their response
+                                            // or changing their settings
+                                            (<Text style={styles.modalSubmitText}>Save</Text>)
+                                        }
                                     </TouchableOpacity>
                                 </View>
                             </View>
