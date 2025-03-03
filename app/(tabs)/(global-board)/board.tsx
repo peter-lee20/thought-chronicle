@@ -250,7 +250,7 @@ export default function Board() {
     return (
       <TouchableOpacity
         style={styles.entryContainer}
-        onPress={() => router.push(`../daily-response/${item.id}`)}
+        onPress={() => router.push(`../global-daily-response/${item.id}`)}
       >
         <View style={styles.textContainer}>
           <View style={styles.nameContainer}>

@@ -5,26 +5,72 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Image,
-  Alert,
+  Image
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { FIRESTORE_DB } from '../../../../FirebaseConfig';
-import { doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { format } from 'date-fns';
 
+/**
+ * Interface for a daily question entry.
+ */
 interface DailyQuestionEntry {
   question: string;
   response: string;
   timestamp: Date | null;
+  anonymous: boolean;
+  displayName: string;
+  username: string;
 }
 
-export default function DailyQuestionEntryPage() {
+/**
+ * Functional component for displaying a global daily question entry.
+ * Fetches and renders the daily question, user response, and associated details.
+ *
+ * @returns {JSX.Element} - The rendered component.
+ */
+export default function GlobalDailyQuestionEntryPage(): JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [dailyEntry, setDailyEntry] = useState<DailyQuestionEntry | null>(null);
   const [loading, setLoading] = useState(true);
 
+  /**
+   * Interface for user data containing full name and username.
+   */
+  interface UserData {
+    fullName: string;
+    username: string;
+  }
+  
+  /**
+   * Fetches user data (full name and username) from Firestore based on the user ID.
+   *
+   * @param {string} userId - The ID of the user to fetch data for.
+   * @returns {Promise<UserData | null>} - A promise that resolves with the user data or null if not found.
+   */
+  const fetchUserDataByUserId = async (userId: string): Promise<UserData | null> => {
+    try {
+      const usersQuery = query(
+        collection(FIRESTORE_DB, 'users'),
+        where('userId', '==', userId)
+      );
+      const querySnapshot = await getDocs(usersQuery);
+      if (!querySnapshot.empty) {
+        const docData = querySnapshot.docs[0].data();
+        const { firstname, lastname, username } = docData;
+        return { fullName: `${firstname} ${lastname}`, username };
+      }
+    } catch (error) {
+      console.error('Error fetching user data for userId:', userId, error);
+    }
+    return null;
+  };
+
   useEffect(() => {
+    /**
+     * Fetches the daily entry data from Firestore based on the provided ID.
+     */
     const fetchDailyEntry = async () => {
       if (!id) {
         console.error("No daily question entry ID provided.");
@@ -38,10 +84,25 @@ export default function DailyQuestionEntryPage() {
 
         if (docSnap.exists()) {
           const data = docSnap.data();
+          // Fetch user data
+          // Fetch user data
+          const userData = await fetchUserDataByUserId(data.userId);
+
+          let displayName = userData ? userData.fullName : 'Unknown User';
+          let username = userData ? userData.username : 'unknown';
+
+          if (data.anonymous) {
+            displayName = 'ANONYMOUS';
+            username = 'ANONYMOUS';
+          }
+
           setDailyEntry({
             question: data.question || "",
             response: data.response || "",
             timestamp: data.timestamp ? data.timestamp.toDate() : null,
+            anonymous: data.anonymous,
+            displayName: displayName,
+            username: username,
           });
         } else {
           console.log("No such document!");
@@ -53,53 +114,26 @@ export default function DailyQuestionEntryPage() {
         setLoading(false);
       }
     };
+    
 
     fetchDailyEntry();
   }, [id]);
 
+  /**
+   * Navigates the user back to the previous screen.
+   */
   const goBack = () => {
     router.back();
   };
 
-  const handleDelete = async () => {
-    if (!id || !dailyEntry) {
-      console.error("No daily question entry ID provided or entry not loaded.");
-      return;
-    }
-  
-    Alert.alert(
-      "Delete Entry",
-      "Are you sure you want to delete this entry?",
-      [
-        {
-          text: "Cancel",
-          style: "cancel"
-        },
-        { 
-          text: "OK", 
-          onPress: async () => {
-            try {
-              const docRef = doc(FIRESTORE_DB, "daily-question-responses", id);
-              await deleteDoc(docRef);
-              console.log("Document successfully deleted!");
-              // Navigate back to the entries page for the same date
-              const entryDate = dailyEntry.timestamp 
-                ? format(dailyEntry.timestamp, "yyyy-MM-dd")
-                : format(new Date(), "yyyy-MM-dd");
-              router.replace(`/(entries)/entries?date=${entryDate}`);
-            } catch (error) {
-              console.error("Error removing document: ", error);
-            }
-          }
-        }
-      ]
-    );
-  };
-  
-  
-
-  const formatDateFull = (timestamp: Date | null) => {
-    if (!timestamp) return '';
+  /**
+   * Formats the timestamp to display the full date, including day of the week.
+   *
+   * @param {Date | null} timestamp - The timestamp to format.
+   * @returns {JSX.Element} - The formatted date as a JSX Text element.
+   */
+  const formatDateFull = (timestamp: Date | null): JSX.Element => {
+    if (!timestamp) return <Text></Text>;
     const dayOfWeek = format(timestamp, "EEEE");
     const month = format(timestamp, "MMMM");
     const day = format(timestamp, "d");
@@ -112,7 +146,13 @@ export default function DailyQuestionEntryPage() {
     );
   };
 
-  const formatTime = (timestamp: Date | null) => {
+  /**
+   * Formats the timestamp to display the time in HH:MM format.
+   *
+   * @param {Date | null} timestamp - The timestamp to format.
+   * @returns {string} - The formatted time as a string.
+   */
+  const formatTime = (timestamp: Date | null): string => {
     if (!timestamp) return '';
     return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
@@ -144,25 +184,10 @@ export default function DailyQuestionEntryPage() {
             resizeMode="contain"
           />
         </TouchableOpacity>
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity onPress={() => { router.replace('/(friends)/'); }}>
-            <Image
-              source={require('../../../../assets/images/edit.png')}
-              resizeMode="contain"
-              style={styles.editImage}
-            />
-          </TouchableOpacity>
-          <TouchableOpacity onPress={handleDelete}>
-            <Image
-              source={require('../../../../assets/images/delete.png')}
-              resizeMode="contain"
-              style={styles.deleteImage}
-            />
-          </TouchableOpacity>
-        </View>
       </View>
 
       <ScrollView style={styles.content}>
+
         {/* Date */}
         {formatDateFull(dailyEntry.timestamp)}
 
@@ -177,7 +202,7 @@ export default function DailyQuestionEntryPage() {
         <Text style={styles.entryText}>{dailyEntry.question}</Text>
 
         {/* Display the Response */}
-        <Text style={styles.sectionResponse}>Your Response:</Text>
+        <Text style={styles.sectionResponse}>@{dailyEntry.username}'s Response:</Text>
         <Text style={styles.entryText}>{dailyEntry.response}</Text>
       </ScrollView>
     </View>
@@ -185,19 +210,6 @@ export default function DailyQuestionEntryPage() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#F0ECE0',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingTop: 50,
-    paddingBottom: 0,
-    paddingHorizontal: 20,
-    backgroundColor: '#F0ECE0',
-  },
   backButton: {
     marginRight: 10,
   },
@@ -205,9 +217,12 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
   },
-  buttonContainer: {
-    flexDirection: 'row', 
-    gap: 10, 
+  boldDay: {
+    fontWeight: 'bold',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#F0ECE0',
   },
   content: {
     flex: 1,
@@ -222,16 +237,26 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'flex-start',
   },
-  deleteImage: {
-    height: 30,
-    width: 30,
+  entryLabel: {
+    fontSize: 13,
+    fontWeight: '400',
+    color: '#706645CC',
+    fontFamily: 'Poppins',
   },
-  editImage: {
-    height: 28,
-    width: 28,
+  entryText: {
+    fontSize: 14,
+    fontWeight: '600',
+    lineHeight: 24,
+    color: '#706645CC',
+    fontFamily: 'Poppins',
   },
-  boldDay: {
-    fontWeight: 'bold',
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingTop: 50,
+    paddingBottom: 0,
+    paddingHorizontal: 20,
+    backgroundColor: '#F0ECE0',
   },
   infoContainer: {
     flexDirection: 'row',
@@ -239,23 +264,29 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 20,
   },
-  entryLabel: {
-    fontSize: 13,
-    fontWeight: '400',
-    color: '#706645CC',
-    fontFamily: 'Poppins',
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-  timeText: {
-    fontSize: 13,
-    color: '#706645CC',
-    fontFamily: 'Poppins',
+  questionContainer: {
+    backgroundColor: '#FDFCF3',
+    margin: 20,
+    padding: 15,
+    borderRadius: 15,
+    marginTop: 10,
+    marginBottom: 20,
   },
-  sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 5,
-    marginBottom: 5,
+  questionLabel: {
     color: '#706645',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+    fontFamily: 'Poppins',
+  },
+  questionText: {
+    color: '#706645',
+    fontSize: 16,
     fontFamily: 'Poppins',
   },
   sectionResponse: {
@@ -266,16 +297,17 @@ const styles = StyleSheet.create({
     color: '#706645',
     fontFamily: 'Poppins',
   },
-  entryText: {
-    fontSize: 14,
+  sectionTitle: {
+    fontSize: 16,
     fontWeight: '600',
-    lineHeight: 24,
+    marginTop: 5,
+    marginBottom: 5,
+    color: '#706645',
+    fontFamily: 'Poppins',
+  },
+  timeText: {
+    fontSize: 13,
     color: '#706645CC',
     fontFamily: 'Poppins',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-});
+})
