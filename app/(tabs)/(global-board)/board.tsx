@@ -179,7 +179,7 @@ export default function Board() {
   const renderEntry = ({ item }: { item: Entry }) => (
     <TouchableOpacity
       style={styles.entryContainer}
-      onPress={() => router.push(`/daily-response/${item.id}`)}
+      onPress={() => router.push(`../global-daily-response/${item.id}`)}
     >
       <View style={styles.textContainer}>
         {/* Header row: profile icon and name */}
