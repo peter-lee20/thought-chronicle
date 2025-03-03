@@ -19,22 +19,9 @@ interface DailyQuestionEntry {
   question: string;
   response: string;
   timestamp: Date | null;
+  anonymous: boolean;
   displayName: string;
   username: string;
-}
-
-/**
- * Interface for a journal entry.
- */
-interface Entry {
-  id: string;
-  response: string;
-  timestamp: Date | null;
-  type: 'daily-question' | 'journal';
-  anonymous: boolean;
-  userId: string;
-  displayName: string; // full name (first and last)
-  username: string; // actual username from Firestore
 }
 
 /**
@@ -98,14 +85,24 @@ export default function GlobalDailyQuestionEntryPage(): JSX.Element {
         if (docSnap.exists()) {
           const data = docSnap.data();
           // Fetch user data
+          // Fetch user data
           const userData = await fetchUserDataByUserId(data.userId);
+
+          let displayName = userData ? userData.fullName : 'Unknown User';
+          let username = userData ? userData.username : 'unknown';
+
+          if (data.anonymous) {
+            displayName = 'ANONYMOUS';
+            username = 'ANONYMOUS';
+          }
 
           setDailyEntry({
             question: data.question || "",
             response: data.response || "",
             timestamp: data.timestamp ? data.timestamp.toDate() : null,
-            displayName: userData ? userData.fullName : 'Unknown User', // not currently using display name, but can be accessed
-            username: userData ? userData.username : 'unknown',
+            anonymous: data.anonymous,
+            displayName: displayName,
+            username: username,
           });
         } else {
           console.log("No such document!");
@@ -117,6 +114,7 @@ export default function GlobalDailyQuestionEntryPage(): JSX.Element {
         setLoading(false);
       }
     };
+    
 
     fetchDailyEntry();
   }, [id]);
