@@ -239,18 +239,25 @@ export default function Board() {
 
   // When rendering an entry, if the entry is anonymous override the display:
   const renderEntry = ({ item }: { item: Entry }) => {
-    // For global feed, if an entry is anonymous, show "ANONYMOUS"
-    // Otherwise (i.e. in the friends feed), show the fetched user info.
     let displayName = item.displayName;
     let username = item.username;
+
+    // If the entry is anonymous in the global tab, show "ANONYMOUS"
     if (activeTab === 'global' && item.anonymous) {
       displayName = 'ANONYMOUS';
       username = 'ANONYMOUS';
     }
+
     return (
       <TouchableOpacity
         style={styles.entryContainer}
-        onPress={() => router.push(`../global-daily-response/${item.id}`)}
+        onPress={() => {
+          const route = activeTab === 'friends'
+            ? (`../friends-daily-response/${item.id}` as const)
+            : (`../global-daily-response/${item.id}` as const);
+
+          router.push(route);
+        }}
       >
         <View style={styles.textContainer}>
           <View style={styles.nameContainer}>
@@ -277,6 +284,8 @@ export default function Board() {
       </TouchableOpacity>
     );
   };
+
+
   
 
   const handleSignOut = async () => {
