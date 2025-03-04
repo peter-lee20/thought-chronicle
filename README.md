@@ -28,9 +28,9 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 3. Install all dependencies:
 
    ```bash
-   npm install
+   npx expo install
    # or
-   yarn install
+   npm install
    ```
 
 4. Start the app:
@@ -38,7 +38,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
    ```bash
    npx expo start
    # or
-   yarn install
+   yarn expo start
    ```
 
 In the output, you'll find options to open the app in a
@@ -50,7 +50,7 @@ In the output, you'll find options to open the app in a
 
 **AMONG THESE OPTIONS, WE HIGHLY RECOMMEND USING AN IOS OR ANDROID DEVICE TO OPEN THOUGHT CHRONICLE!**
 
-## How to use Thought Chronicle
+## User guide
 1. Create an account, making sure to meet the requirements for each field
 2. Verify your account through your email
 3. Log in
