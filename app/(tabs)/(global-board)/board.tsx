@@ -442,6 +442,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     padding: 20,
+    marginTop: -29,
   },
   headerTitle: {
     fontSize: 24,
