@@ -28,7 +28,6 @@ export default function JournalEntryPage() {
     const [editing, setEditing] = useState(false);
     const [contents, setContents] = useState<string>("");
     const wordCount = contents.trim() ? contents.trim().    split(/\s+/).length : 0;
-    const minWords = 50;
     const maxWords = 1500;
 
     useEffect(() => {
@@ -74,11 +73,6 @@ export default function JournalEntryPage() {
     const handleEdit = async () => {
         if (!id || !journalEntry) {
           console.error("No journal entry ID provided or entry not loaded.");
-          return;
-        }
-        // Handle cases for word count
-        if (wordCount < minWords) {
-          Alert.alert("Go ahead, express yourself!", "Please enter an entry that is between 50 and 1500 words.");
           return;
         }
 
@@ -246,11 +240,8 @@ export default function JournalEntryPage() {
               scrollEnabled={false} />
               <View style={styles.footer}>
                 <View style={styles.wordCount}>
-                  <Text style={[styles.minWordDisplay, wordCount < minWords ? { color: "red" } : { color: "#706645" }]}>
-                    Minimum {wordCount}/{minWords} words
-                  </Text>
                   <Text style={[styles.maxWordDisplay, wordCount > maxWords ? { color: "red" } : { color: "#706645" }]}>
-                    Maximum {wordCount}/{maxWords} words
+                    {wordCount}/{maxWords} words
                   </Text>
                 </View>
               </View></>
@@ -311,12 +302,6 @@ const styles = StyleSheet.create({
       flex: 1,
       marginBottom: 15,
     },
-    minWordDisplay: {
-      fontFamily: "Poppins",
-      fontSize: 14,
-      color: "#706645",
-      // textAlign: "center",
-    },
 
     maxWordDisplay: {
         fontFamily: "Poppins",
@@ -374,6 +359,7 @@ const styles = StyleSheet.create({
         borderLeftWidth: 2,
         width: 346,
         textAlignVertical: "top",
+        height: 400,
     },
     loadingContainer: {
         flex: 1,

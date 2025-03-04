@@ -388,6 +388,7 @@ const styles = StyleSheet.create({
     borderLeftWidth: 2,
     width: 346,
     textAlignVertical: "top",
+    height: 400,
 
   },
   loadingContainer: {
