@@ -26,6 +26,7 @@ export default function DailyQuestionEntryPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [contents, setContents] = useState<string>("");
+  const maxCharacters = 1500;
 
   useEffect(() => {
     const fetchDailyEntry = async () => {
@@ -72,6 +73,15 @@ export default function DailyQuestionEntryPage() {
   const handleEdit = async () => {
     if (!id || !dailyEntry) {
       console.error("No daily question entry ID provided or entry not loaded.");
+      return;
+    }
+
+    // Enforce character limit
+    if (contents.length > maxCharacters) {
+      Alert.alert(
+        `Response exceeds the maximum limit of ${maxCharacters} characters.`
+      );
+
       return;
     }
     Alert.alert(
@@ -233,12 +243,18 @@ export default function DailyQuestionEntryPage() {
         {/* Display the Response */}
         <Text style={styles.sectionResponse}>Your Response:</Text>
 
-        {editing ? <TextInput 
-        style={styles.editText} 
-        value={contents} 
-        onChangeText={setContents} 
-        multiline
-        scrollEnabled={false}/> 
+        {editing ? <><TextInput
+          style={styles.editText}
+          value={contents}
+          onChangeText={setContents}
+          multiline
+          scrollEnabled={false} />
+          <View style={styles.footer}>
+            <Text style={styles.characterCounter}>
+              {contents.length}/{maxCharacters} characters
+            </Text>
+          </View></>
+
         : <Text style={styles.entryText}>{dailyEntry.response}</Text>}
       </ScrollView>
     </View>
@@ -270,6 +286,18 @@ const styles = StyleSheet.create({
     flexDirection: 'row', 
     gap: 10, 
   },
+  characterCounter: {
+    color: "#706645",
+    flex: 1,
+    fontFamily: "Poppins",
+    fontSize: 14,
+    marginTop: 25,
+    marginLeft: 27,
+    marginRight: 20,
+    marginBottom: 25,
+    textAlign: "right",
+    justifyContent:  "flex-end",
+  },
   content: {
     flex: 1,
     padding: 20,
@@ -290,6 +318,10 @@ const styles = StyleSheet.create({
   editImage: {
     height: 28,
     width: 28,
+  },
+  footer: {
+    flex: 1,
+    marginBottom: 15,
   },
   boldDay: {
     fontWeight: 'bold',
@@ -327,6 +359,16 @@ const styles = StyleSheet.create({
     color: '#706645',
     fontFamily: 'Poppins',
   },
+
+  wordCount: {
+    flex: 1,
+    alignItems: "flex-end",
+    justifyContent:  "flex-end",
+    marginTop: 25,
+    marginLeft: 27,
+    marginRight: 27,
+    marginBottom: 25,
+},
   entryText: {
     fontSize: 14,
     fontWeight: '600',

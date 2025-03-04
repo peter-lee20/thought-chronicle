@@ -243,7 +243,8 @@ export default function JournalEntryPage() {
               value={contents}
               onChangeText={setContents}
               multiline
-              scrollEnabled={false} /><View style={styles.footer}>
+              scrollEnabled={false} />
+              <View style={styles.footer}>
                 <View style={styles.wordCount}>
                   <Text style={[styles.minWordDisplay, wordCount < minWords ? { color: "red" } : { color: "#706645" }]}>
                     Minimum {wordCount}/{minWords} words
