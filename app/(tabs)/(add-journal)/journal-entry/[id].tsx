@@ -27,6 +27,9 @@ export default function JournalEntryPage() {
     const [loading, setLoading] = useState(true);
     const [editing, setEditing] = useState(false);
     const [contents, setContents] = useState<string>("");
+    const wordCount = contents.trim() ? contents.trim().    split(/\s+/).length : 0;
+    const minWords = 50;
+    const maxWords = 1500;
 
     useEffect(() => {
         const fetchJournalEntry = async () => {
@@ -71,6 +74,16 @@ export default function JournalEntryPage() {
     const handleEdit = async () => {
         if (!id || !journalEntry) {
           console.error("No journal entry ID provided or entry not loaded.");
+          return;
+        }
+        // Handle cases for word count
+        if (wordCount < minWords) {
+          Alert.alert("Go ahead, express yourself!", "Please enter an entry that is between 50 and 1500 words.");
+          return;
+        }
+
+        if (wordCount > maxWords) {
+          Alert.alert("Woah, slow your roll!", "Please enter an entry that is between 50 and 1500 words.");
           return;
         }
         Alert.alert(
@@ -224,14 +237,25 @@ export default function JournalEntryPage() {
                 </View>
 
                 {/* Journal Entry */}
-                {editing ? <TextInput 
-                        style={styles.editText} 
-                        value={contents} 
-                        onChangeText={setContents} 
-                        multiline
-                        scrollEnabled={false}/> 
-                        : <Text style={styles.entryText}>{journalEntry.response}</Text>}
-            </ScrollView>
+                {editing ?
+                <><TextInput
+              style={styles.editText}
+              value={contents}
+              onChangeText={setContents}
+              multiline
+              scrollEnabled={false} /><View style={styles.footer}>
+                <View style={styles.wordCount}>
+                  <Text style={[styles.minWordDisplay, wordCount < minWords ? { color: "red" } : { color: "#706645" }]}>
+                    Minimum {wordCount}/{minWords} words
+                  </Text>
+                  <Text style={[styles.maxWordDisplay, wordCount > maxWords ? { color: "red" } : { color: "#706645" }]}>
+                    Maximum {wordCount}/{maxWords} words
+                  </Text>
+                </View>
+              </View></>
+                : <Text style={styles.entryText}>{journalEntry.response}</Text>}
+                
+              </ScrollView>
         </View>
     );
 }
@@ -282,6 +306,34 @@ const styles = StyleSheet.create({
         height: 28,
         width: 28,
     },
+    footer: {
+      flex: 1,
+      marginBottom: 15,
+    },
+    minWordDisplay: {
+      fontFamily: "Poppins",
+      fontSize: 14,
+      color: "#706645",
+      // textAlign: "center",
+    },
+
+    maxWordDisplay: {
+        fontFamily: "Poppins",
+        fontSize: 14,
+        color: "#706645",
+        // textAlign: "center"
+    },
+
+    wordCount: {
+      flex: 1,
+      alignItems: "flex-end",
+      justifyContent:  "flex-end",
+      marginTop: 25,
+      marginLeft: 27,
+      marginRight: 27,
+      marginBottom: 25,
+  },
+
     boldDay: {
         fontWeight: 'bold',
     },
