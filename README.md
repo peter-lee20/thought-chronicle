@@ -1,4 +1,5 @@
 # Thought Chronicle
+*Version: 1.0.0*
 
 Thought Chronicle is an mobile application that serves to replace mindless short-term content with thoughtful self-reflection and deeper connections with loved ones. Thought Chronicle accomplishes this through two main features: prompting users to answer a daily random, self-reflective question and allowing them to express themselves whenever, through unprompted journal entries. Both types of entries are then saved for the the user to privately reflect upon at a later date. Thought Chronicle also provides the option for the user to share their daily question responses with friends and even users around the world (anonymously too, if they choose!). This application encourages users to engage in self-reflective thought and deepen connections with others in an exciting, therapeutic, and time-efficient manner. 
 
@@ -10,7 +11,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 - Random Daily Though-Provoking Questions (**NOT GENERATED** - Created by a human!)
 - Unlimited Journal Entries
 - Friends List
-- Global/Friends Feed
+- Global/Friends Feed for Daily Question Responses
 
 ## Prerequisities
 - [Node.js](https://nodejs.org/en/)
@@ -49,17 +50,16 @@ In the output, you'll find options to open the app in a
 
 **AMONG THESE OPTIONS, WE HIGHLY RECOMMEND USING AN IOS OR ANDROID DEVICE TO OPEN THOUGHT CHRONICLE!**
 
-## How to use
-1. Create an account
-2. 
+## How to use Thought Chronicle
+1. Create an account, making sure to meet the requirements for each field
+2. Verify your account through your email
+3. Log in
+4. Start expressing yourself through daily question responses and/or journal entries!
 
 ## Learn more
 
-Thought Chronicle was developed by 5 core members: Kunal Walia, Matthew Kimotsuki, Andrew Nguyen, Trinity Wu, and Peter Lee. This application was created for educational purposes as part of the UCSC CSE 115A course, instructed by Richard Jullig. Special thanks to Scott Davis for providing constructive feedback on a weekly basis and ensuring that the team was on the right track.
+Thought Chronicle was developed by 5 core members: Kunal Walia, Matthew Kimotsuki, Andrew Nguyen, Trinity Wu, and Peter Lee. This application was created for educational purposes as part of the UCSC CSE 115A course, instructed by Richard Jullig. Special thanks to Scott Davis for providing constructive feedback on a weekly basis and ensuring that the team remained on the right track.
 
-## Join the community
+## Contact us
 
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+We'd love to hear your feedback! If you have any questions, comments, or concerns, feel free to email us at [pedtheberry@gmail.com](mailto:pedtheberry@gmail.com)! 
