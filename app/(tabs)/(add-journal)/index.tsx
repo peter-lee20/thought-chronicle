@@ -152,8 +152,6 @@ const styles = StyleSheet.create({
         lineHeight: 24,
         color: "#3C4444",
         paddingLeft: 9,
-        borderLeftColor: "#3C4444",
-        borderLeftWidth: 2,
         textAlignVertical: "top",
         width: 346,
         height: 400,

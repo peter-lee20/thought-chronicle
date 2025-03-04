@@ -355,8 +355,6 @@ const styles = StyleSheet.create({
         fontFamily: 'Poppins',
         color: "#3C4444",
         paddingLeft: 9,
-        borderLeftColor: "#3C4444",
-        borderLeftWidth: 2,
         width: 346,
         textAlignVertical: "top",
         height: 400,
