@@ -8,6 +8,8 @@ export default function JournalLayout() {
         <Stack.Screen name="journal-entry/[id]" options={{ headerShown: false }}/>
         <Stack.Screen name="daily-response/[id]" options={{ headerShown: false }}/>
         <Stack.Screen name="global-daily-response/[id]" options={{ headerShown: false }}/>
+        <Stack.Screen name="friends-daily-response/[id]" options={{ headerShown: false }}/>
+
     </Stack>
   );
 }
