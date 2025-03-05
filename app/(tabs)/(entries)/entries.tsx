@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -24,7 +24,7 @@ import {
   where,
 } from 'firebase/firestore';
 import { getAuth, signOut } from 'firebase/auth';
-import { router, useLocalSearchParams, useRouter } from 'expo-router';
+import { router, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
 import { format } from "date-fns";
 
 import DateTimePicker from '@react-native-community/datetimepicker';
@@ -159,9 +159,11 @@ export default function EntryPage() {
     }
   };
 
-  useEffect(() => {
-    fetchResponses();
-  }, [selectedDate]);
+  useFocusEffect(
+    useCallback(() => {
+      fetchResponses();
+    }, [selectedDate])
+  )
 
   // Function to format the time from a timestamp
   const formatTime = (timestamp: Date | null) => {

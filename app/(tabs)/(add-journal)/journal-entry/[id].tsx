@@ -7,11 +7,12 @@ import {
     ScrollView,
     TouchableOpacity,
     Image,
-    Alert
+    Alert,
+    TextInput
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { FIRESTORE_DB } from '../../../../FirebaseConfig';
-import { doc, getDoc, deleteDoc } from 'firebase/firestore';
+import { doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
 import { format } from "date-fns";
 import { Stack } from "expo-router"
 
@@ -24,6 +25,10 @@ export default function JournalEntryPage() {
     const { id } = useLocalSearchParams<{ id: string }>();
     const [journalEntry, setJournalEntry] = useState<JournalEntry | null>(null);
     const [loading, setLoading] = useState(true);
+    const [editing, setEditing] = useState(false);
+    const [contents, setContents] = useState<string>("");
+    const wordCount = contents.trim() ? contents.trim().    split(/\s+/).length : 0;
+    const maxWords = 1500;
 
     useEffect(() => {
         const fetchJournalEntry = async () => {
@@ -60,6 +65,52 @@ export default function JournalEntryPage() {
     const goBack = () => {
         router.back(); // Navigates to the previous screen
     };
+    const enableEdit = async (entry: string) => {
+        setEditing(true);
+        setContents(entry);
+    }
+    
+    const handleEdit = async () => {
+        if (!id || !journalEntry) {
+          console.error("No journal entry ID provided or entry not loaded.");
+          return;
+        }
+
+        if (wordCount > maxWords) {
+          Alert.alert("Woah, slow your roll!", "Please enter an entry that is between 50 and 1500 words.");
+          return;
+        }
+        Alert.alert(
+          "Edit Journal Entry",
+          "Are you sure you want to edit this entry?",
+          [
+            {
+              text: "Cancel",
+              style: "cancel"
+            },
+            { 
+              text: "OK", 
+              onPress: async () => {
+                try {
+                  const docRef = doc(FIRESTORE_DB, "journal-responses", id);
+                  await updateDoc(docRef, {
+                    response: contents,
+                  });
+    
+                  setEditing(false);
+                  setJournalEntry({
+                    response: contents,
+                    timestamp: journalEntry.timestamp,
+                  });
+                } catch (error) {
+                  console.error("Error editing document: ", error);
+                }
+              }
+            }
+          ]
+        );
+        
+      }
 
     const handleDelete = async () => {
         if (!id || !journalEntry) {
@@ -144,13 +195,21 @@ export default function JournalEntryPage() {
                     />
                 </TouchableOpacity>
                 <View style={styles.buttonContainer}>
-                    <TouchableOpacity onPress={() => { router.replace('/(friends)/'); }}>
-                        <Image
-                        source={require('../../../../assets/images/edit.png')}
-                        resizeMode="contain"
-                        style={styles.editImage}
-                        />
-                    </TouchableOpacity>
+                    {editing ? <TouchableOpacity onPress={handleEdit}>
+                                <Image
+                                  source={require('../../../../assets/images/journal-check.png')}
+                                  resizeMode="contain"
+                                  style={styles.editImage}
+                                />
+                              </TouchableOpacity> 
+                    
+                              : <TouchableOpacity onPress={() => enableEdit(journalEntry.response)}>
+                                <Image
+                                  source={require('../../../../assets/images/edit.png')}
+                                  resizeMode="contain"
+                                  style={styles.editImage}
+                                />
+                              </TouchableOpacity>}
                     <TouchableOpacity onPress={handleDelete}>
                         <Image
                         source={require('../../../../assets/images/delete.png')}
@@ -172,8 +231,23 @@ export default function JournalEntryPage() {
                 </View>
 
                 {/* Journal Entry */}
-                <Text style={styles.entryText}>{journalEntry.response}</Text>
-            </ScrollView>
+                {editing ?
+                <><TextInput
+              style={styles.editText}
+              value={contents}
+              onChangeText={setContents}
+              multiline
+              scrollEnabled={false} />
+              <View style={styles.footer}>
+                <View style={styles.wordCount}>
+                  <Text style={[styles.maxWordDisplay, wordCount > maxWords ? { color: "red" } : { color: "#706645" }]}>
+                    {wordCount}/{maxWords} words
+                  </Text>
+                </View>
+              </View></>
+                : <Text style={styles.entryText}>{journalEntry.response}</Text>}
+                
+              </ScrollView>
         </View>
     );
 }
@@ -224,6 +298,28 @@ const styles = StyleSheet.create({
         height: 28,
         width: 28,
     },
+    footer: {
+      flex: 1,
+      marginBottom: 15,
+    },
+
+    maxWordDisplay: {
+        fontFamily: "Poppins",
+        fontSize: 14,
+        color: "#706645",
+        // textAlign: "center"
+    },
+
+    wordCount: {
+      flex: 1,
+      alignItems: "flex-end",
+      justifyContent:  "flex-end",
+      marginTop: 25,
+      marginLeft: 27,
+      marginRight: 27,
+      marginBottom: 25,
+  },
+
     boldDay: {
         fontWeight: 'bold',
     },
@@ -250,6 +346,18 @@ const styles = StyleSheet.create({
         lineHeight: 24,
         color: '#706645CC',
         fontFamily: 'Poppins',
+    },
+    editText: {
+        alignSelf: "center",
+        fontSize: 14,
+        fontWeight: '600',
+        lineHeight: 24,
+        fontFamily: 'Poppins',
+        color: "#3C4444",
+        paddingLeft: 9,
+        width: 346,
+        textAlignVertical: "top",
+        height: 400,
     },
     loadingContainer: {
         flex: 1,

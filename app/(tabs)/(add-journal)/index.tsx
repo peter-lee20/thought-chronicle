@@ -34,7 +34,6 @@ export default function JournalEntry() {
     const [response, setResponse] = useState('');
     const wordCount = response.trim() ? response.trim().    split(/\s+/).length : 0;
     const currentDate = new Date();
-    const minWords = 50;
     const maxWords = 1500;
 
     const backHome = () => {
@@ -48,10 +47,6 @@ export default function JournalEntry() {
     }
 
     const handleSubmitResponse = async () => {
-        if (wordCount < minWords) {
-            Alert.alert("Go ahead, express yourself!", "Please enter an entry that is between 50 and 1500 words.");
-            return;
-        }
 
         if (wordCount > maxWords) {
             Alert.alert("Woah, slow your roll!", "Please enter an entry that is between 50 and 1500 words.");
@@ -83,7 +78,7 @@ export default function JournalEntry() {
 
     return (
         <SafeAreaView style={{flex: 1, backgroundColor: "#F0ECE0"}}>
-        <KeyboardAvoidingView style={styles.container} behavior="height" keyboardVerticalOffset={100}>
+        <KeyboardAvoidingView style={styles.container} behavior="height" keyboardVerticalOffset={500}>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <TouchableOpacity onPress={backHome}>
                     <Image source={require("../../../assets/images/close-button.png")} style={styles.close}/>
@@ -100,11 +95,8 @@ export default function JournalEntry() {
                 />
                 <View style={styles.footer}>
                     <View style={styles.wordCount}>
-                        <Text style={[styles.minWordDisplay, wordCount < minWords ? { color: "red" } : { color: "#706645" }]}>
-                            Minimum {wordCount}/{minWords} words
-                        </Text>   
                         <Text style={[styles.maxWordDisplay, wordCount > maxWords ? { color: "red" } : {color: "#706645" }]}>
-                            Maximum {wordCount}/{maxWords} words
+                            {wordCount}/{maxWords} words
                         </Text>
                     </View>
 
@@ -160,9 +152,9 @@ const styles = StyleSheet.create({
         lineHeight: 24,
         color: "#3C4444",
         paddingLeft: 9,
-        borderLeftColor: "#3C4444",
-        borderLeftWidth: 2,
+        textAlignVertical: "top",
         width: 346,
+        height: 200,
     },
 
     footer: {
