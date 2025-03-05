@@ -78,7 +78,7 @@ export default function JournalEntry() {
 
     return (
         <SafeAreaView style={{flex: 1, backgroundColor: "#F0ECE0"}}>
-        <KeyboardAvoidingView style={styles.container} behavior="height" keyboardVerticalOffset={100}>
+        <KeyboardAvoidingView style={styles.container} behavior="height" keyboardVerticalOffset={500}>
             <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
                 <TouchableOpacity onPress={backHome}>
                     <Image source={require("../../../assets/images/close-button.png")} style={styles.close}/>
@@ -154,7 +154,7 @@ const styles = StyleSheet.create({
         paddingLeft: 9,
         textAlignVertical: "top",
         width: 346,
-        height: 400,
+        height: 200,
     },
 
     footer: {
