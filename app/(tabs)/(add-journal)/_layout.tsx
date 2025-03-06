@@ -1,5 +1,9 @@
 import { Stack } from "expo-router"
 
+/**
+ * JournalLayout component defines the navigation stack for journal screens.
+ * @returns {JSX.Element} The navigation stack.
+ */
 export default function JournalLayout() {
   return (
     <Stack>

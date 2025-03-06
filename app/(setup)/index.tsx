@@ -1,34 +1,45 @@
 import { Link, router } from 'expo-router';
 import React, { useState } from 'react';
 import {
+  Alert,
+  Image,
+  Keyboard,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
-  View,
-  Image,
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  Keyboard,
   TouchableWithoutFeedback,
-  ScrollView,
+  View,
 } from 'react-native';
 import { FIREBASE_AUTH } from '../../FirebaseConfig';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 
-export default function App() {
+/**
+ * SignInScreen - Renders the sign-in page for user authentication.
+ * @returns {JSX.Element} The SignInScreen component.
+ */
+export default function SignInScreen(): JSX.Element {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Firebase authentication token
   const auth = FIREBASE_AUTH;
-
-  const changePassword = () => {
+  
+  /**
+   * Redirects the user to the forgot password screen.
+   */
+  const handleForgotPassword = () => {
     router.replace("/forgot");
   };
 
+  /**
+   * Handles user sign-in using Firebase authentication.
+   * Shows success or failure alerts based on the authentication result.
+   */
   const handleSignIn = async () => {
     setLoading(true);
     try {
@@ -79,7 +90,7 @@ export default function App() {
 
           {/* Forgot Password Link */}
           <View style={{ width: '100%' }}>
-            <TouchableOpacity onPress={changePassword}>
+            <TouchableOpacity onPress={handleForgotPassword}>
               <Text style={[styles.forgotPassword, { textDecorationLine: 'underline' }]}>
                 Forgot your password?
               </Text>
@@ -125,71 +136,71 @@ export default function App() {
 }
 
 const styles = StyleSheet.create({
-   container: {
-      flex: 1,
-      justifyContent: 'center',
-      alignItems: 'center',
-      backgroundColor: '#F0ECE0',
-      padding: 20,
-   },
-   illustration: {
-      width: 250,
-      height: 200,
-      marginBottom: 20,
-   },
-   title: {
-      fontSize: 24,
-      fontWeight: 'bold',
-      color: '#333',
-      marginBottom: 20,
-      textAlign: 'center',
-   },
-   subtitle: {
-      fontSize: 16,
-      color: '#666',
-      marginBottom: 30,
-      textAlign: 'center',
-   },
-   input: {
-      width: '100%',
-      height: 50,
-      borderColor: '#7E948C',
-      borderWidth: 2,
-      borderRadius: 15,
-      paddingHorizontal: 10,
-      marginBottom: 15,
-      backgroundColor: '#F0ECE0',
-   },
-   forgotPassword: {
-      fontSize: 14,
-      color: '#7E948C',
-      marginBottom: 20,
-      textAlign: 'right',
-      width: '100%',
-      fontWeight: 'bold',
-   },
-   signInButton: {
-      backgroundColor: "#7E948C",
-      paddingVertical: 20,
-      paddingHorizontal: 20,
-      borderRadius: 15,
-      borderWidth: 1,
-      borderColor: "#7E948C",
-      alignItems: "center",
-      width: "100%",
-      marginTop: 20,
-      marginBottom: 20,
-   },
-   signInButtonText: {
-      color: "white",
-      fontSize: 16,
-      fontWeight: "bold",
-      fontFamily: "Poppins",
-   },
-   signUp: {
-      fontSize: 14,
-      color: '#7E948C',
-      textAlign: 'center',
-      fontWeight: 'bold',
-   },
+  container: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#F0ECE0',
+    padding: 20,
+  },
+  forgotPassword: {
+    fontSize: 14,
+    color: '#7E948C',
+    marginBottom: 20,
+    textAlign: 'right',
+    width: '100%',
+    fontWeight: 'bold',
+  },
+  illustration: {
+    width: 250,
+    height: 200,
+    marginBottom: 20,
+  },
+  input: {
+    width: '100%',
+    height: 50,
+    borderColor: '#7E948C',
+    borderWidth: 2,
+    borderRadius: 15,
+    paddingHorizontal: 10,
+    marginBottom: 15,
+    backgroundColor: '#F0ECE0',
+  },
+  signInButton: {
+    backgroundColor: "#7E948C",
+    paddingVertical: 20,
+    paddingHorizontal: 20,
+    borderRadius: 15,
+    borderWidth: 1,
+    borderColor: "#7E948C",
+    alignItems: "center",
+    width: "100%",
+    marginTop: 20,
+    marginBottom: 20,
+  },
+  signInButtonText: {
+    color: "white",
+    fontSize: 16,
+    fontWeight: "bold",
+    fontFamily: "Poppins",
+  },
+  signUp: {
+    fontSize: 14,
+    color: '#7E948C',
+    textAlign: 'center',
+    fontWeight: 'bold',
+  },
+  subtitle: {
+    fontSize: 16,
+    color: '#666',
+    marginBottom: 30,
+    textAlign: 'center',
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 20,
+    textAlign: 'center',
+  },
 });

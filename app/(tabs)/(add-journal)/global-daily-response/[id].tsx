@@ -5,7 +5,7 @@ import {
   Text,
   ScrollView,
   TouchableOpacity,
-  Image
+  Image,
 } from 'react-native';
 import { useLocalSearchParams, router } from 'expo-router';
 import { FIRESTORE_DB } from '../../../../FirebaseConfig';
@@ -25,29 +25,29 @@ interface DailyQuestionEntry {
 }
 
 /**
+ * Interface for user data containing full name and username.
+ */
+interface UserData {
+  fullName: string;
+  username: string;
+}
+
+/**
  * Functional component for displaying a global daily question entry.
  * Fetches and renders the daily question, user response, and associated details.
  *
- * @returns {JSX.Element} - The rendered component.
+ * @returns {JSX.Element} The rendered component.
  */
 export default function GlobalDailyQuestionEntryPage(): JSX.Element {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [dailyEntry, setDailyEntry] = useState<DailyQuestionEntry | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
 
-  /**
-   * Interface for user data containing full name and username.
-   */
-  interface UserData {
-    fullName: string;
-    username: string;
-  }
-  
   /**
    * Fetches user data (full name and username) from Firestore based on the user ID.
    *
    * @param {string} userId - The ID of the user to fetch data for.
-   * @returns {Promise<UserData | null>} - A promise that resolves with the user data or null if not found.
+   * @returns {Promise<UserData | null>} A promise that resolves with the user data or null if not found.
    */
   const fetchUserDataByUserId = async (userId: string): Promise<UserData | null> => {
     try {
@@ -61,7 +61,7 @@ export default function GlobalDailyQuestionEntryPage(): JSX.Element {
         const { firstname, lastname, username } = docData;
         return { fullName: `${firstname} ${lastname}`, username };
       }
-    } catch (error) {
+    } catch (error: unknown) {
       console.error('Error fetching user data for userId:', userId, error);
     }
     return null;
@@ -71,50 +71,48 @@ export default function GlobalDailyQuestionEntryPage(): JSX.Element {
     /**
      * Fetches the daily entry data from Firestore based on the provided ID.
      */
-    const fetchDailyEntry = async () => {
+    const fetchDailyEntry = async (): Promise<void> => {
       if (!id) {
-        console.error("No daily question entry ID provided.");
+        console.error('No daily question entry ID provided.');
         return;
       }
 
       setLoading(true);
       try {
-        const docRef = doc(FIRESTORE_DB, "daily-question-responses", id);
+        const docRef = doc(FIRESTORE_DB, 'daily-question-responses', id);
         const docSnap = await getDoc(docRef);
 
         if (docSnap.exists()) {
           const data = docSnap.data();
-          // Fetch user data
-          // Fetch user data
           const userData = await fetchUserDataByUserId(data.userId);
 
           let displayName = userData ? userData.fullName : 'Unknown User';
           let username = userData ? userData.username : 'unknown';
 
+          // If the entry is marked as anonymous, override display values.
           if (data.anonymous) {
             displayName = 'ANONYMOUS';
             username = 'ANONYMOUS';
           }
 
           setDailyEntry({
-            question: data.question || "",
-            response: data.response || "",
+            question: data.question || '',
+            response: data.response || '',
             timestamp: data.timestamp ? data.timestamp.toDate() : null,
             anonymous: data.anonymous,
-            displayName: displayName,
-            username: username,
+            displayName,
+            username,
           });
         } else {
-          console.log("No such document!");
-          // Optionally, handle the error or navigate back
+          console.log('No such document!');
+          // Optionally, handle the error or navigate back.
         }
-      } catch (error) {
-        console.error("Error fetching daily question entry:", error);
+      } catch (error: unknown) {
+        console.error('Error fetching daily question entry:', error);
       } finally {
         setLoading(false);
       }
     };
-    
 
     fetchDailyEntry();
   }, [id]);
@@ -122,7 +120,7 @@ export default function GlobalDailyQuestionEntryPage(): JSX.Element {
   /**
    * Navigates the user back to the previous screen.
    */
-  const goBack = () => {
+  const goBack = (): void => {
     router.back();
   };
 
@@ -130,14 +128,14 @@ export default function GlobalDailyQuestionEntryPage(): JSX.Element {
    * Formats the timestamp to display the full date, including day of the week.
    *
    * @param {Date | null} timestamp - The timestamp to format.
-   * @returns {JSX.Element} - The formatted date as a JSX Text element.
+   * @returns {JSX.Element} The formatted date as a JSX Text element.
    */
   const formatDateFull = (timestamp: Date | null): JSX.Element => {
     if (!timestamp) return <Text></Text>;
-    const dayOfWeek = format(timestamp, "EEEE");
-    const month = format(timestamp, "MMMM");
-    const day = format(timestamp, "d");
-    const year = format(timestamp, "yyyy");
+    const dayOfWeek = format(timestamp, 'EEEE');
+    const month = format(timestamp, 'MMMM');
+    const day = format(timestamp, 'd');
+    const year = format(timestamp, 'yyyy');
     return (
       <Text style={styles.dateText}>
         <Text style={styles.boldDay}>{dayOfWeek}, </Text>
@@ -150,7 +148,7 @@ export default function GlobalDailyQuestionEntryPage(): JSX.Element {
    * Formats the timestamp to display the time in HH:MM format.
    *
    * @param {Date | null} timestamp - The timestamp to format.
-   * @returns {string} - The formatted time as a string.
+   * @returns {string} The formatted time as a string.
    */
   const formatTime = (timestamp: Date | null): string => {
     if (!timestamp) return '';
@@ -187,7 +185,6 @@ export default function GlobalDailyQuestionEntryPage(): JSX.Element {
       </View>
 
       <ScrollView style={styles.content}>
-
         {/* Date */}
         {formatDateFull(dailyEntry.timestamp)}
 
@@ -214,100 +211,100 @@ const styles = StyleSheet.create({
     marginRight: 10,
   },
   backButtonImage: {
-    width: 24,
     height: 24,
+    width: 24,
   },
   boldDay: {
     fontWeight: 'bold',
   },
   container: {
-    flex: 1,
     backgroundColor: '#F0ECE0',
+    flex: 1,
   },
   content: {
     flex: 1,
     padding: 20,
   },
   dateText: {
+    alignItems: 'flex-start',
+    color: '#706645',
+    flexDirection: 'row',
+    fontFamily: 'Poppins',
     fontSize: 24,
     fontWeight: '400',
     marginBottom: 15,
-    color: "#706645",
-    fontFamily: "Poppins",
-    flexDirection: 'row',
-    alignItems: 'flex-start',
   },
   entryLabel: {
-    fontSize: 13,
-    fontWeight: '400',
     color: '#706645CC',
     fontFamily: 'Poppins',
+    fontSize: 13,
+    fontWeight: '400',
   },
   entryText: {
+    color: '#706645CC',
+    fontFamily: 'Poppins',
     fontSize: 14,
     fontWeight: '600',
     lineHeight: 24,
-    color: '#706645CC',
-    fontFamily: 'Poppins',
   },
   header: {
-    flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: '#F0ECE0',
+    flexDirection: 'row',
+    paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 0,
-    paddingHorizontal: 20,
-    backgroundColor: '#F0ECE0',
   },
   infoContainer: {
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
     marginBottom: 20,
   },
   loadingContainer: {
+    alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
-    alignItems: 'center',
   },
   questionContainer: {
     backgroundColor: '#FDFCF3',
-    margin: 20,
-    padding: 15,
     borderRadius: 15,
-    marginTop: 10,
+    margin: 20,
     marginBottom: 20,
+    marginTop: 10,
+    padding: 15,
   },
   questionLabel: {
     color: '#706645',
+    fontFamily: 'Poppins',
     fontSize: 14,
     fontWeight: 'bold',
     marginBottom: 8,
-    fontFamily: 'Poppins',
   },
   questionText: {
     color: '#706645',
-    fontSize: 16,
     fontFamily: 'Poppins',
+    fontSize: 16,
   },
   sectionResponse: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 18,
-    marginBottom: 5,
     color: '#706645',
     fontFamily: 'Poppins',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 5,
+    marginTop: 18,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: '600',
-    marginTop: 5,
-    marginBottom: 5,
     color: '#706645',
     fontFamily: 'Poppins',
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 5,
+    marginTop: 5,
   },
   timeText: {
-    fontSize: 13,
     color: '#706645CC',
     fontFamily: 'Poppins',
+    fontSize: 13,
   },
-})
+});
