@@ -18,20 +18,31 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
 
 /**
- * Function that checks whether a provided username is valid (meaning that
- * it is unique from other usernames in the database and only contains
- * lowercase letters and numbers.
- *
- * @param username the string containing the username to be checked
- * @returns a boolean representign whether the username is valid
+ * Interface representing the props for the PasswordRequirements component.
  */
-const isValidUser = async (username: string) => {
+interface PasswordRequirementsProps {
+  password: string;
+}
+
+/**
+ * Interface representing a single password requirement.
+ */
+interface Requirement {
+  label: string;
+  validator: (pwd: string) => boolean;
+}
+
+/**
+ * Checks whether a provided username is valid. A valid username is unique in the
+ * database and contains only lowercase letters and numbers.
+ *
+ * @param username - The username string to validate.
+ * @returns {Promise<boolean>} A promise that resolves to true if valid, otherwise false.
+ */
+const isValidUser = async (username: string): Promise<boolean> => {
   try {
     const sameUsernames = await getDocs(
-      query(
-        collection(FIRESTORE_DB, "users"),
-        where("username", "==", username)
-      )
+      query(collection(FIRESTORE_DB, "users"), where("username", "==", username))
     );
     const meetsCharReqs = /^[a-z0-9]{5,15}$/;
 
@@ -44,7 +55,7 @@ const isValidUser = async (username: string) => {
     }
 
     return true;
-  } catch (error) {
+  } catch (error: unknown) {
     Alert.alert(
       "Error",
       "There was an error validating your username. Please try again later."
@@ -53,40 +64,22 @@ const isValidUser = async (username: string) => {
   }
 };
 
-// const UsernameRequirements = async (username: string) => {
-//   const uniqueUser = await isUniqueUser(username);
-
-//   const requirements = [
-//     { label: "8+ characters", validator: (_ : string) => uniqueUser},
-//   ];
-
-//   return (
-//     <View style={styles.requirementsGrid}>
-//       {requirements.map((req, index) => (
-//         <View key={index} style={styles.requirementItem}>
-//           <Text
-//             style={{
-//               color: req.validator(username) ? "green" : "#7E948C", //#7E948C
-//               fontSize: 14,
-//             }}
-//           >
-//             {req.validator(username) ? "✓" : "✗"} {req.label}
-//           </Text>
-//         </View>
-//       ))}
-//     </View>
-//   );
-// }
-
-const UsernameRequirements = ({ username }: { username: string }) => {
+/**
+ * Component that renders username requirements.
+ *
+ * @param props - The component props containing the username.
+ * @returns {JSX.Element} The rendered username requirements.
+ */
+const UsernameRequirements = ({ username }: { username: string }): JSX.Element => {
   const requirements = [
     {
       label: "5-15 characters",
-      validator: (user: string) => user.length >= 5 && user.length <= 15,
+      validator: (user: string): boolean => user.length >= 5 && user.length <= 15,
     },
     {
       label: "Contains only lowercase letters and numbers",
-      validator: (user: string) => /^[a-z0-9]*$/.test(user),
+      // Validator returns false when input is empty, so color changes only after typing starts.
+      validator: (user: string): boolean => user.length > 0 && /^[a-z0-9]*$/.test(user),
     },
   ];
 
@@ -96,7 +89,7 @@ const UsernameRequirements = ({ username }: { username: string }) => {
         <View key={index} style={styles.requirementItem}>
           <Text
             style={{
-              color: req.validator(username) ? "green" : "#7E948C", //#7E948C
+              color: req.validator(username) ? "green" : "#7E948C",
               fontSize: 14,
             }}
           >
@@ -108,15 +101,18 @@ const UsernameRequirements = ({ username }: { username: string }) => {
   );
 };
 
-const PasswordRequirements = ({ password }) => {
-  const requirements = [
-    { label: "8+ characters", validator: (pwd) => pwd.length >= 8 },
-    { label: "Uppercase letter", validator: (pwd) => /[A-Z]/.test(pwd) },
-    { label: "Numeric character", validator: (pwd) => /[0-9]/.test(pwd) },
-    {
-      label: "Special character",
-      validator: (pwd) => /[^a-zA-Z0-9]/.test(pwd),
-    },
+/**
+ * Component that renders password requirements.
+ *
+ * @param props - The component props containing the password.
+ * @returns {JSX.Element} The rendered password requirements.
+ */
+const PasswordRequirements = ({ password }: PasswordRequirementsProps): JSX.Element => {
+  const requirements: Requirement[] = [
+    { label: "8+ characters", validator: (pwd: string): boolean => pwd.length >= 8 },
+    { label: "Uppercase letter", validator: (pwd: string): boolean => /[A-Z]/.test(pwd) },
+    { label: "Numeric character", validator: (pwd: string): boolean => /[0-9]/.test(pwd) },
+    { label: "Special character", validator: (pwd: string): boolean => /[^a-zA-Z0-9]/.test(pwd) },
   ];
 
   return (
@@ -125,7 +121,7 @@ const PasswordRequirements = ({ password }) => {
         <View key={index} style={styles.requirementItem}>
           <Text
             style={{
-              color: req.validator(password) ? "green" : "#7E948C", //#7E948C
+              color: req.validator(password) ? "green" : "#7E948C",
               fontSize: 14,
             }}
           >
@@ -137,24 +133,41 @@ const PasswordRequirements = ({ password }) => {
   );
 };
 
-export default function Signup() {
-  const [email, setEmail] = useState("");
-  const [firstName, setFirstName] = useState("");
-  const [lastName, setLastName] = useState("");
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [loading, setLoading] = useState(false);
+/**
+ * Signup component that renders a sign-up form and handles account creation.
+ *
+ * @returns {JSX.Element} The rendered signup component.
+ */
+export default function Signup(): JSX.Element {
+  const [email, setEmail] = useState<string>("");
+  const [firstName, setFirstName] = useState<string>("");
+  const [lastName, setLastName] = useState<string>("");
+  const [username, setUsername] = useState<string>("");
+  const [password, setPassword] = useState<string>("");
+  const [confirmPassword, setConfirmPassword] = useState<string>("");
+  const [loading, setLoading] = useState<boolean>(false);
 
-  // Firebase authentication token
+  // Firebase authentication token.
   const auth = FIREBASE_AUTH;
 
-  const isValidEmail = (email) => {
+  /**
+   * Validates the email format.
+   *
+   * @param email - The email string to validate.
+   * @returns {boolean} True if valid, false otherwise.
+   */
+  const isValidEmail = (email: string): boolean => {
     const regex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,6}$/;
     return regex.test(email);
   };
 
-  const checkPasswordRequirements = (pwd) => {
+  /**
+   * Checks if the password meets the required criteria.
+   *
+   * @param pwd - The password string to validate.
+   * @returns {boolean} True if the password meets all requirements, false otherwise.
+   */
+  const checkPasswordRequirements = (pwd: string): boolean => {
     return (
       pwd.length >= 8 &&
       /[A-Z]/.test(pwd) &&
@@ -163,15 +176,13 @@ export default function Signup() {
     );
   };
 
-  const handleSignUp = async () => {
-    if (
-      !email ||
-      !firstName ||
-      !lastName ||
-      !username ||
-      !password ||
-      !confirmPassword
-    ) {
+  /**
+   * Handles the signup process including validation and account creation.
+   *
+   * @returns {Promise<void>} A promise that resolves when the signup process is complete.
+   */
+  const handleSignUp = async (): Promise<void> => {
+    if (!email || !firstName || !lastName || !username || !password || !confirmPassword) {
       Alert.alert("Error", "Missing fields");
       return;
     }
@@ -198,14 +209,10 @@ export default function Signup() {
 
     try {
       setLoading(true);
-      const response = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        password
-      );
+      const response = await createUserWithEmailAndPassword(auth, email, password);
       Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
 
-      // Store first and last name to Firestore
+      // Store first and last name to Firestore.
       await addDoc(collection(FIRESTORE_DB, "users"), {
         userId: response.user.uid,
         email: email,
@@ -217,7 +224,7 @@ export default function Signup() {
 
       router.replace("/verification");
       console.log(response);
-    } catch (error) {
+    } catch (error: unknown) {
       console.error(error);
       if (error instanceof Error) {
         Alert.alert(error.message);
@@ -232,7 +239,6 @@ export default function Signup() {
       <Text style={styles.heading}>Sign Up</Text>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : "height"}
-        // keyboardVerticalOffset={Platform.OS === "ios" ?  : 20}
         style={styles.formContainer}
       >
         <TextInput
@@ -280,7 +286,7 @@ export default function Signup() {
           secureTextEntry
         />
 
-        {/* Password Requirements */}
+        {/* Render Password Requirements */}
         <PasswordRequirements password={password} />
 
         <TextInput
@@ -294,8 +300,8 @@ export default function Signup() {
       </KeyboardAvoidingView>
 
       <TouchableOpacity
-        style={[styles.button, loading && styles.disabledButton]}
-        onPress={() => handleSignUp()}
+        style={[styles.button]}
+        onPress={handleSignUp}
         disabled={loading}
       >
         <Text style={styles.buttonText}>Create Account</Text>
@@ -312,111 +318,96 @@ export default function Signup() {
 }
 
 const styles = StyleSheet.create({
-  requirementsGrid: {
-    width: "100%",
-    flexDirection: "row",
-    flexWrap: "wrap",
-    justifyContent: "space-between",
-    marginTop: -5,
-    marginBottom: 2,
+  button: {
+    alignItems: "center",
+    backgroundColor: "#7E948C",
+    borderColor: "#7E948C",
+    borderRadius: 15,
+    borderWidth: 1,
+    paddingHorizontal: 20,
+    paddingVertical: 20,
+    marginTop: 20,
+    width: "90%",
   },
-
+  buttonText: {
+    color: "white",
+    fontFamily: "Poppins",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  container: {
+    alignItems: "center",
+    backgroundColor: "#F0ECE0",
+    flex: 1,
+    justifyContent: "center",
+    padding: 20,
+  },
+  formContainer: {
+    alignItems: "center",
+    padding: 20,
+    width: "100%",
+  },
+  footer: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "center",
+    marginTop: 20,
+  },
+  footerText: {
+    color: "#333",
+    fontFamily: "Poppins",
+    fontSize: 14,
+  },
+  halfInput: {
+    width: "48%",
+  },
+  heading: {
+    color: "#333",
+    fontFamily: "Poppins",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  image: {
+    height: 150,
+    marginBottom: 20,
+    width: 150,
+  },
+  input: {
+    backgroundColor: "#F0ECE0",
+    borderColor: "#7E948C",
+    borderRadius: 15,
+    borderWidth: 2,
+    fontFamily: "Poppins",
+    marginBottom: 15,
+    padding: 15,
+    width: "100%",
+  },
+  link: {
+    color: "#7E948C",
+    fontSize: 14,
+    fontWeight: "bold",
+    textDecorationLine: "underline",
+  },
   requirementItem: {
     width: "48%",
     marginBottom: 10,
   },
-
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    padding: 20,
-    backgroundColor: "#F0ECE0",
-  },
-
-  formContainer: {
-    alignItems: "center",
-    // flexGrow: 1,
-    padding: 20,
+  requirementsContainer: {
+    marginBottom: 10,
+    marginTop: -5,
     width: "100%",
   },
-
-  image: {
-    width: 150,
-    height: 150,
-    marginBottom: 20,
-  },
-
-  heading: {
-    fontSize: 24,
-    color: "#333",
-    fontFamily: "Poppins",
-    fontWeight: "bold",
-  },
-
-  input: {
+  requirementsGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    marginBottom: 2,
+    marginTop: -5,
     width: "100%",
-    padding: 15,
-    marginBottom: 15,
-    borderWidth: 2,
-    borderColor: "#7E948C",
-    borderRadius: 15,
-    backgroundColor: "#F0ECE0",
-    fontFamily: "Poppins",
   },
-
   rowContainer: {
     flexDirection: "row",
     justifyContent: "space-between",
     width: "100%",
-  },
-
-  halfInput: {
-    width: "48%",
-  },
-
-  button: {
-    backgroundColor: "#7E948C",
-    paddingVertical: 20,
-    paddingHorizontal: 20,
-    borderRadius: 15,
-    borderWidth: 1,
-    borderColor: "#7E948C",
-    alignItems: "center",
-    width: "90%",
-    marginTop: 20,
-  },
-
-  buttonText: {
-    color: "white",
-    fontSize: 16,
-    fontWeight: "bold",
-    fontFamily: "Poppins",
-  },
-
-  footer: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    marginTop: 20,
-  },
-
-  footerText: {
-    fontSize: 14,
-    color: "#333",
-    fontFamily: "Poppins",
-  },
-
-  link: {
-    fontSize: 14,
-    color: "#7E948C",
-    fontWeight: "bold",
-    textDecorationLine: "underline",
-  },
-
-  requirementsContainer: {
-    width: "100%",
-    marginTop: -5,
-    marginBottom: 10,
   },
 });

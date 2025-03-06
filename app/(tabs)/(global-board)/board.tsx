@@ -22,6 +22,9 @@ import { signOut } from 'firebase/auth';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
 import { useRouter } from 'expo-router';
 
+/**
+ * Interface representing an entry.
+ */
 interface Entry {
   id: string;
   response: string;
@@ -33,22 +36,43 @@ interface Entry {
   username: string;
 }
 
-export default function Board() {
-  const [question, setQuestion] = useState('');
+/**
+ * Interface representing user data.
+ */
+interface UserData {
+  fullName: string;
+  username: string;
+}
+
+/**
+ * Board component: Displays daily questions and entries.
+ *
+ * @returns {JSX.Element} The board component.
+ */
+export default function Board(): JSX.Element {
+  const [question, setQuestion] = useState<string>('');
   // activeTab controls which feed is shown: 'global' or 'friends'
   const [activeTab, setActiveTab] = useState<'global' | 'friends'>('global');
-  const [showDropdown, setShowDropdown] = useState(false);
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [entries, setEntries] = useState<Entry[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
   const currentUser = FIREBASE_AUTH.currentUser;
 
-  const toggleDropdown = () => {
-    setShowDropdown((prev) => !prev);
+  /**
+   * Toggle the visibility of the dropdown menu.
+   */
+  const toggleDropdown = (): void => {
+    setShowDropdown((prevState) => !prevState);
   };
 
-  const getCurrentDate = () => {
+  /**
+   * Get the current date formatted as "weekday, month day".
+   *
+   * @returns {string} The formatted date string.
+   */
+  const getCurrentDate = (): string => {
     const date = new Date();
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
@@ -57,14 +81,22 @@ export default function Board() {
     });
   };
 
-  const navEntries = async () => {
+  /**
+   * Navigate to the entries screen.
+   */
+  const navigateToEntries = async (): Promise<void> => {
     router.replace('/(entries)/');
   };
 
-  const fetchQuestion = async () => {
+  /**
+   * Fetch the current daily question from Firestore.
+   *
+   * @returns {Promise<void>}
+   */
+  const fetchQuestion = async (): Promise<void> => {
     try {
-      const docRef = doc(FIRESTORE_DB, 'current-question', 'latest');
-      const snapshot = await getDoc(docRef);
+      const questionDocRef = doc(FIRESTORE_DB, 'current-question', 'latest');
+      const snapshot = await getDoc(questionDocRef);
       if (snapshot.exists()) {
         setQuestion(snapshot.data().text);
       } else {
@@ -75,12 +107,12 @@ export default function Board() {
     }
   };
 
-  // Helper: Fetch user data from the "users" collection by userId.
-  interface UserData {
-    fullName: string;
-    username: string;
-  }
-
+  /**
+   * Fetch user data from the "users" collection by userId.
+   *
+   * @param {string} userId - The user ID to fetch data for.
+   * @returns {Promise<UserData | null>} The fetched user data or null if not found.
+   */
   const fetchUserDataByUserId = async (userId: string): Promise<UserData | null> => {
     try {
       const usersQuery = query(
@@ -99,31 +131,33 @@ export default function Board() {
     return null;
   };
 
-  // Global feed: fetch daily entries that are shared globally.
-  const fetchGlobalEntries = async () => {
+  /**
+   * Fetch global entries for the daily question that are shared globally.
+   *
+   * @returns {Promise<void>}
+   */
+  const fetchGlobalEntries = async (): Promise<void> => {
     try {
       setLoading(true);
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      const globalQuery = query(
+      const globalEntriesQuery = query(
         collection(FIRESTORE_DB, 'daily-question-responses'),
         where('sharedGlobally', '==', true)
       );
-      const globalSnapshot = await getDocs(globalQuery);
+      const globalSnapshot = await getDocs(globalEntriesQuery);
       const fetchedEntries: Entry[] = globalSnapshot.docs
-  .map((doc) => ({
-    id: doc.id,
-    response: doc.data().response || '',
-    timestamp: doc.data().timestamp ? doc.data().timestamp.toDate() : null,
-    type: 'daily-question' as 'daily-question', // Explicit literal cast
-    anonymous: doc.data().anonymous || false,
-    userId: doc.data().userId || '',
-    displayName: '', // placeholder
-    username: '',    // placeholder
-  }))
-  // ... rest of your code
-
+        .map((doc) => ({
+          id: doc.id,
+          response: doc.data().response || '',
+          timestamp: doc.data().timestamp ? doc.data().timestamp.toDate() : null,
+          type: 'daily-question' as 'daily-question', // Explicit literal cast
+          anonymous: doc.data().anonymous || false,
+          userId: doc.data().userId || '',
+          displayName: '', // placeholder
+          username: '',    // placeholder
+        }))
         .filter((entry) => {
           if (!entry.timestamp) return false;
           const entryDate = new Date(entry.timestamp);
@@ -154,9 +188,12 @@ export default function Board() {
     }
   };
 
-  // Friends feed: look up current user's friends list, then for each friend,
-  // find their document by matching username and then fetch their entries if sharedWithFriends is true.
-  const fetchFriendsEntries = async () => {
+  /**
+   * Fetch friends' entries by retrieving the current user's friends list and fetching their entries.
+   *
+   * @returns {Promise<void>}
+   */
+  const fetchFriendsEntries = async (): Promise<void> => {
     try {
       setLoading(true);
       const currentUserId = FIREBASE_AUTH.currentUser?.uid;
@@ -164,7 +201,7 @@ export default function Board() {
         console.error("No user logged in.");
         return;
       }
-      // Get current user's document to retrieve the friends list (array of friend usernames)
+      // Retrieve current user's document to get friends list.
       const currentUserQuery = query(
         collection(FIRESTORE_DB, 'users'),
         where('userId', '==', currentUserId)
@@ -181,7 +218,7 @@ export default function Board() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
 
-      // Iterate over each friend's username.
+      // Iterate over each friend's username to fetch their entries.
       for (const friendUsername of friendsUsernames) {
         // Find friend's document by matching username.
         const friendUserQuery = query(
@@ -203,22 +240,21 @@ export default function Board() {
         );
         const friendEntriesSnapshot = await getDocs(friendEntriesQuery);
         const friendEntries: Entry[] = friendEntriesSnapshot.docs
-  .map((doc) => {
-    const data = doc.data();
-    return {
-      id: doc.id,
-      response: data.response || '',
-      timestamp: data.timestamp ? data.timestamp.toDate() : null,
-      type: 'daily-question' as 'daily-question', // Explicit literal cast
-      anonymous: data.anonymous || false,
-      userId: data.userId || '',
-      displayName: friendDoc.firstname && friendDoc.lastname
-        ? `${friendDoc.firstname} ${friendDoc.lastname}`
-        : friendDoc.username,
-      username: friendDoc.username,
-    };
-  })
-
+          .map((doc) => {
+            const data = doc.data();
+            return {
+              id: doc.id,
+              response: data.response || '',
+              timestamp: data.timestamp ? data.timestamp.toDate() : null,
+              type: 'daily-question' as 'daily-question', // Explicit literal cast
+              anonymous: data.anonymous || false,
+              userId: data.userId || '',
+              displayName: friendDoc.firstname && friendDoc.lastname
+                ? `${friendDoc.firstname} ${friendDoc.lastname}`
+                : friendDoc.username,
+              username: friendDoc.username,
+            };
+          })
           .filter((entry) => {
             if (!entry.timestamp) return false;
             const entryDate = new Date(entry.timestamp);
@@ -237,8 +273,14 @@ export default function Board() {
     }
   };
 
-  // When rendering an entry, if the entry is anonymous override the display:
-  const renderEntry = ({ item }: { item: Entry }) => {
+  /**
+   * Render an individual entry.
+   *
+   * @param {Object} param0 - The props containing the entry item.
+   * @param {Entry} param0.item - The entry item to render.
+   * @returns {JSX.Element} The rendered entry component.
+   */
+  const renderEntry = ({ item }: { item: Entry }): JSX.Element => {
     let displayName = item.displayName;
     let username = item.username;
 
@@ -252,9 +294,10 @@ export default function Board() {
       <TouchableOpacity
         style={styles.entryContainer}
         onPress={() => {
-          const route = activeTab === 'friends'
-            ? (`../friends-daily-response/${item.id}` as const)
-            : (`../global-daily-response/${item.id}` as const);
+          const route =
+            activeTab === 'friends'
+              ? (`../friends-daily-response/${item.id}` as const)
+              : (`../global-daily-response/${item.id}` as const);
 
           router.push(route);
         }}
@@ -285,21 +328,23 @@ export default function Board() {
     );
   };
 
-
-  
-
-  const handleSignOut = async () => {
+  /**
+   * Sign out the current user.
+   *
+   * @returns {Promise<void>}
+   */
+  const handleSignOut = async (): Promise<void> => {
     try {
       await signOut(FIREBASE_AUTH);
       Alert.alert('Signed out successfully!');
       router.replace('/(setup)');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error(error);
       Alert.alert('Failed to sign out. Please try again.');
     }
   };
 
-  // Fetch the daily question once.
+  // Fetch the daily question once on component mount.
   useEffect(() => {
     fetchQuestion();
   }, []);
@@ -394,7 +439,7 @@ export default function Board() {
               resizeMode="contain"
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={navEntries}>
+          <TouchableOpacity onPress={navigateToEntries}>
             <Image
               source={require('../../../assets/images/entries.png')}
               style={styles.footerImage}
@@ -432,176 +477,73 @@ export default function Board() {
   );
 }
 
+// Sorted stylesheet classes alphabetically
 const styles = StyleSheet.create({
+  activeTabIndicator: {
+    backgroundColor: '#706645',
+    borderRadius: 1,
+    bottom: -5,
+    height: 2,
+    left: 22,
+    position: 'absolute',
+    right: 22,
+  },
   container: {
     backgroundColor: '#F0ECE0',
     flex: 1,
-  },
-  header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    padding: 20,
-    marginTop: -29,
-  },
-  headerTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#706645',
-    fontFamily: 'Poppins',
-  },
-  headerDate: {
-    fontSize: 18,
-    color: '#706645',
-    fontFamily: 'Poppins',
-    fontWeight: '400',
-    marginTop: 4,
-  },
-  image: {
-    height: 40,
-    width: 40,
-  },
-  dropdownMenu: {
-    backgroundColor: '#FFF',
-    borderRadius: 8,
-    elevation: 5,
-    position: 'absolute',
-    right: 0,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    top: 50,
-    width: 100,
-    zIndex: 10,
   },
   dropdownItem: {
     borderBottomColor: '#EEE',
     borderBottomWidth: 1,
     padding: 10,
   },
+  dropdownMenu: {
+    backgroundColor: '#FFF',
+    borderRadius: 8,
+    elevation: 5,
+    position: 'absolute',
+    right: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    top: 75,
+    width: 100,
+    zIndex: 10,
+  },
   dropdownText: {
     color: '#706645',
     fontFamily: 'Poppins',
     fontSize: 16,
-  },
-  // Updated tab container to take the full width and space items evenly.
-  tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
-    marginBottom: 10,
-  },
-  tabItem: {
-    flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-    position: 'relative',
-  },
-  tabIcon: {
-    width: 20,
-    height: 20,
-    marginRight: 5,
-  },
-  tabText: {
-    color: '#706645',
-    fontFamily: 'Poppins',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  activeTabIndicator: {
-    position: 'absolute',
-    bottom: -5,
-    left: 22,
-    right: 22,
-    height: 2,
-    backgroundColor: '#706645',
-    borderRadius: 1,
-  },
-  questionContainer: {
-    backgroundColor: '#FDFCF3',
-    margin: 20,
-    padding: 15,
-    borderRadius: 15,
-    marginTop: 10,
-    marginBottom: 20,
-  },
-  questionLabel: {
-    color: '#706645',
-    fontSize: 14,
-    fontWeight: 'bold',
-    marginBottom: 8,
-    fontFamily: 'Poppins',
-  },
-  questionText: {
-    color: '#706645',
-    fontSize: 16,
-    fontFamily: 'Poppins',
-  },
-  loadingContainer: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-  },
-  noContentContainer: {
-    alignItems: 'center',
-    flex: 1,
-    justifyContent: 'center',
-    marginTop: 50,
-  },
-  noContentText: {
-    color: '#706645',
-    fontSize: 16,
-    fontStyle: 'italic',
   },
   entryContainer: {
     alignItems: 'flex-start',
     backgroundColor: '#FDFCF3',
     borderRadius: 15,
     flexDirection: 'row',
-    marginHorizontal: 20,
     marginBottom: 10,
+    marginHorizontal: 20,
     minHeight: 130,
     overflow: 'hidden',
     padding: 10,
   },
-  profileIcon: {
-    width: 35,
-    height: 35,
-    marginRight: 8,
-    marginTop: 2,
-  },
   entryLabel: {
     color: '#706645CC',
+    fontFamily: 'Poppins',
     fontSize: 13,
     fontWeight: '400',
-    fontFamily: 'Poppins',
   },
   entryText: {
     color: '#706645CC',
+    fontFamily: 'Poppins',
     fontSize: 12,
     fontWeight: '600',
     marginRight: 25,
     marginTop: 10,
-    fontFamily: 'Poppins',
   },
-  textContainer: {
-    flex: 1,
-  },
-  nameContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  timeText: {
-    fontSize: 13,
-    color: '#706645CC',
-    fontFamily: 'Poppins',
-    position: 'absolute',
-    right: 20,
-    top: 10,
-  },
-  listContainer: {
-    paddingBottom: 20,
+  entryTextContainer: {
+    marginLeft: 42,
+    marginTop: -10,
   },
   footer: {
     backgroundColor: '#F0ECE0',
@@ -617,6 +559,53 @@ const styles = StyleSheet.create({
     height: 50,
     width: 50,
   },
+  header: {
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginTop: -29,
+    padding: 20,
+  },
+  headerDate: {
+    color: '#706645',
+    fontFamily: 'Poppins',
+    fontSize: 18,
+    fontWeight: '400',
+    marginTop: 4,
+  },
+  headerTitle: {
+    color: '#706645',
+    fontFamily: 'Poppins',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  image: {
+    height: 40,
+    width: 40,
+  },
+  listContainer: {
+    paddingBottom: 20,
+  },
+  loadingContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+  },
+  nameContainer: {
+    alignItems: 'center',
+    flexDirection: 'row',
+  },
+  noContentContainer: {
+    alignItems: 'center',
+    flex: 1,
+    justifyContent: 'center',
+    marginTop: 50,
+  },
+  noContentText: {
+    color: '#706645',
+    fontSize: 16,
+    fontStyle: 'italic',
+  },
   plusSign: {
     color: 'white',
     fontSize: 30,
@@ -625,8 +614,64 @@ const styles = StyleSheet.create({
     marginTop: 4,
     position: 'absolute',
   },
-  entryTextContainer: {
-    marginLeft: 42,
-    marginTop: -10,
+  profileIcon: {
+    height: 35,
+    marginRight: 8,
+    marginTop: 2,
+    width: 35,
+  },
+  questionContainer: {
+    backgroundColor: '#FDFCF3',
+    borderRadius: 15,
+    margin: 20,
+    marginBottom: 20,
+    marginTop: 10,
+    padding: 15,
+  },
+  questionLabel: {
+    color: '#706645',
+    fontFamily: 'Poppins',
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginBottom: 8,
+  },
+  questionText: {
+    color: '#706645',
+    fontFamily: 'Poppins',
+    fontSize: 16,
+  },
+  tabContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-evenly',
+    marginBottom: 10,
+  },
+  tabIcon: {
+    height: 20,
+    marginRight: 5,
+    width: 20,
+  },
+  tabItem: {
+    alignItems: 'center',
+    flex: 1,
+    flexDirection: 'row',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  tabText: {
+    color: '#706645',
+    fontFamily: 'Poppins',
+    fontSize: 24,
+    fontWeight: 'bold',
+  },
+  textContainer: {
+    flex: 1,
+  },
+  timeText: {
+    color: '#706645CC',
+    fontFamily: 'Poppins',
+    fontSize: 13,
+    position: 'absolute',
+    right: 20,
+    top: 10,
   },
 });
