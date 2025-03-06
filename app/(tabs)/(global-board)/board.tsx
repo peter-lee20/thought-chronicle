@@ -423,7 +423,9 @@ export default function Board(): JSX.Element {
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContainer}
             showsVerticalScrollIndicator={false}
+            ListFooterComponent={<View style={{ height: 50 }} />}
           />
+
         ) : (
           <View style={styles.noContentContainer}>
             <Text style={styles.noContentText}>No entries found.</Text>

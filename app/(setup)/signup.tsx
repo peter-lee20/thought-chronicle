@@ -212,7 +212,7 @@ export default function Signup(): JSX.Element {
       const response = await createUserWithEmailAndPassword(auth, email, password);
       Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
 
-      // Store first and last name to Firestore.
+      // Store first and last name, username, email, and userId to Firestore.
       await addDoc(collection(FIRESTORE_DB, "users"), {
         userId: response.user.uid,
         email: email,
@@ -316,6 +316,7 @@ export default function Signup(): JSX.Element {
     </SafeAreaView>
   );
 }
+
 
 const styles = StyleSheet.create({
   button: {
