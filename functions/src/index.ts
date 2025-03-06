@@ -51,12 +51,15 @@ exports.scheduleUpdateStreak = onSchedule("0 8 * * *",
 
       for (const userDoc of usersSnapshot.docs) {
         const userId = userDoc.data().userId;
+        const userStreakDoc = await admin.firestore().collection("userStreaks").doc(userId).get();
         const prevUserResponseSnapshot = await admin.firestore()
           .collection("daily-question-responses")
           .where("userId", "==", userId)
           .where("date", "==", yesterdayString)
           .get();
-        let newStreak = userDoc.data().currentStreak || 0;
+        
+          
+        let newStreak = userStreakDoc.data()?.currentStreak || 0;
 
         if (prevUserResponseSnapshot.empty) {
           newStreak = 0;
@@ -66,6 +69,7 @@ exports.scheduleUpdateStreak = onSchedule("0 8 * * *",
 
         await admin.firestore().collection("userStreaks").doc(userId).update({
           currentStreak: newStreak,
+          lastAnsweredDate: yesterdayString,
         });
       }
     } catch (error: any) {

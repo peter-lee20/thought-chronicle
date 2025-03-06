@@ -15,7 +15,7 @@ import {
 import { FIREBASE_AUTH } from "../../FirebaseConfig";
 import { FIRESTORE_DB } from "../../FirebaseConfig";
 import { createUserWithEmailAndPassword } from "firebase/auth";
-import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
+import { addDoc, collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 
 /**
  * Function that checks whether a provided username is valid (meaning that
@@ -52,31 +52,6 @@ const isValidUser = async (username: string) => {
     return false;
   }
 };
-
-// const UsernameRequirements = async (username: string) => {
-//   const uniqueUser = await isUniqueUser(username);
-
-//   const requirements = [
-//     { label: "8+ characters", validator: (_ : string) => uniqueUser},
-//   ];
-
-//   return (
-//     <View style={styles.requirementsGrid}>
-//       {requirements.map((req, index) => (
-//         <View key={index} style={styles.requirementItem}>
-//           <Text
-//             style={{
-//               color: req.validator(username) ? "green" : "#7E948C", //#7E948C
-//               fontSize: 14,
-//             }}
-//           >
-//             {req.validator(username) ? "✓" : "✗"} {req.label}
-//           </Text>
-//         </View>
-//       ))}
-//     </View>
-//   );
-// }
 
 const UsernameRequirements = ({ username }: { username: string }) => {
   const requirements = [
@@ -213,6 +188,12 @@ export default function Signup() {
         lastname: lastName,
         username: username,
         friends: [],
+      });
+
+      // Start storing streak for new user
+      await setDoc(doc(FIRESTORE_DB, "userStreaks", response.user.uid), {
+        currentStreak: 0,
+        lastAnsweredDate: "N/A",
       });
 
       router.replace("/verification");

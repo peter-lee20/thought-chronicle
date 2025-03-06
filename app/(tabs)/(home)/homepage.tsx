@@ -94,13 +94,9 @@ export default function HomePage() {
 
     if (user) {
       try {
-        const todayStr = currentDate.toLocaleDateString();
         const streakDocRef = doc(FIRESTORE_DB, "userStreaks", user.uid);
         const streakDocSnap = await getDoc(streakDocRef);
         const currDateString = currentDate.toLocaleDateString();
-        const prevDateString = new Date(
-          currentDate.getDate() - 1
-        ).toLocaleDateString();
 
         const currDailyQuestionDocs = await getDocs(
           query(
@@ -110,13 +106,12 @@ export default function HomePage() {
           )
         );
 
-        const prevDailyQuestionDocs = await getDocs(
-          query(
-            collection(FIRESTORE_DB, "daily-question-responses"),
-            where("userId", "==", user.uid),
-            where("date", "==", prevDateString)
-          )
-        );
+        if (!streakDocSnap.exists()) {
+          await setDoc(doc(FIRESTORE_DB, "userStreaks", user.uid), {
+            currentStreak: 0,
+            lastAnsweredDate: "N/A",
+          });
+        }
 
         if (streakDocSnap.exists()) {
           const currentStreak = streakDocSnap.data().currentStreak;
@@ -126,8 +121,6 @@ export default function HomePage() {
           } else {
             setStreak(currentStreak);
           }
-        } else {
-          setStreak(0);
         }
       } catch (error: any) {
         console.error("Error fetching user streak:", error);
@@ -324,14 +317,6 @@ export default function HomePage() {
 
   // Handles signing out the current user.
   const handleSignOut = async () => {
-    try {
-      await signOut(FIREBASE_AUTH);
-      Alert.alert("Signed out successfully!");
-      router.replace("/(setup)");
-    } catch (error: any) {
-      console.error(error);
-      Alert.alert("Failed to sign out. Please try again.");
-    }
     try {
       await signOut(FIREBASE_AUTH);
       Alert.alert("Signed out successfully!");
