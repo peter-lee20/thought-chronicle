@@ -46,7 +46,13 @@ export default function SignInScreen(): JSX.Element {
       const response = await signInWithEmailAndPassword(auth, email, password);
 
       if(!response.user.emailVerified) {
-        Alert.alert("Email Not Verified", "Please verify your email before signing in.");
+        Alert.alert("Email Not Verified", "Please verify your email before signing in.", [
+          {
+            text: "Send again",
+            onPress: async () => await sendEmailVerification(response.user),
+          },
+          {text: "Ok",}
+        ]);
         await sendEmailVerification(response.user);
         setLoading(false);
         return;
