@@ -14,7 +14,7 @@ import {
 } from "react-native";
 import { FIREBASE_AUTH } from "../../FirebaseConfig";
 import { FIRESTORE_DB } from "../../FirebaseConfig";
-import { createUserWithEmailAndPassword } from "firebase/auth";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
 import { addDoc, collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 
 /**
@@ -177,7 +177,8 @@ export default function Signup() {
         auth,
         email,
         password
-      );
+      )
+      await sendEmailVerification(response.user);
       Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
 
       // Store first and last name to Firestore

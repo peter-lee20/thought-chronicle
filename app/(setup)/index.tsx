@@ -15,7 +15,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { FIREBASE_AUTH } from '../../FirebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { sendEmailVerification, signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function App() {
   const [email, setEmail] = useState("");
@@ -33,6 +33,14 @@ export default function App() {
     setLoading(true);
     try {
       const response = await signInWithEmailAndPassword(auth, email, password);
+
+      if(!response.user.emailVerified) {
+        Alert.alert("Email Not Verified", "Please verify your email before signing in.");
+        await sendEmailVerification(response.user);
+        setLoading(false);
+        return;
+      }
+
       Alert.alert("Success", `Signed in as ${email}`);
       console.log(response);
       router.replace("/(tabs)/(home)/homepage");
