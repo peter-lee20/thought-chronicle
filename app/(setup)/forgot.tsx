@@ -1,12 +1,29 @@
-import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
-import { Link } from 'expo-router';
-import { getAuth, sendPasswordResetEmail } from 'firebase/auth';
+import React, { useState } from "react";
+import { 
+  View, 
+  Text, 
+  StyleSheet, 
+  TextInput, 
+  TouchableOpacity, 
+  Alert 
+} from "react-native";
+import { Link } from "expo-router";
+import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 
-export default function Forgot() {
-  const [email, setEmail] = useState(''); 
+/**
+ * Forgot component renders a password reset form.
+ *
+ * @returns {JSX.Element} The rendered Forgot screen.
+ */
+export default function Forgot(): JSX.Element {
+  const [email, setEmail] = useState<string>("");
 
-  const handlePasswordReset = () => {
+  /**
+   * Handles the password reset process by validating the email and sending a password reset email.
+   *
+   * @returns {void}
+   */
+  const handlePasswordReset = (): void => {
     if (!email.trim()) {
       Alert.alert("Error", "Please enter a valid email address.");
       return;
@@ -14,12 +31,15 @@ export default function Forgot() {
 
     const auth = getAuth();
     sendPasswordResetEmail(auth, email)
-      .then(() => {
+      .then((): void => {
         Alert.alert("Success", "Password reset instructions have been sent to your email.");
       })
-      .catch((error) => {
-        const errorMessage = error.message;
-        Alert.alert("Error", errorMessage);
+      .catch((error: unknown): void => {
+        if (error instanceof Error) {
+          Alert.alert("Error", error.message);
+        } else {
+          Alert.alert("Error", "An unknown error occurred.");
+        }
       });
   };
 
@@ -48,28 +68,41 @@ export default function Forgot() {
 }
 
 const styles = StyleSheet.create({
+  button: {
+    backgroundColor: "#7E948C",
+    height: 66,
+    width: 352,
+    alignSelf: "center",
+    justifyContent: "center",
+    borderRadius: 14,
+  },
+  buttonText: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#F0ECE0",
+    textAlign: "center",
+    lineHeight: 24,
+    fontFamily: "Poppins",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F0ECE0",
     alignContent: "center",
     justifyContent: "center",
   },
-  title: {
-    color: "#333",
-    fontSize: 24,
-    fontWeight: "700",
-    textAlign: "center",
-    lineHeight: 36,
-  },
-  text: {
+  footer: {
     color: "#333",
     fontSize: 15,
-    fontWeight: "400",
+    lineHeight: 22.5,
     textAlign: "center",
-    alignSelf: "center",
     marginTop: 34,
-    marginBottom: 34,
-    maxWidth: 303,
+    fontFamily: "Poppins",
+  },
+  footerLink: {
+    fontWeight: "600",
+    color: "#7E948C",
+    textDecorationLine: "underline",
+    fontFamily: "Poppins",
   },
   input: {
     fontSize: 16,
@@ -83,32 +116,25 @@ const styles = StyleSheet.create({
     height: 55,
     paddingLeft: 15,
     marginBottom: 34,
+    fontFamily: "Poppins",
   },
-  button: {
-    backgroundColor: "#7E948C",
-    width: 352,
-    height: 66,
-    alignSelf: "center",
-    justifyContent: "center",
-    borderRadius: 14,
-  },
-  buttonText: {
-    fontSize: 16,
-    fontWeight: "600",
-    color: "#F0ECE0",
-    textAlign: "center",
-    lineHeight: 24,
-  },
-  footer: {
+  text: {
     color: "#333",
     fontSize: 15,
-    lineHeight: 22.5,
+    fontWeight: "400",
     textAlign: "center",
+    alignSelf: "center",
     marginTop: 34,
+    marginBottom: 34,
+    maxWidth: 303,
+    fontFamily: "Poppins",
   },
-  footerLink: {
-    fontWeight: "600",
-    color: "#7E948C",
-    textDecorationLine: "underline",
+  title: {
+    color: "#333",
+    fontSize: 24,
+    fontWeight: "700",
+    textAlign: "center",
+    lineHeight: 36,
+    fontFamily: "Poppins",
   },
 });
