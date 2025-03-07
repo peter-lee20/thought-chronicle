@@ -53,13 +53,10 @@ export default function SignInScreen(): JSX.Element {
           },
           {text: "Ok",}
         ]);
-        await sendEmailVerification(response.user);
         setLoading(false);
         return;
       }
 
-      Alert.alert("Success", `Signed in as ${email}`);
-      console.log(response);
       router.replace("/(tabs)/(home)/homepage");
     } catch (error) {
       console.log(error);

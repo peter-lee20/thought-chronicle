@@ -211,7 +211,7 @@ export default function Signup(): JSX.Element {
       setLoading(true);
       const response = await createUserWithEmailAndPassword(auth, email, password)
       await sendEmailVerification(response.user);
-      Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
+      // Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
 
       // Store first and last name, username, email, and userId to Firestore.
       await addDoc(collection(FIRESTORE_DB, "users"), {
