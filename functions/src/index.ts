@@ -2,7 +2,7 @@
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
 import { onSchedule } from "firebase-functions/scheduler";
-import { FieldValue } from "firebase-admin/firestore";
+import { FieldValue, WriteResult } from "firebase-admin/firestore";
 // import { onRequest } from "firebase-functions/https";
 
 admin.initializeApp();
@@ -48,35 +48,43 @@ exports.scheduleUpdateStreak = onSchedule("0 8 * * *",
 
     try {
       const usersSnapshot = await admin.firestore().collection("users").get();
+      const updatePromises: Promise<WriteResult>[] = [];
 
-      for (const userDoc of usersSnapshot.docs) {
+      usersSnapshot.forEach((userDoc) => {
         const userId = userDoc.data().userId;
-        const userStreakDoc = await admin.firestore().collection("userStreaks").doc(userId).get();
-        const prevUserResponseSnapshot = await admin.firestore()
-          .collection("daily-question-responses")
-          .where("userId", "==", userId)
-          .where("date", "==", yesterdayString)
-          .get();
-        
-          
-        let newStreak = userStreakDoc.data()?.currentStreak || 0;
+        const updatePromise = admin.firestore().collection("userStreaks").doc(userId).get()
+          .then(userStreakDoc => {
+            let newStreak = userStreakDoc.exists ? userStreakDoc.data()?.currentStreak : 0;
+            let lastAnswered = userStreakDoc.exists ? userStreakDoc.data()?.lastAnsweredDate : "N/A";
 
-        if (prevUserResponseSnapshot.empty) {
-          newStreak = 0;
-        } else {
-          newStreak += 1;
-        }
+            return admin.firestore().collection("daily-question-responses")
+              .where("userId", "==", userId)
+              .where("date", "==", yesterdayString)
+              .get()
+              .then(prevUserResponseSnapshot => {
+                if (prevUserResponseSnapshot.empty) {
+                  newStreak = 0;
+                } else {
+                  newStreak += 1;
+                  lastAnswered = yesterdayString;
+                }
 
-        await admin.firestore().collection("userStreaks").doc(userId).update({
-          currentStreak: newStreak,
-          lastAnsweredDate: yesterdayString,
-        });
-      }
+                return admin.firestore().collection("userStreaks").doc(userId).set({
+                  currentStreak: newStreak,
+                  lastAnsweredDate: lastAnswered,
+                });
+              });
+          });
+
+        updatePromises.push(updatePromise);
+      });
+
+      await Promise.all(updatePromises);
     } catch (error: any) {
       console.error("There was an error updating your streak.", error);
     }
   }
-)
+);
 
 export const fetchPrompt = functions.https.onRequest(async (req, res) => {
   // Inefficient if our question database is big
