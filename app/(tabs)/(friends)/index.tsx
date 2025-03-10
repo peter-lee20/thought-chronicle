@@ -568,7 +568,7 @@ export default function FriendsPage(): JSX.Element {
                             }
                         }]
                     }
-                    : user
+                : user
             )
         );
 
