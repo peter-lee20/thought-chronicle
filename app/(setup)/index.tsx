@@ -15,7 +15,7 @@ import {
   View,
 } from 'react-native';
 import { FIREBASE_AUTH } from '../../FirebaseConfig';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { sendEmailVerification, signInWithEmailAndPassword } from 'firebase/auth';
 
 /**
  * SignInScreen - Renders the sign-in page for user authentication.
@@ -44,8 +44,19 @@ export default function SignInScreen(): JSX.Element {
     setLoading(true);
     try {
       const response = await signInWithEmailAndPassword(auth, email, password);
-      Alert.alert("Success", `Signed in as ${email}`);
-      console.log(response);
+
+      if(!response.user.emailVerified) {
+        Alert.alert("Email Not Verified", "Please verify your email before signing in.", [
+          {
+            text: "Send again",
+            onPress: async () => await sendEmailVerification(response.user),
+          },
+          {text: "Ok",}
+        ]);
+        setLoading(false);
+        return;
+      }
+
       router.replace("/(tabs)/(home)/homepage");
     } catch (error) {
       console.log(error);

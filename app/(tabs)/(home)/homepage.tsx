@@ -14,6 +14,7 @@ import {
   View,
   GestureResponderEvent,
 } from "react-native";
+import {} from "react-native";
 import {
   addDoc,
   collection,
@@ -84,47 +85,56 @@ export default function HomePage() {
     checkResponse();
   }, []);
 
-  // useEffect hook to fetch the user's streak on component mount.
-  useEffect(() => {
-    const fetchUserStreak = async () => {
-      const user = FIREBASE_AUTH.currentUser;
+  /**
+   * Function to set the current streak state to the correct value depending
+   * on if the user has answered the daily question response or not.
+   */
+  const fetchUserStreak = async () => {
+    const user = FIREBASE_AUTH.currentUser;
 
-      if (user) {
-        try {
-          // Reference to the user's streak document in the 'userStreaks' collection.
-          const streakDocRef = doc(FIRESTORE_DB, "userStreaks", user.uid);
-          const streakDocSnap = await getDoc(streakDocRef);
-          const todayStr = currentDate.toLocaleDateString();
-          const yesterday = new Date(currentDate);
+    if (user) {
+      try {
+        const streakDocRef = doc(FIRESTORE_DB, "userStreaks", user.uid);
+        const streakDocSnap = await getDoc(streakDocRef);
+        const currDateString = currentDate.toLocaleDateString();
 
-          yesterday.setDate(currentDate.getDate() - 1);
+        const currDailyQuestionDocs = await getDocs(
+          query(
+            collection(FIRESTORE_DB, "daily-question-responses"),
+            where("userId", "==", user.uid),
+            where("date", "==", currDateString)
+          )
+        );
 
-          const yesterdayStr = yesterday.toLocaleDateString();
-
-          if (streakDocSnap.exists()) {
-            const data = streakDocSnap.data();
-
-            if (
-              data.lastAnsweredDate === todayStr ||
-              data.lastAnsweredDate === yesterdayStr
-            ) {
-              setStreak(data.currentStreak);
-            } else {
-              // Resets the streak to 0 if the user misses a day
-              setStreak(0);
-              await updateDoc(streakDocRef, { currentStreak: 0 });
-            }
-          } else {
-            setStreak(0);
-          }
-        } catch (error: any) {
-          console.error("Error fetching user streak:", error);
+        if (!streakDocSnap.exists()) {
+          await setDoc(doc(FIRESTORE_DB, "userStreaks", user.uid), {
+            currentStreak: 0,
+            lastAnsweredDate: "N/A",
+          });
         }
-      }
-    };
 
+        if (streakDocSnap.exists()) {
+          const currentStreak = streakDocSnap.data().currentStreak;
+
+          if (!currDailyQuestionDocs.empty) {
+            setStreak(currentStreak + 1);
+          } else {
+            setStreak(currentStreak);
+          }
+        }
+      } catch (error: any) {
+        console.error("Error fetching user streak:", error);
+      }
+    }
+  };
+
+  /**
+   * Effect that runs the fetchUserStreak function whenever 
+   * the page renders
+   */
+  useEffect(() => {
     fetchUserStreak();
-  }, []);
+  }, [responded]);
 
   // Function to calculate the start and end dates of the current week.
   const getWeekRange = () => {
@@ -185,17 +195,17 @@ export default function HomePage() {
     // don't want to check requirements for the response if the user is just
     // changing their settings
     if (!responded) {
-        if (response.trim() === "") {
+      if (response.trim() === "") {
         Alert.alert("Please enter a response.");
         return;
-        }
+      }
 
-        if (response.length > maxCharacters) {
+      if (response.length > maxCharacters) {
         Alert.alert(
-            `Response exceeds the maximum limit of ${maxCharacters} characters.`
+          `Response exceeds the maximum limit of ${maxCharacters} characters.`
         );
         return;
-        }
+      }
     }
 
     setModalVisible(true);
@@ -208,7 +218,6 @@ export default function HomePage() {
   }) => {
     if (response.trim() === "") {
       Alert.alert("Please enter a response.");
-
       return;
     }
 
@@ -216,7 +225,6 @@ export default function HomePage() {
       Alert.alert(
         `Response exceeds the maximum limit of ${maxCharacters} characters.`
       );
-
       return;
     }
 
@@ -225,38 +233,8 @@ export default function HomePage() {
 
       if (user) {
         const todayStr = currentDate.toLocaleDateString();
-        const yesterday = new Date(currentDate);
 
-        yesterday.setDate(currentDate.getDate() - 1);
-
-        const yesterdayStr = yesterday.toLocaleDateString();
-        const streakDocRef = doc(FIRESTORE_DB, "userStreaks", user.uid);
-        const streakDocSnap = await getDoc(streakDocRef);
-        let newStreak = 1;
-
-        if (streakDocSnap.exists()) {
-          const data = streakDocSnap.data();
-
-          if (data.lastAnsweredDate === todayStr) {
-            newStreak = data.currentStreak;
-          } else if (data.lastAnsweredDate === yesterdayStr) {
-            newStreak = data.currentStreak + 1;
-          } else {
-            newStreak = 1;
-          }
-
-          await updateDoc(streakDocRef, {
-            currentStreak: newStreak,
-            lastAnsweredDate: todayStr,
-          });
-        } else {
-          await setDoc(streakDocRef, {
-            currentStreak: newStreak,
-            lastAnsweredDate: todayStr,
-          });
-        }
-
-        setStreak(newStreak);
+        fetchUserStreak();
 
         await addDoc(collection(FIRESTORE_DB, "daily-question-responses"), {
           question: question,
@@ -284,9 +262,9 @@ export default function HomePage() {
 
   /**
    * Function that is called when the user taps on "Change Visibility Settings"
-   * button after they have responded to the daily question. This opens up the 
+   * button after they have responded to the daily question. This opens up the
    * sharing modal again so they can change their sharing settings.
-   * 
+   *
    * @param options The new sharing settings to update
    * @returns Updates the provided changes to the Firestore and on the feeds
    */
@@ -301,26 +279,30 @@ export default function HomePage() {
       if (user) {
         const todayStr = currentDate.toLocaleDateString();
         const responseQuery = query(
-          collection(FIRESTORE_DB, "daily-question-responses"), 
-          where('userId', '==', user.uid),
-          where('date', '==', todayStr)
+          collection(FIRESTORE_DB, "daily-question-responses"),
+          where("userId", "==", user.uid),
+          where("date", "==", todayStr)
         );
         const snapshot = await getDocs(responseQuery);
 
         if (snapshot.empty) {
-            console.error("No response was found. Please enter a response first");
-            Alert.alert("No reponse was found. Please enter a response first.");
-            return;
+          console.error("No response was found. Please enter a response first");
+          Alert.alert("No reponse was found. Please enter a response first.");
+          return;
         }
 
         const responseDoc = snapshot.docs[0];
-        const docRef = doc(FIRESTORE_DB, "daily-question-responses", responseDoc.id);
-        
+        const docRef = doc(
+          FIRESTORE_DB,
+          "daily-question-responses",
+          responseDoc.id
+        );
+
         await updateDoc(docRef, {
-            sharedGlobally: options["globalFeed"],
-            anonymous: options["anonymous"],
-            sharedWithFriends: options["friends"],
-        })
+          sharedGlobally: options["globalFeed"],
+          anonymous: options["anonymous"],
+          sharedWithFriends: options["friends"],
+        });
 
         Alert.alert("Settings changed successfully!");
         setModalVisible(false);
@@ -431,20 +413,24 @@ export default function HomePage() {
                   onPress={openVisiblityModal}
                   // disabled={responded}
                 >
-                  {!responded ? 
-                    (<Text style={styles.buttonText}>Submit Response</Text>): 
+                  {!responded ? (
+                    <Text style={styles.buttonText}>Submit Response</Text>
+                  ) : (
                     // text is different depending on whther user is submitting their response or changing their settings
-                    (<Text style={styles.buttonText}>Change Visibility Settings</Text>)
-                  }
-                  
+                    <Text style={styles.buttonText}>
+                      Change Visibility Settings
+                    </Text>
+                  )}
                 </TouchableOpacity>
-                
+
                 <ShareModal
                   isVisible={modalVisible}
-                  isFirstSubmit={!responded} 
+                  isFirstSubmit={!responded}
                   // indicates to the share modal whether the user is submitting their response or changing their settings
                   onClose={() => setModalVisible(false)}
-                  onSubmit={responded ? handleEditSettings: handleSubmitResponse}
+                  onSubmit={
+                    responded ? handleEditSettings : handleSubmitResponse
+                  }
                 />
               </View>
             </View>

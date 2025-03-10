@@ -14,8 +14,8 @@ import {
 } from "react-native";
 import { FIREBASE_AUTH } from "../../FirebaseConfig";
 import { FIRESTORE_DB } from "../../FirebaseConfig";
-import { createUserWithEmailAndPassword } from "firebase/auth";
-import { addDoc, collection, getDocs, query, where } from "firebase/firestore";
+import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
+import { addDoc, collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
 
 /**
  * Interface representing the props for the PasswordRequirements component.
@@ -209,8 +209,9 @@ export default function Signup(): JSX.Element {
 
     try {
       setLoading(true);
-      const response = await createUserWithEmailAndPassword(auth, email, password);
-      Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
+      const response = await createUserWithEmailAndPassword(auth, email, password)
+      await sendEmailVerification(response.user);
+      // Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
 
       // Store first and last name, username, email, and userId to Firestore.
       await addDoc(collection(FIRESTORE_DB, "users"), {
@@ -220,6 +221,12 @@ export default function Signup(): JSX.Element {
         lastname: lastName,
         username: username,
         friends: [],
+      });
+
+      // Start storing streak for new user
+      await setDoc(doc(FIRESTORE_DB, "userStreaks", response.user.uid), {
+        currentStreak: 0,
+        lastAnsweredDate: "N/A",
       });
 
       router.replace("/verification");
