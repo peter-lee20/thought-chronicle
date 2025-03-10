@@ -65,10 +65,11 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     width: '100%',
   },
-  tabContent: {
-    flex: 1,
-    paddingVertical: 20,
-    width: '100%',
+  listItem: {
+    color: '#706645',
+    fontFamily: 'Poppins',
+    fontSize: 16,
+    marginBottom: 5,
   },
   searchBarContainer: {
     flexDirection: 'row',
@@ -88,11 +89,10 @@ const styles = StyleSheet.create({
     height: 20,
     marginRight: 10,
   },
-  listItem: {
-    color: '#706645',
-    fontFamily: 'Poppins',
-    fontSize: 16,
-    marginBottom: 5,
+  tabContent: {
+    flex: 1,
+    paddingVertical: 20,
+    width: '100%',
   },
 });
 
