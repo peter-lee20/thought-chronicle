@@ -317,27 +317,61 @@ const [markedDates, setMarkedDates] = useState<Record<string, any>>({}); // Keep
 }
 
 const styles = StyleSheet.create({
+  body: {
+    paddingHorizontal: 10,
+  },
+  circleButton: {
+    position: "relative",
+    width: 50,
+    height: 50,
+    justifyContent: "center",
+    alignItems: "center",
+  },
   container: {
     flex: 1,
     backgroundColor: "#F0ECE0",
   },
-
-  header: {
+  date: {
+    textAlign: "center",
+    fontFamily: "Poppins",
+    color: "#706645",
+    fontSize: 24,
+    fontWeight: 600,
+    lineHeight: 36,
+    marginRight: 7,
+  },
+  dateChangeButton: {
     flexDirection: "row",
-    justifyContent: "flex-end",
-    marginRight: 21,
     alignItems: "center",
-    marginBottom: 20,
   },
-
-  headerImage: {
-    width: 40,
-    height: 40,
+  dateContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
   },
-
+  dayIconContainer: {
+    width: 45,
+    height: 45,
+    borderRadius: 22,
+    backgroundColor: "#FDFCF3",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dayText: {
+    fontFamily: "Poppins",
+    fontSize: 13,
+    color: "#706645",
+    textAlign: "center",
+    marginTop: 8,
+  },
+  dropdownItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: "#EEE",
+  },
   dropdownMenu: {
     position: "absolute",
-    top: 50, // Position below the profile image
+    top: 50,
     right: 0,
     width: 100,
     backgroundColor: "#FFF",
@@ -349,51 +383,37 @@ const styles = StyleSheet.create({
     elevation: 5,
     zIndex: 10,
   },
-
-  dropdownItem: {
-    padding: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: "#EEE",
-  },
-
   dropdownText: {
     color: "#706645",
     fontSize: 16,
     fontFamily: "Poppins",
   },
-
-  body: {
-    paddingHorizontal: 10,
-  },
-
-  dateContainer: {
+  footer: {
     flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
+    justifyContent: "space-around",
+    marginTop: "auto",
+    paddingVertical: 20,
+    backgroundColor: "#F0ECE0",
   },
-
-  dateChangeButton: {
+  footerImage: {
+    width: 50,
+    height: 50,
+  },
+  header: {
     flexDirection: "row",
+    justifyContent: "flex-end",
+    marginRight: 21,
     alignItems: "center",
+    marginBottom: 20,
   },
-
-  date: {
-    textAlign: "center",
-    fontFamily: "Poppins",
-    color: "#706645",
-    fontSize: 24,
-    fontWeight: 600,
-    lineHeight: 36,
-    marginRight: 7,
+  headerImage: {
+    width: 40,
+    height: 40,
   },
-
-  modalOverlay: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  modalArrows: {
+    width: 20,
+    height: 40,
   },
-
   modalContent: {
     flexDirection: "column",
     width: 352,
@@ -406,21 +426,20 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
     alignItems: "center",
   },
-
-  modalArrows: {
-    width: 20,
-    height: 40,
-  },
-
-  dayIconContainer: {
-    width: 45,
-    height: 45,
-    borderRadius: 22,
-    backgroundColor: "#FDFCF3",
-    alignItems: "center",
+  modalOverlay: {
+    flex: 1,
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
-
+  plusSign: {
+    marginLeft: 15.5,
+    marginTop: 4,
+    position: "absolute",
+    fontSize: 30,
+    color: "white",
+    fontWeight: "400",
+  },
   selectedDayText: {
     fontFamily: "Poppins",
     fontSize: 13,
@@ -430,43 +449,4 @@ const styles = StyleSheet.create({
     marginTop: 8,
     borderRadius: 10,
   },
-
-  dayText: {
-    fontFamily: "Poppins",
-    fontSize: 13,
-    color: "#706645",
-    textAlign: "center",
-    marginTop: 8,
-  },
-
-  // footer styling
-  footer: {
-    flexDirection: "row",
-    justifyContent: "space-around",
-    marginTop: "auto", // Push footer to the bottom,
-    paddingVertical: 20,
-    backgroundColor: "#F0ECE0",
-  },
-
-  circleButton: {
-    position: "relative", // Make this container the reference for absolute positioning
-    width: 50, // Adjust to match your circle image size
-    height: 50, // Adjust to match your circle image size
-    justifyContent: "center",
-    alignItems: "center",
-  },
-
-  plusSign: {
-    marginLeft: 15.5,
-    marginTop: 4,
-    position: "absolute",
-    fontSize: 30, // Adjust size as needed
-    color: "white", // Adjust color as needed
-    fontWeight: "400", // Make the plus sign bold if needed
-  },
-
-  footerImage: {
-    width: 50,
-    height: 50,
-  },
-});
+});  
