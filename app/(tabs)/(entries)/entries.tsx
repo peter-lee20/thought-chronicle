@@ -217,14 +217,24 @@ export default function EntryPage() {
                   />
                   <View style={styles.textContainer}>
                     <View style={styles.titleRow}>
-                      <Text style={styles.entryLabel}>DAILY QUESTION</Text>
-                      {dailyResponse.timestamp && (
-                        <Text style={styles.timestampText}>
-                          {formatTime(dailyResponse.timestamp)}
-                        </Text>
-                      )}
+                      {/* Left Side: Label & Timestamp */}
+                      <View style={styles.titleTextContainer}>
+                        <Text style={styles.entryLabel}>DAILY QUESTION</Text>
+                        {dailyResponse.timestamp && (
+                          <Text style={styles.timestampText}>
+                            {formatTime(dailyResponse.timestamp)}
+                          </Text>
+                        )}
+                      </View>
+
+                      {/* Right Side: Image */}
+                      <Image
+                        source={require('../../../assets/images/delete.png')} 
+                        style={styles.titleImage}
+                        resizeMode="contain"
+                      />
                     </View>
-                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
+                    <Text style={styles.entryText} numberOfLines={5} ellipsizeMode="tail">
                       {dailyResponse.response}
                     </Text>
                   </View>
@@ -249,14 +259,23 @@ export default function EntryPage() {
                   />
                   <View style={styles.textContainer}>
                     <View style={styles.titleRow}>
-                      <Text style={styles.entryLabel}>JOURNAL</Text>
-                      {entry.timestamp && (
-                        <Text style={styles.timestampText}>
-                          {formatTime(entry.timestamp)}
-                        </Text>
-                      )}
+                      {/* Left Side: Label & Timestamp */}
+                      <View style={styles.titleTextContainer}>
+                        <Text style={styles.entryLabel}>JOURNAL</Text>
+                        {entry.timestamp && (
+                          <Text style={styles.timestampText}>
+                            {formatTime(entry.timestamp)}
+                          </Text>
+                        )}
+                      </View>
+                      {/* Right Side: Image */}
+                      <Image
+                        source={require('../../../assets/images/delete.png')} 
+                        style={styles.titleImage}
+                        resizeMode="contain"
+                      />
                     </View>
-                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
+                    <Text style={styles.entryText} numberOfLines={5} ellipsizeMode="tail">
                       {entry.response}
                     </Text>
                   </View>
@@ -429,13 +448,14 @@ const styles: StylesProps = StyleSheet.create({
     fontSize: 13,
     fontWeight: '400',
     marginTop: 10,
+    letterSpacing: 13 * 0.1,
   },
   entryText: {
     color: "#706645CC",
     fontSize: 12,
     fontWeight: '600',
-    marginRight: 25,
     marginTop: 10,
+    marginRight: 10,
   },
   footer: {
     backgroundColor: '#F0ECE0',
@@ -504,15 +524,24 @@ const styles: StylesProps = StyleSheet.create({
   timestampText: {
     color: '#706645CC',
     fontFamily: "Poppins",
-    fontSize: 13,
-    position: 'absolute',
-    right: 20,
-    top: 10,
+    fontSize: 11,
+    fontWeight: '300',
+    marginRight: 25,
   },
   titleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 5,
+    flexDirection: "row", 
+    justifyContent: "space-between", 
+    alignItems: "center", 
+    width: "100%", 
+  },
+  titleTextContainer: {
+    flexDirection: "column", 
+    justifyContent: "center", 
+  },
+  titleImage: {
+    width: 23,  
+    height: 23, 
+    marginTop: 5,
+    marginRight: 10,
   },
 });
