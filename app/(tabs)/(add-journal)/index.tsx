@@ -53,6 +53,7 @@ const callPromptFunc = async (): Promise<any> => {
 export default function JournalEntry(): JSX.Element {
   const [prompt, setPrompt] = useState<string>('What are you currently feeling or experiencing?');
   const [response, setResponse] = useState<string>('');
+  const [showMessage, setShowMessage] = useState<boolean>(true);
   const wordCount: number = response.trim() ? response.trim().split(/\s+/).length : 0;
   const currentDate: Date = new Date();
   const maxWords = 1500;
@@ -139,9 +140,19 @@ export default function JournalEntry(): JSX.Element {
               </Text>
             </View>
             <View style={styles.buttons}>
-              <TouchableOpacity style={styles.help} onPress={getPrompt}>
+              <TouchableOpacity
+                style={styles.help}
+                onPress={() => {
+                  getPrompt();
+                }}
+              >
                 <Image source={require('../../../assets/images/fire.png')} style={styles.check} />
               </TouchableOpacity>
+              {showMessage && (
+                <Text style={styles.generatePromptText}>
+                  &lt;- Generate a random prompt
+                </Text>
+              )}
               <TouchableOpacity style={styles.finished} onPress={handleSubmitResponse}>
                 <Image source={require('../../../assets/images/check.png')} style={styles.check} />
               </TouchableOpacity>
@@ -155,7 +166,7 @@ export default function JournalEntry(): JSX.Element {
 
 const styles = StyleSheet.create({
   buttons: {
-    alignItems: 'flex-end',
+    alignItems: 'center',
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
@@ -176,6 +187,12 @@ const styles = StyleSheet.create({
   footer: {
     flex: 1,
     marginBottom: 15,
+  },
+  generatePromptText: {
+    color: '#706645',
+    fontFamily: 'Poppins',
+    fontSize: 14,
+    marginLeft: -15,
   },
   help: {
     alignItems: 'center',

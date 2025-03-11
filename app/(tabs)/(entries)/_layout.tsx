@@ -1,5 +1,9 @@
 import { Stack } from "expo-router"
 
+/**
+ * SetupLayout component defines the navigation stack for entry screens.
+ * @returns {JSX.Element} The navigation stack.
+ */
 export default function SetupLayout() {
   return (
     <Stack>
