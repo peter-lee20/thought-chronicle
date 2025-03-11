@@ -20,6 +20,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  deleteDoc,
   query,
   where,
 } from 'firebase/firestore';
@@ -40,7 +41,6 @@ interface JournalEntry {
   timestamp: Date | null;
 }
 
-// Updated DailyResponse to include an "id" for navigation
 interface DailyResponse {
   id: string;
   response: string;
@@ -165,6 +165,52 @@ export default function EntryPage() {
     }, [selectedDate])
   )
 
+  /**
+   * Handles deleting an entry (daily response or journal entry) from Firestore.
+   *
+   * @param {string} entryType - The type of entry ("daily-question-responses" or "journal-responses").
+   * @param {DailyResponse | JournalEntry | null} entry - The entry object.
+   * @returns {Promise<void>}
+   */
+  const handleDelete = async (
+    entryType: "daily-question-responses" | "journal-responses",
+    entry: DailyResponse | JournalEntry | null
+  ): Promise<void> => {
+    console.log("handleDelete called with:", entryType, entry); // Debugging log
+  
+    if (!entry || !entry.id) {
+      console.error(`No ${entryType} entry found or missing ID.`);
+      return;
+    }
+  
+    Alert.alert(
+      "Delete Entry",
+      "Are you sure you want to delete this entry?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "OK",
+          onPress: async (): Promise<void> => {
+            try {
+              console.log("Attempting to delete entry with ID:", entry.id);
+              const docRef = doc(FIRESTORE_DB, entryType, entry.id);
+              await deleteDoc(docRef);
+              console.log("Document successfully deleted!");
+  
+              // Navigate back to entries page
+              const entryDate = entry.timestamp
+                ? format(entry.timestamp, "yyyy-MM-dd")
+                : format(new Date(), "yyyy-MM-dd");
+              router.replace(`/(entries)/entries?date=${entryDate}`);
+            } catch (error) {
+              console.error("Error removing document:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
+  
   // Function to format the time from a timestamp
   const formatTime = (timestamp: Date | null) => {
     if (!timestamp) return '';
@@ -228,11 +274,13 @@ export default function EntryPage() {
                       </View>
 
                       {/* Right Side: Image */}
-                      <Image
-                        source={require('../../../assets/images/delete.png')} 
-                        style={styles.titleImage}
-                        resizeMode="contain"
-                      />
+                      <TouchableOpacity onPress={() => handleDelete("daily-question-responses", dailyResponse)}>
+                        <Image
+                          source={require('../../../assets/images/delete.png')} 
+                          style={styles.titleImage}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
                     </View>
                     <Text style={styles.entryText} numberOfLines={5} ellipsizeMode="tail">
                       {dailyResponse.response}
@@ -269,11 +317,13 @@ export default function EntryPage() {
                         )}
                       </View>
                       {/* Right Side: Image */}
-                      <Image
-                        source={require('../../../assets/images/delete.png')} 
-                        style={styles.titleImage}
-                        resizeMode="contain"
-                      />
+                      <TouchableOpacity onPress={() => handleDelete("journal-responses", entry)}>
+                        <Image
+                          source={require('../../../assets/images/delete.png')} 
+                          style={styles.titleImage}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
                     </View>
                     <Text style={styles.entryText} numberOfLines={5} ellipsizeMode="tail">
                       {entry.response}
