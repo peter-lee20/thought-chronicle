@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "400",
   },
-  
+
   futureDay: {
     opacity: 0.5,
   },

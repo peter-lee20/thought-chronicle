@@ -1,5 +1,5 @@
 import { Link, router } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,7 +7,6 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
@@ -470,7 +469,7 @@ const styles = StyleSheet.create({
     marginTop: -5,
     width: "100%",
   },
-  
+
   rowContainer: {
     flexDirection: "row",
     justifyContent: "space-between",

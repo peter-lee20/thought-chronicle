@@ -679,7 +679,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 5,
   },
-  
+
   weekDisplay: {
     marginBottom: 20,
   },
