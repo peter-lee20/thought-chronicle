@@ -77,6 +77,7 @@ export default function FriendsPage(): JSX.Element {
 
         /**
          * Fetches users from the Firebase and creates a list of Person objects from the data.
+         * @returns {Person[]}
          */
         const fetchUsers = async () => {
             try {
@@ -186,6 +187,10 @@ export default function FriendsPage(): JSX.Element {
             }
         };
 
+        /**
+         * Fetches all pending friend requests for the current user
+         * @returns {Person[]}
+         */
         const fetchSentRequests = async () => {
             try {
                 const sentQuery = query(
@@ -229,7 +234,11 @@ export default function FriendsPage(): JSX.Element {
                 console.error("Error fetching sent requests:", error);
             }
         };
-
+        
+        /**
+         * Fetches all received friend requests for the current user
+         * @returns {Person[]}
+         */
         const fetchReceivedRequests = async () => {
             try {
                 const receivedQuery = query(
@@ -291,6 +300,10 @@ export default function FriendsPage(): JSX.Element {
             }
         };
 
+        /**
+         * Fetches all current friends for the current user
+         * @returns {Person[]}
+         */
         const fetchFriends = async () => {
             try {
                 const userQuery = query(
@@ -431,7 +444,10 @@ export default function FriendsPage(): JSX.Element {
     };
 
     /**
-     * Helper function for friend removal
+     * Locates and removes the specified username from the provided list
+     * @param list - The list to be modified
+     * @param friend - The username to be removed
+     * @returns {Array<string>}
      */
 
     const findAndDelete = (list: Array<string>, friend: string) => {
@@ -448,6 +464,7 @@ export default function FriendsPage(): JSX.Element {
 
     /**
      * Remove friend from friend list
+     * @param friendId - Firebase ID of user to be removed
      */
     const removeFriend = async (friendId: string) => {
         // const confirmed = window.confirm("Are you sure you want to remove this friend?");
@@ -551,7 +568,7 @@ export default function FriendsPage(): JSX.Element {
                             }
                         }]
                     }
-                    : user
+                : user
             )
         );
 
@@ -559,6 +576,7 @@ export default function FriendsPage(): JSX.Element {
 
     /**
      * Add friend to friend list
+     * @param friendId - Firebase ID of user to be added
      */
 
     const addFriend = async (friendId: string) => {
@@ -644,8 +662,7 @@ export default function FriendsPage(): JSX.Element {
                 id: friendId,
                 username: friendName,
                 name: `${friendDocument.data().firstname} ${friendDocument.data().lastname}`,
-                buttons: [{
-                  label: 'Remove', onPress: () => {
+                buttons: [{label: 'Remove', onPress: () => {
                       Alert.alert(
                           "Remove Friend",
                           `Are you sure you want to remove ${friendName} from your friends?`,
@@ -671,35 +688,33 @@ export default function FriendsPage(): JSX.Element {
 
         setFindUsers(prevUsers =>
             prevUsers.map(user =>
-                user.id === friendId
-                    ? {
-                        ...user,
-                        buttons: [{
-                          label: 'Remove', onPress: () => {
-                              Alert.alert(
-                                  "Remove Friend",
-                                  `Are you sure you want to remove ${friendName} from your friends?`,
-                                  [
-                                      {
-                                          text: "Cancel",
-                                          style: "cancel",
-                                      },
-                                      {
-                                          text: "Confirm",
-                                          onPress: () => removeFriend(friendId),
-                                      },
-                                  ],
-                              );
-                          }
-                      }], // Or any other relevant action
-                    }
-                    : user
+                user.id === friendId ? {
+                    ...user,
+                    buttons: [{label: 'Remove', onPress: () => {
+                            Alert.alert(
+                                "Remove Friend",
+                                `Are you sure you want to remove ${friendName} from your friends?`,
+                                [
+                                    {
+                                        text: "Cancel",
+                                        style: "cancel",
+                                    },
+                                    {
+                                        text: "Confirm",
+                                        onPress: () => removeFriend(friendId),
+                                    },
+                                ],
+                            );
+                        }
+                    }], // Or any other relevant action
+                }
+                : user
             )
         );
     }
 
     return (
-        <View style={{ flex: 1 }}>
+        <View style={{ flex: 1, backgroundColor: "#F0ECE0" }}>
             <KeyboardAvoidingView
                 style={{ flex: 1 }}
                 contentContainerStyle={{ flexGrow: 1 }}
