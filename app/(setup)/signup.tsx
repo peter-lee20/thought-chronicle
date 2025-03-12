@@ -1,5 +1,5 @@
 import { Link, router } from "expo-router";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   View,
   Text,
@@ -7,15 +7,25 @@ import {
   TouchableOpacity,
   StyleSheet,
   Alert,
-  Image,
   KeyboardAvoidingView,
   Platform,
   SafeAreaView,
 } from "react-native";
 import { FIREBASE_AUTH } from "../../FirebaseConfig";
 import { FIRESTORE_DB } from "../../FirebaseConfig";
-import { createUserWithEmailAndPassword, sendEmailVerification } from "firebase/auth";
-import { addDoc, collection, doc, getDocs, query, setDoc, where } from "firebase/firestore";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
+import {
+  addDoc,
+  collection,
+  doc,
+  getDocs,
+  query,
+  setDoc,
+  where,
+} from "firebase/firestore";
 
 /**
  * Interface representing the props for the PasswordRequirements component.
@@ -42,7 +52,10 @@ interface Requirement {
 const isValidUser = async (username: string): Promise<boolean> => {
   try {
     const sameUsernames = await getDocs(
-      query(collection(FIRESTORE_DB, "users"), where("username", "==", username))
+      query(
+        collection(FIRESTORE_DB, "users"),
+        where("username", "==", username)
+      )
     );
     const meetsCharReqs = /^[a-z0-9]{5,15}$/;
 
@@ -70,16 +83,22 @@ const isValidUser = async (username: string): Promise<boolean> => {
  * @param props - The component props containing the username.
  * @returns {JSX.Element} The rendered username requirements.
  */
-const UsernameRequirements = ({ username }: { username: string }): JSX.Element => {
+const UsernameRequirements = ({
+  username,
+}: {
+  username: string;
+}): JSX.Element => {
   const requirements = [
     {
       label: "5-15 characters",
-      validator: (user: string): boolean => user.length >= 5 && user.length <= 15,
+      validator: (user: string): boolean =>
+        user.length >= 5 && user.length <= 15,
     },
     {
       label: "Contains only lowercase letters and numbers",
       // Validator returns false when input is empty, so color changes only after typing starts.
-      validator: (user: string): boolean => user.length > 0 && /^[a-z0-9]*$/.test(user),
+      validator: (user: string): boolean =>
+        user.length > 0 && /^[a-z0-9]*$/.test(user),
     },
   ];
 
@@ -107,12 +126,26 @@ const UsernameRequirements = ({ username }: { username: string }): JSX.Element =
  * @param props - The component props containing the password.
  * @returns {JSX.Element} The rendered password requirements.
  */
-const PasswordRequirements = ({ password }: PasswordRequirementsProps): JSX.Element => {
+const PasswordRequirements = ({
+  password,
+}: PasswordRequirementsProps): JSX.Element => {
   const requirements: Requirement[] = [
-    { label: "8+ characters", validator: (pwd: string): boolean => pwd.length >= 8 },
-    { label: "Uppercase letter", validator: (pwd: string): boolean => /[A-Z]/.test(pwd) },
-    { label: "Numeric character", validator: (pwd: string): boolean => /[0-9]/.test(pwd) },
-    { label: "Special character", validator: (pwd: string): boolean => /[^a-zA-Z0-9]/.test(pwd) },
+    {
+      label: "8+ characters",
+      validator: (pwd: string): boolean => pwd.length >= 8,
+    },
+    {
+      label: "Uppercase letter",
+      validator: (pwd: string): boolean => /[A-Z]/.test(pwd),
+    },
+    {
+      label: "Numeric character",
+      validator: (pwd: string): boolean => /[0-9]/.test(pwd),
+    },
+    {
+      label: "Special character",
+      validator: (pwd: string): boolean => /[^a-zA-Z0-9]/.test(pwd),
+    },
   ];
 
   return (
@@ -182,7 +215,14 @@ export default function Signup(): JSX.Element {
    * @returns {Promise<void>} A promise that resolves when the signup process is complete.
    */
   const handleSignUp = async (): Promise<void> => {
-    if (!email || !firstName || !lastName || !username || !password || !confirmPassword) {
+    if (
+      !email ||
+      !firstName ||
+      !lastName ||
+      !username ||
+      !password ||
+      !confirmPassword
+    ) {
       Alert.alert("Error", "Missing fields");
       return;
     }
@@ -209,9 +249,12 @@ export default function Signup(): JSX.Element {
 
     try {
       setLoading(true);
-      const response = await createUserWithEmailAndPassword(auth, email, password)
+      const response = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       await sendEmailVerification(response.user);
-      // Alert.alert("Success", `Account created for: ${firstName} ${lastName}`);
 
       // Store first and last name, username, email, and userId to Firestore.
       await addDoc(collection(FIRESTORE_DB, "users"), {
@@ -316,6 +359,7 @@ export default function Signup(): JSX.Element {
 
       <View style={styles.footer}>
         <Text style={styles.footerText}>Already have an account? </Text>
+
         <Link href="/(setup)" style={styles.link}>
           Sign In
         </Link>
@@ -323,7 +367,6 @@ export default function Signup(): JSX.Element {
     </SafeAreaView>
   );
 }
-
 
 const styles = StyleSheet.create({
   button: {
@@ -337,12 +380,14 @@ const styles = StyleSheet.create({
     marginTop: 20,
     width: "90%",
   },
+
   buttonText: {
     color: "white",
     fontFamily: "Poppins",
     fontSize: 16,
     fontWeight: "bold",
   },
+
   container: {
     alignItems: "center",
     backgroundColor: "#F0ECE0",
@@ -350,36 +395,43 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
+
   formContainer: {
     alignItems: "center",
     padding: 20,
     width: "100%",
   },
+
   footer: {
     alignItems: "center",
     flexDirection: "row",
     justifyContent: "center",
     marginTop: 20,
   },
+
   footerText: {
     color: "#333",
     fontFamily: "Poppins",
     fontSize: 14,
   },
+
   halfInput: {
     width: "48%",
   },
+
   heading: {
     color: "#333",
     fontFamily: "Poppins",
     fontSize: 24,
     fontWeight: "bold",
   },
+
   image: {
     height: 150,
     marginBottom: 20,
     width: 150,
   },
+
   input: {
     backgroundColor: "#F0ECE0",
     borderColor: "#7E948C",
@@ -390,21 +442,25 @@ const styles = StyleSheet.create({
     padding: 15,
     width: "100%",
   },
+
   link: {
     color: "#7E948C",
     fontSize: 14,
     fontWeight: "bold",
     textDecorationLine: "underline",
   },
+
   requirementItem: {
     width: "48%",
     marginBottom: 10,
   },
+
   requirementsContainer: {
     marginBottom: 10,
     marginTop: -5,
     width: "100%",
   },
+
   requirementsGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -413,6 +469,7 @@ const styles = StyleSheet.create({
     marginTop: -5,
     width: "100%",
   },
+
   rowContainer: {
     flexDirection: "row",
     justifyContent: "space-between",

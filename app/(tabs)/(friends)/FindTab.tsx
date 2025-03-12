@@ -1,8 +1,8 @@
 // FindTab.tsx
-import React, { useState } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, Image } from 'react-native';
-import PersonCard from './PersonCard';
-import { FIREBASE_AUTH } from '@/FirebaseConfig';
+import React, { useState } from "react";
+import { View, TextInput, FlatList, StyleSheet, Image } from "react-native";
+import PersonCard from "./PersonCard";
+import { FIREBASE_AUTH } from "@/FirebaseConfig";
 
 /**
  * Represents a person with basic information and optional interaction buttons.
@@ -28,19 +28,20 @@ interface FindTabProps {
  * @returns {JSX.Element} The rendered FindTab component.
  */
 const FindTab: React.FC<FindTabProps> = ({ items }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Filters users alphabetically by whether their username contains the search query
-  const filteredItems = items.filter((item) => 
-    item.id != FIREBASE_AUTH.currentUser?.uid && 
-    (item.username.toLowerCase().includes(searchQuery.toLowerCase()))
+  const filteredItems = items.filter(
+    (item) =>
+      item.id != FIREBASE_AUTH.currentUser?.uid &&
+      item.username.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   return (
     <View style={styles.container}>
       <View style={styles.searchBarContainer}>
         <Image
-          source={require('../../../assets/images/search_icon.png')}
+          source={require("../../../assets/images/search_icon.png")}
           style={styles.searchIcon}
           resizeMode="contain"
         />
@@ -53,9 +54,13 @@ const FindTab: React.FC<FindTabProps> = ({ items }) => {
       </View>
       <FlatList
         // if searchQuery is empty, no results are dipslayed
-        data={searchQuery != '' ? filteredItems: null}
+        data={searchQuery != "" ? filteredItems : null}
         renderItem={({ item }) => (
-          <PersonCard username={item.username} name={item.name} buttons={item.buttons} />
+          <PersonCard
+            username={item.username}
+            name={item.name}
+            buttons={item.buttons}
+          />
         )}
         keyExtractor={(item) => item.id}
         removeClippedSubviews={true}
@@ -68,20 +73,20 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingTop: 20,
-    width: '100%',
+    width: "100%",
   },
 
   listItem: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 16,
     marginBottom: 5,
   },
 
   searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#70664533',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#70664533",
     borderRadius: 30,
     marginBottom: 10,
     paddingHorizontal: 10,
@@ -102,7 +107,7 @@ const styles = StyleSheet.create({
   tabContent: {
     flex: 1,
     paddingVertical: 20,
-    width: '100%',
+    width: "100%",
   },
 });
 

@@ -1,11 +1,11 @@
 import React, { useState } from "react";
-import { 
-  View, 
-  Text, 
-  StyleSheet, 
-  TextInput, 
-  TouchableOpacity, 
-  Alert 
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
 } from "react-native";
 import { Link } from "expo-router";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
@@ -32,7 +32,10 @@ export default function Forgot(): JSX.Element {
     const auth = getAuth();
     sendPasswordResetEmail(auth, email)
       .then((): void => {
-        Alert.alert("Success", "Password reset instructions have been sent to your email.");
+        Alert.alert(
+          "Success",
+          "Password reset instructions have been sent to your email."
+        );
       })
       .catch((error: unknown): void => {
         if (error instanceof Error) {
@@ -47,7 +50,8 @@ export default function Forgot(): JSX.Element {
     <View style={styles.container}>
       <Text style={styles.title}>Reset Your Password</Text>
       <Text style={styles.text}>
-        Enter the email associated with your account and we will send you password reset instructions.
+        Enter the email associated with your account and we will send you
+        password reset instructions.
       </Text>
       <TextInput
         style={styles.input}
@@ -61,7 +65,10 @@ export default function Forgot(): JSX.Element {
         <Text style={styles.buttonText}>Send Reset Instructions</Text>
       </TouchableOpacity>
       <Text style={styles.footer}>
-        Return to <Link href="/(setup)" style={styles.footerLink}>Sign In</Link>
+        Return to{" "}
+        <Link href="/(setup)" style={styles.footerLink}>
+          Sign In
+        </Link>
       </Text>
     </View>
   );
@@ -76,6 +83,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     borderRadius: 14,
   },
+
   buttonText: {
     fontSize: 16,
     fontWeight: "600",
@@ -84,12 +92,14 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     fontFamily: "Poppins",
   },
+  
   container: {
     flex: 1,
     backgroundColor: "#F0ECE0",
     alignContent: "center",
     justifyContent: "center",
   },
+
   footer: {
     color: "#333",
     fontSize: 15,
@@ -98,12 +108,14 @@ const styles = StyleSheet.create({
     marginTop: 34,
     fontFamily: "Poppins",
   },
+
   footerLink: {
     fontWeight: "600",
     color: "#7E948C",
     textDecorationLine: "underline",
     fontFamily: "Poppins",
   },
+
   input: {
     fontSize: 16,
     lineHeight: 24,
@@ -118,6 +130,7 @@ const styles = StyleSheet.create({
     marginBottom: 34,
     fontFamily: "Poppins",
   },
+
   text: {
     color: "#333",
     fontSize: 15,
@@ -129,6 +142,7 @@ const styles = StyleSheet.create({
     maxWidth: 303,
     fontFamily: "Poppins",
   },
+  
   title: {
     color: "#333",
     fontSize: 24,

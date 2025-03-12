@@ -1,94 +1,114 @@
-// import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
 import * as functions from "firebase-functions";
 import { onSchedule } from "firebase-functions/scheduler";
 import { FieldValue, WriteResult } from "firebase-admin/firestore";
-// import { onRequest } from "firebase-functions/https";
 
 admin.initializeApp();
-// Function to fetch random question from Firestore
-exports.scheduleFetchQuestion = onSchedule("0 8 * * *",  
-  async () => {
-    // Inefficient if our question database is big
-    try {
-      const snapshot = admin.firestore().collection("daily-question-prompts").get();
-      const qPool = (await snapshot).docs;
 
-      if (qPool.length == 0) {
-        console.log("No daily question found...");
-      }
+/**
+ * Fetches a random question from the database and sets it as the current daily question.
+ */
+exports.scheduleFetchQuestion = onSchedule("0 7 * * *", async () => {
+  // Inefficient if our question database is big
+  try {
+    const snapshot = admin
+      .firestore()
+      .collection("daily-question-prompts")
+      .get();
+    const qPool = (await snapshot).docs;
 
-      const randomIndex = Math.floor(Math.random() * qPool.length);
-      const randomQuestion = qPool[randomIndex].data();
-
-      console.log(randomQuestion.prompt);
-
-      await admin.firestore().collection("current-question").doc("latest").set({
-        text: randomQuestion.prompt,
-        timestamp: FieldValue.serverTimestamp()
-      });
-
-      //return null;
-    } catch(error) {
-      console.error("Error fetching question:", error);
-      // return null;
+    if (qPool.length == 0) {
+      console.log("No daily question found...");
     }
+
+    const randomIndex = Math.floor(Math.random() * qPool.length);
+    const randomQuestion = qPool[randomIndex].data();
+
+    console.log(randomQuestion.prompt);
+
+    await admin.firestore().collection("current-question").doc("latest").set({
+      text: randomQuestion.prompt,
+      timestamp: FieldValue.serverTimestamp(),
+    });
+
+    //return null;
+  } catch (error) {
+    console.error("Error fetching question:", error);
+    // return null;
   }
-);
+});
 
 /**
  * Updates every user's streak every day at midnight depending on if they
  * answered the daily question on the previous day.
  */
-exports.scheduleUpdateStreak = onSchedule("0 8 * * *",
-  async () => {
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayString = yesterday.toLocaleDateString("en-US");
+exports.scheduleUpdateStreak = onSchedule("0 7 * * *", async () => {
+  const yesterday = new Date();
+  yesterday.setDate(yesterday.getDate() - 1);
+  const yesterdayString = yesterday.toLocaleDateString("en-US");
 
-    try {
-      const usersSnapshot = await admin.firestore().collection("users").get();
-      const updatePromises: Promise<WriteResult>[] = [];
+  try {
+    const usersSnapshot = await admin.firestore().collection("users").get();
+    const updatePromises: Promise<WriteResult>[] = [];
 
-      usersSnapshot.forEach((userDoc) => {
-        const userId = userDoc.data().userId;
-        const updatePromise = admin.firestore().collection("userStreaks").doc(userId).get()
-          .then(userStreakDoc => {
-            let newStreak = userStreakDoc.exists ? userStreakDoc.data()?.currentStreak : 0;
-            let lastAnswered = userStreakDoc.exists ? userStreakDoc.data()?.lastAnsweredDate : "N/A";
+    usersSnapshot.forEach((userDoc) => {
+      const userId = userDoc.data().userId;
+      const updatePromise = admin
+        .firestore()
+        .collection("userStreaks")
+        .doc(userId)
+        .get()
+        .then((userStreakDoc) => {
+          let newStreak = userStreakDoc.exists
+            ? userStreakDoc.data()?.currentStreak
+            : 0;
+          let lastAnswered = userStreakDoc.exists
+            ? userStreakDoc.data()?.lastAnsweredDate
+            : "N/A";
 
-            return admin.firestore().collection("daily-question-responses")
-              .where("userId", "==", userId)
-              .where("date", "==", yesterdayString)
-              .get()
-              .then(prevUserResponseSnapshot => {
-                if (prevUserResponseSnapshot.empty) {
-                  newStreak = 0;
-                } else {
-                  newStreak += 1;
-                  lastAnswered = yesterdayString;
-                }
+          return admin
+            .firestore()
+            .collection("daily-question-responses")
+            .where("userId", "==", userId)
+            .where("date", "==", yesterdayString)
+            .get()
+            .then((prevUserResponseSnapshot) => {
+              if (prevUserResponseSnapshot.empty) {
+                newStreak = 0;
+              } else {
+                newStreak += 1;
+                lastAnswered = yesterdayString;
+              }
 
-                return admin.firestore().collection("userStreaks").doc(userId).set({
+              return admin
+                .firestore()
+                .collection("userStreaks")
+                .doc(userId)
+                .set({
                   currentStreak: newStreak,
                   lastAnsweredDate: lastAnswered,
                 });
-              });
-          });
+            });
+        });
 
-        updatePromises.push(updatePromise);
-      });
+      updatePromises.push(updatePromise);
+    });
 
-      await Promise.all(updatePromises);
-    } catch (error: any) {
-      console.error("There was an error updating your streak.", error);
-    }
+    await Promise.all(updatePromises);
+  } catch (error: any) {
+    console.error("There was an error updating your streak.", error);
   }
-);
+});
 
-export const fetchPrompt = functions.https.onRequest(async (req, res) => {
+/**
+ * Fetches a random prompt from the database and returns it to the client.
+ */
+export const fetchPrompt = functions.https.onRequest(async (_req, res) => {
   // Inefficient if our question database is big
-  admin.firestore().collection("random-prompts").get()
+  admin
+    .firestore()
+    .collection("random-prompts")
+    .get()
     .then((snapshot) => {
       const qPool = snapshot.docs;
       if (qPool.length == 0) {
@@ -102,6 +122,6 @@ export const fetchPrompt = functions.https.onRequest(async (req, res) => {
     })
     .catch((error) => {
       console.error("Error fetching prompt", error);
-      res.status(500).send({error: "Internal Server Error"});
+      res.status(500).send({ error: "Internal Server Error" });
     });
 });
