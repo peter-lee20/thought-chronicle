@@ -19,13 +19,10 @@ import {
   deleteDoc,
   query,
   where,
+  doc,
 } from "firebase/firestore";
 import { getAuth, signOut } from "firebase/auth";
-import {
-  useLocalSearchParams,
-  useRouter,
-  useFocusEffect,
-} from "expo-router";
+import { useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
 import { format } from "date-fns";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../FirebaseConfig";
@@ -207,7 +204,7 @@ export default function EntryPage(): JSX.Element {
       fetchResponses();
     }, [selectedDate])
   );
-  
+
   /**
    * Handles deleting an entry (daily response or journal entry) from Firestore.
    *
@@ -220,38 +217,34 @@ export default function EntryPage(): JSX.Element {
     entry: DailyResponse | JournalEntry | null
   ): Promise<void> => {
     console.log("handleDelete called with:", entryType, entry); // Debugging log
-  
+
     if (!entry || !entry.id) {
       console.error(`No ${entryType} entry found or missing ID.`);
       return;
     }
-  
-    Alert.alert(
-      "Delete Entry",
-      "Are you sure you want to delete this entry?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "OK",
-          onPress: async (): Promise<void> => {
-            try {
-              console.log("Attempting to delete entry with ID:", entry.id);
-              const docRef = doc(FIRESTORE_DB, entryType, entry.id);
-              await deleteDoc(docRef);
-              console.log("Document successfully deleted!");
-  
-              // Navigate back to entries page
-              const entryDate = entry.timestamp
-                ? format(entry.timestamp, "yyyy-MM-dd")
-                : format(new Date(), "yyyy-MM-dd");
-              router.replace(`/(entries)/entries?date=${entryDate}`);
-            } catch (error) {
-              console.error("Error removing document:", error);
-            }
-          },
+
+    Alert.alert("Delete Entry", "Are you sure you want to delete this entry?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "OK",
+        onPress: async (): Promise<void> => {
+          try {
+            console.log("Attempting to delete entry with ID:", entry.id);
+            const docRef = doc(FIRESTORE_DB, entryType, entry.id);
+            await deleteDoc(docRef);
+            console.log("Document successfully deleted!");
+
+            // Navigate back to entries page
+            const entryDate = entry.timestamp
+              ? format(entry.timestamp, "yyyy-MM-dd")
+              : format(new Date(), "yyyy-MM-dd");
+            router.replace(`/(entries)/entries?date=${entryDate}`);
+          } catch (error) {
+            console.error("Error removing document:", error);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   /**
@@ -337,15 +330,26 @@ export default function EntryPage(): JSX.Element {
                       </View>
 
                       {/* Right Side: Image */}
-                      <TouchableOpacity onPress={() => handleDelete("daily-question-responses", dailyResponse)}>
+                      <TouchableOpacity
+                        onPress={() =>
+                          handleDelete(
+                            "daily-question-responses",
+                            dailyResponse
+                          )
+                        }
+                      >
                         <Image
-                          source={require('../../../assets/images/delete.png')} 
+                          source={require("../../../assets/images/delete.png")}
                           style={styles.titleImage}
                           resizeMode="contain"
                         />
                       </TouchableOpacity>
                     </View>
-                    <Text style={styles.entryText} numberOfLines={5} ellipsizeMode="tail">
+                    <Text
+                      style={styles.entryText}
+                      numberOfLines={5}
+                      ellipsizeMode="tail"
+                    >
                       {dailyResponse.response}
                     </Text>
                   </View>
@@ -381,15 +385,21 @@ export default function EntryPage(): JSX.Element {
                         )}
                       </View>
                       {/* Right Side: Image */}
-                      <TouchableOpacity onPress={() => handleDelete("journal-responses", entry)}>
+                      <TouchableOpacity
+                        onPress={() => handleDelete("journal-responses", entry)}
+                      >
                         <Image
-                          source={require('../../../assets/images/delete.png')} 
+                          source={require("../../../assets/images/delete.png")}
                           style={styles.titleImage}
                           resizeMode="contain"
                         />
                       </TouchableOpacity>
                     </View>
-                    <Text style={styles.entryText} numberOfLines={5} ellipsizeMode="tail">
+                    <Text
+                      style={styles.entryText}
+                      numberOfLines={5}
+                      ellipsizeMode="tail"
+                    >
                       {entry.response}
                     </Text>
                   </View>
@@ -593,7 +603,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
     padding: 10,
   },
-  
+
   entryImage: {
     height: 30,
     marginLeft: 10,
@@ -613,7 +623,7 @@ const styles = StyleSheet.create({
   entryText: {
     color: "#706645CC",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     marginTop: 10,
     marginRight: 10,
   },
@@ -698,26 +708,26 @@ const styles = StyleSheet.create({
     color: "#706645CC",
     fontFamily: "Poppins",
     fontSize: 11,
-    fontWeight: '300',
+    fontWeight: "300",
     marginRight: 25,
   },
 
   titleImage: {
-    width: 23,  
-    height: 23, 
+    width: 23,
+    height: 23,
     marginTop: 5,
     marginRight: 10,
   },
 
   titleRow: {
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center", 
-    width: "100%", 
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    width: "100%",
   },
-  
+
   titleTextContainer: {
-    flexDirection: "column", 
-    justifyContent: "center", 
+    flexDirection: "column",
+    justifyContent: "center",
   },
 });
