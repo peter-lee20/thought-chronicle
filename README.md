@@ -8,6 +8,9 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 ## Final Deliverables
 [Google Drive Deliverables Folder](https://drive.google.com/drive/folders/1CyKWC91Erm2cXJpFHiiOTpOM3t2WQ4M1?usp=drive_link)
 
+## Design
+[Figma Design](https://www.figma.com/design/pyXJ3SXcgxqHWJLw83tNqU/Thought-Chronicle?node-id=16-237&t=WiOJDHhaa8A7RSUL-0)
+
 ## Scrum Board
 [Jira Sprint 4 Scrum Board](https://thought-chronicle.atlassian.net/jira/software/projects/SCRUM/boards/1?assignee=712020%3A2b0ecea7-7629-41ef-8bd9-ec29e14a8a5b%2Cunassigned%2C712020%3Ab884d954-c92a-4031-9203-e93fd25c020d%2C712020%3Aa132e508-14b7-4f13-9cd0-b8b2366970cd%2C712020%3A1416b121-f30e-4bec-8503-fc6249ed0c14%2C712020%3Aef7d916d-dbef-4536-baf9-b67566bcd573)
 
