@@ -223,17 +223,6 @@ export default function EntriesCalendar() {
               resizeMode="contain"
             />
           </TouchableOpacity>
-
-          {showDropdown && (
-            <View style={styles.dropdownMenu}>
-              <TouchableOpacity
-                style={styles.dropdownItem}
-                onPress={handleSignOut}
-              >
-                <Text style={styles.dropdownText}>Sign Out</Text>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
       </SafeAreaView>
 
@@ -253,6 +242,15 @@ export default function EntriesCalendar() {
           dayComponent={dayComponent}
         />
       </View>
+
+      {/* dropdown menu */}
+      {showDropdown && (
+        <View style={styles.dropdownMenu}>
+          <TouchableOpacity style={styles.dropdownItem} onPress={handleSignOut}>
+            <Text style={styles.dropdownText}>Sign Out</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       {/* footer */}
       <View style={styles.footer}>
@@ -381,8 +379,8 @@ const styles = StyleSheet.create({
 
   dropdownMenu: {
     position: "absolute",
-    top: 50,
-    right: 0,
+    top: 110,
+    right: 20,
     width: 100,
     backgroundColor: "#FFF",
     borderRadius: 8,
@@ -391,7 +389,7 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
     shadowOffset: { width: 0, height: 2 },
     elevation: 5,
-    zIndex: 10,
+    zIndex: 10, // Ensure the dropdown menu appears above other elements
   },
 
   dropdownText: {
@@ -459,7 +457,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "400",
   },
-  
+
   selectedDayText: {
     fontFamily: "Poppins",
     fontSize: 13,
