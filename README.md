@@ -14,7 +14,7 @@ This is an [Expo](https://expo.dev) project created with [`create-expo-app`](htt
 ## Features
 - Cross-platform (iOS & Android)
 - User Authentication
-- Random Daily Though-Provoking Questions (**NOT GENERATED** - Created by a human!)
+- Random Daily Thought-Provoking Questions (**NOT GENERATED** - Created by a human!)
 - Unlimited Journal Entries
 - Friends List
 - Global/Friends Feed for Daily Question Responses
