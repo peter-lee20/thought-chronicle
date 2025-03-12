@@ -25,87 +25,131 @@ import {
   where,
 } from 'firebase/firestore';
 import { getAuth, signOut } from 'firebase/auth';
-import { router, useLocalSearchParams, useRouter, useFocusEffect } from 'expo-router';
-import { format } from "date-fns";
-
+import {
+  router,
+  useLocalSearchParams,
+  useRouter,
+  useFocusEffect,
+} from 'expo-router';
+import { format } from 'date-fns';
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
 
-interface StylesProps {
-  [key: string]: any;
-}
-
+/**
+ * Interface representing a journal entry.
+ */
 interface JournalEntry {
   id: string;
   response: string;
   timestamp: Date | null;
 }
 
+/**
+ * Interface representing a daily response.
+ */
 interface DailyResponse {
   id: string;
   response: string;
   timestamp: Date | null;
 }
 
-// Entries page component displaying daily question and journal entries
-export default function EntryPage() {
-  // Access the date parameter from the route
-  const { date } = useLocalSearchParams();
-  // Format date string to PST
+/**
+ * EntryPage component displays a daily question response and journal entries
+ * for a given date. It allows the user to change the date, sign out, and navigate
+ * to detailed entry screens.
+ *
+ * @returns {JSX.Element} The rendered entry page.
+ */
+export default function EntryPage(): JSX.Element {
+  // Access the "date" parameter from the route.
+  const { date } = useLocalSearchParams<{ date: string }>();
+  // Format the date string to PST.
   const pstDateString = `${date}T00:00:00-08:00`;
 
-  // State variables
-  const [showDropdown, setShowDropdown] = useState(false);
-  const [selectedDate, setSelectedDate] = useState(new Date(pstDateString));
+  // State variables.
+  const [showDropdown, setShowDropdown] = useState<boolean>(false);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date(pstDateString));
   const [dailyResponse, setDailyResponse] = useState<DailyResponse | null>(null);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
-  const [currentPickerType, setCurrentPickerType] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isDatePickerVisible, setIsDatePickerVisible] = useState<boolean>(false);
+  const [currentPickerType, setCurrentPickerType] = useState<string>('');
+  const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
   const auth = getAuth();
   const currentUser = auth.currentUser;
 
-  // Function to toggle the dropdown menu visibility
-  const toggleDropdown = () => {
+  /**
+   * Toggles the visibility of the dropdown menu.
+   *
+   * @returns {void}
+   */
+  const toggleDropdown = (): void => {
     setShowDropdown((prev) => !prev);
   };
 
-  // Function to handle user sign out
-  const handleSignOut = async () => {
+  /**
+   * Signs out the current user.
+   *
+   * @returns {Promise<void>}
+   */
+  const handleSignOut = async (): Promise<void> => {
     try {
       await signOut(FIREBASE_AUTH);
       Alert.alert('Signed out successfully!');
-      router.replace("/(setup)");
-    } catch (error: any) {
+      router.replace('/(setup)');
+    } catch (error: unknown) {
       console.error(error);
       Alert.alert('Failed to sign out. Please try again.');
     }
   };
 
-  // Function to handle date changes from the date picker
-  const handleDateChange = (_event: any, selectedDate?: Date) => {
-    if (selectedDate) {
-      setSelectedDate(selectedDate);
+  /**
+   * Handles changes from the date picker.
+   *
+   * @param _event - The event object (unused).
+   * @param selected - The selected date (if any).
+   * @returns {void}
+   */
+  const handleDateChange = (_event: unknown, selected?: Date): void => {
+    if (selected) {
+      setSelectedDate(selected);
     }
     setIsDatePickerVisible(false);
   };
 
-  // Function to format date for Firestore queries
-  const formatDateForFirestore = (date: Date): string => {
-    return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
+  /**
+   * Formats a Date into a string for Firestore queries.
+   *
+   * @param dateObj - The date to format.
+   * @returns {string} The formatted date.
+   */
+  const formatDateForFirestore = (dateObj: Date): string => {
+    return dateObj.toLocaleDateString('en-US', {
+      month: 'numeric',
+      day: 'numeric',
+      year: 'numeric',
+    });
   };
 
-  // Function to format date for state updates (YYYY-MM-DD)
-  const formatDateForState = (date: Date): string => {
-    return format(date, "yyyy-MM-dd");
+  /**
+   * Formats a Date into a state-friendly string (YYYY-MM-DD).
+   *
+   * @param dateObj - The date to format.
+   * @returns {string} The formatted date.
+   */
+  const formatDateForState = (dateObj: Date): string => {
+    return format(dateObj, 'yyyy-MM-dd');
   };
 
-  // Function to fetch daily question response and journal entries from Firestore
-  const fetchResponses = async () => {
+  /**
+   * Fetches the daily question response and journal entries for the selected date.
+   *
+   * @returns {Promise<void>}
+   */
+  const fetchResponses = async (): Promise<void> => {
     if (!currentUser?.uid) {
-      console.error("User not logged in!");
+      console.error('User not logged in!');
       return;
     }
 
@@ -113,47 +157,46 @@ export default function EntryPage() {
     const firestoreDate = formatDateForFirestore(selectedDate);
 
     try {
-      // Fetch Daily Question Response
+      // Fetch Daily Question Response.
       const dailyQuestionQuery = query(
-        collection(FIRESTORE_DB, "daily-question-responses"),
-        where("date", "==", firestoreDate),
-        where("userId", "==", currentUser.uid)
+        collection(FIRESTORE_DB, 'daily-question-responses'),
+        where('date', '==', firestoreDate),
+        where('userId', '==', currentUser.uid)
       );
 
       const dailyQuestionSnapshot = await getDocs(dailyQuestionQuery);
       if (dailyQuestionSnapshot.docs.length > 0) {
-        const docSnap = dailyQuestionSnapshot.docs[0]; // Assuming only one response per day
+        const docSnap = dailyQuestionSnapshot.docs[0]; // Assuming one response per day.
         const docData = docSnap.data();
         setDailyResponse({
           id: docSnap.id,
-          response: docData.response || "",
+          response: docData.response || '',
           timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
         });
       } else {
         setDailyResponse(null);
       }
 
-      // Fetch Journal Entries
+      // Fetch Journal Entries.
       const journalQuery = query(
-        collection(FIRESTORE_DB, "journal-responses"),
-        where("date", "==", firestoreDate),
-        where("userId", "==", currentUser.uid)
+        collection(FIRESTORE_DB, 'journal-responses'),
+        where('date', '==', firestoreDate),
+        where('userId', '==', currentUser.uid)
       );
 
       const journalSnapshot = await getDocs(journalQuery);
       const journalEntriesData: JournalEntry[] = [];
-      journalSnapshot.forEach((doc) => {
-        const docData = doc.data();
+      journalSnapshot.forEach((docSnap) => {
+        const docData = docSnap.data();
         journalEntriesData.push({
-          id: doc.id, // Store the document ID
-          response: docData.response || "",
+          id: docSnap.id,
+          response: docData.response || '',
           timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
         });
       });
       setJournalEntries(journalEntriesData);
-
-    } catch (error: any) {
-      console.error("Error fetching responses:", error);
+    } catch (error: unknown) {
+      console.error('Error fetching responses:', error);
     } finally {
       setLoading(false);
     }
@@ -163,8 +206,8 @@ export default function EntryPage() {
     useCallback(() => {
       fetchResponses();
     }, [selectedDate])
-  )
-
+  );
+  
   /**
    * Handles deleting an entry (daily response or journal entry) from Firestore.
    *
@@ -210,14 +253,25 @@ export default function EntryPage() {
       ]
     );
   };
-  
-  // Function to format the time from a timestamp
-  const formatTime = (timestamp: Date | null) => {
+
+  /**
+   * Formats a timestamp into a short time string.
+   *
+   * @param timestamp - The timestamp to format.
+   * @returns {string} The formatted time.
+   */
+  const formatTime = (timestamp: Date | null): string => {
     if (!timestamp) return '';
     return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  const renderDateContent = () => {
+  /**
+   * Renders the main content for the selected date, including the daily question response
+   * and any journal entries.
+   *
+   * @returns {JSX.Element} The rendered content.
+   */
+  const renderDateContent = (): JSX.Element => {
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
@@ -242,7 +296,11 @@ export default function EntryPage() {
           <Text style={styles.boldDay}>
             {selectedDate.toLocaleDateString('en-US', { weekday: 'long' })},
           </Text>{' '}
-          {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+          {selectedDate.toLocaleDateString('en-US', {
+            month: 'long',
+            day: 'numeric',
+            year: 'numeric',
+          })}
         </Text>
 
         {hasContent ? (
@@ -335,7 +393,9 @@ export default function EntryPage() {
           </>
         ) : (
           <View style={styles.noContentContainer}>
-            <Text style={styles.noContentText}>No responses or journal entries for this day.</Text>
+            <Text style={styles.noContentText}>
+              No responses or journal entries for this day.
+            </Text>
           </View>
         )}
       </ScrollView>
@@ -351,13 +411,12 @@ export default function EntryPage() {
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
-            {/* Back Arrow */}
-            <TouchableOpacity onPress={() => {
-              router.push({
-                pathname: "/(entries)",
-                params: {},
-              });
-            }} style={styles.backButton}>
+            <TouchableOpacity
+              onPress={() => {
+                router.push({ pathname: '/(entries)', params: {} });
+              }}
+              style={styles.backButton}
+            >
               <Image
                 source={require('../../../assets/images/back_arrow.png')}
                 style={styles.backButtonImage}
@@ -388,36 +447,66 @@ export default function EntryPage() {
               mode="date"
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               onChange={handleDateChange}
-              textColor='black'
+              textColor="black"
             />
           )}
-
           {/* Scrollable Content */}
           <View style={{ flex: 1 }}>
-            <ScrollView>
-              {renderDateContent()}
-            </ScrollView>
+            <ScrollView>{renderDateContent()}</ScrollView>
           </View>
-
           {/* Footer */}
           <View style={styles.footer}>
-            <TouchableOpacity onPress={() => { router.replace('/(home)/homepage') }}>
-              <Image source={require('../../../assets/images/today.png')} style={styles.footerImage} resizeMode="contain" />
+            <TouchableOpacity
+              onPress={() => {
+                router.replace('/(home)/homepage');
+              }}
+            >
+              <Image
+                source={require('../../../assets/images/today.png')}
+                style={styles.footerImage}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
             <TouchableOpacity>
-              <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain" />
+              <Image
+                source={require('../../../assets/images/entries.png')}
+                style={styles.footerImage}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => { router.replace('/(add-journal)/') }}>
-              <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain" />
+            <TouchableOpacity
+              onPress={() => {
+                router.replace('/(add-journal)/');
+              }}
+            >
+              <Image
+                source={require('../../../assets/images/circle.png')}
+                style={styles.footerImage}
+                resizeMode="contain"
+              />
               <Text style={styles.plusSign}>+</Text>
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => {
-            router.replace('/(global-board)');
-          }}>
-              <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain" />
+            <TouchableOpacity
+              onPress={() => {
+                router.replace('/(global-board)');
+              }}
+            >
+              <Image
+                source={require('../../../assets/images/feed.png')}
+                style={styles.footerImage}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
-            <TouchableOpacity onPress={() => {router.replace('/(home)/homepage')}}>
-              <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
+            <TouchableOpacity
+              onPress={() => {
+                router.replace('/(home)/homepage');
+              }}
+            >
+              <Image
+                source={require('../../../assets/images/friends.png')}
+                style={styles.footerImage}
+                resizeMode="contain"
+              />
             </TouchableOpacity>
           </View>
         </View>
@@ -426,7 +515,7 @@ export default function EntryPage() {
   );
 }
 
-const styles: StylesProps = StyleSheet.create({
+const styles = StyleSheet.create({
   backButton: {
     borderRadius: 20,
     padding: 10,
