@@ -701,21 +701,23 @@ const styles = StyleSheet.create({
     fontWeight: '300',
     marginRight: 25,
   },
-  
+
+  titleImage: {
+    width: 23,  
+    height: 23, 
+    marginTop: 5,
+    marginRight: 10,
+  },
+
   titleRow: {
     flexDirection: "row", 
     justifyContent: "space-between", 
     alignItems: "center", 
     width: "100%", 
   },
+  
   titleTextContainer: {
     flexDirection: "column", 
     justifyContent: "center", 
-  },
-  titleImage: {
-    width: 23,  
-    height: 23, 
-    marginTop: 5,
-    marginRight: 10,
   },
 });
