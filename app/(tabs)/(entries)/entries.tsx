@@ -20,6 +20,7 @@ import {
   doc,
   getDoc,
   getDocs,
+  deleteDoc,
   query,
   where,
 } from 'firebase/firestore';
@@ -206,6 +207,52 @@ export default function EntryPage(): JSX.Element {
       fetchResponses();
     }, [selectedDate])
   );
+  
+  /**
+   * Handles deleting an entry (daily response or journal entry) from Firestore.
+   *
+   * @param {string} entryType - The type of entry ("daily-question-responses" or "journal-responses").
+   * @param {DailyResponse | JournalEntry | null} entry - The entry object.
+   * @returns {Promise<void>}
+   */
+  const handleDelete = async (
+    entryType: "daily-question-responses" | "journal-responses",
+    entry: DailyResponse | JournalEntry | null
+  ): Promise<void> => {
+    console.log("handleDelete called with:", entryType, entry); // Debugging log
+  
+    if (!entry || !entry.id) {
+      console.error(`No ${entryType} entry found or missing ID.`);
+      return;
+    }
+  
+    Alert.alert(
+      "Delete Entry",
+      "Are you sure you want to delete this entry?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "OK",
+          onPress: async (): Promise<void> => {
+            try {
+              console.log("Attempting to delete entry with ID:", entry.id);
+              const docRef = doc(FIRESTORE_DB, entryType, entry.id);
+              await deleteDoc(docRef);
+              console.log("Document successfully deleted!");
+  
+              // Navigate back to entries page
+              const entryDate = entry.timestamp
+                ? format(entry.timestamp, "yyyy-MM-dd")
+                : format(new Date(), "yyyy-MM-dd");
+              router.replace(`/(entries)/entries?date=${entryDate}`);
+            } catch (error) {
+              console.error("Error removing document:", error);
+            }
+          },
+        },
+      ]
+    );
+  };
 
   /**
    * Formats a timestamp into a short time string.
@@ -274,14 +321,26 @@ export default function EntryPage(): JSX.Element {
                   />
                   <View style={styles.textContainer}>
                     <View style={styles.titleRow}>
-                      <Text style={styles.entryLabel}>DAILY QUESTION</Text>
-                      {dailyResponse.timestamp && (
-                        <Text style={styles.timestampText}>
-                          {formatTime(dailyResponse.timestamp)}
-                        </Text>
-                      )}
+                      {/* Left Side: Label & Timestamp */}
+                      <View style={styles.titleTextContainer}>
+                        <Text style={styles.entryLabel}>DAILY QUESTION</Text>
+                        {dailyResponse.timestamp && (
+                          <Text style={styles.timestampText}>
+                            {formatTime(dailyResponse.timestamp)}
+                          </Text>
+                        )}
+                      </View>
+
+                      {/* Right Side: Image */}
+                      <TouchableOpacity onPress={() => handleDelete("daily-question-responses", dailyResponse)}>
+                        <Image
+                          source={require('../../../assets/images/delete.png')} 
+                          style={styles.titleImage}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
                     </View>
-                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
+                    <Text style={styles.entryText} numberOfLines={5} ellipsizeMode="tail">
                       {dailyResponse.response}
                     </Text>
                   </View>
@@ -296,7 +355,7 @@ export default function EntryPage(): JSX.Element {
                   style={styles.entryContainer}
                   onPress={() => {
                     router.push(`../(add-journal)/journal-entry/${entry.id}`);
-                    console.log('pressed journal entry');
+                    console.log("pressed journal entry");
                   }}
                 >
                   <Image
@@ -306,14 +365,25 @@ export default function EntryPage(): JSX.Element {
                   />
                   <View style={styles.textContainer}>
                     <View style={styles.titleRow}>
-                      <Text style={styles.entryLabel}>JOURNAL</Text>
-                      {entry.timestamp && (
-                        <Text style={styles.timestampText}>
-                          {formatTime(entry.timestamp)}
-                        </Text>
-                      )}
+                      {/* Left Side: Label & Timestamp */}
+                      <View style={styles.titleTextContainer}>
+                        <Text style={styles.entryLabel}>JOURNAL</Text>
+                        {entry.timestamp && (
+                          <Text style={styles.timestampText}>
+                            {formatTime(entry.timestamp)}
+                          </Text>
+                        )}
+                      </View>
+                      {/* Right Side: Image */}
+                      <TouchableOpacity onPress={() => handleDelete("journal-responses", entry)}>
+                        <Image
+                          source={require('../../../assets/images/delete.png')} 
+                          style={styles.titleImage}
+                          resizeMode="contain"
+                        />
+                      </TouchableOpacity>
                     </View>
-                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
+                    <Text style={styles.entryText} numberOfLines={5} ellipsizeMode="tail">
                       {entry.response}
                     </Text>
                   </View>
@@ -517,13 +587,14 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '400',
     marginTop: 10,
+    letterSpacing: 13 * 0.1,
   },
   entryText: {
     color: "#706645CC",
     fontSize: 12,
     fontWeight: '600',
-    marginRight: 25,
     marginTop: 10,
+    marginRight: 10,
   },
   footer: {
     backgroundColor: '#F0ECE0',
@@ -592,15 +663,24 @@ const styles = StyleSheet.create({
   timestampText: {
     color: '#706645CC',
     fontFamily: "Poppins",
-    fontSize: 13,
-    position: 'absolute',
-    right: 20,
-    top: 10,
+    fontSize: 11,
+    fontWeight: '300',
+    marginRight: 25,
   },
   titleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 5,
+    flexDirection: "row", 
+    justifyContent: "space-between", 
+    alignItems: "center", 
+    width: "100%", 
+  },
+  titleTextContainer: {
+    flexDirection: "column", 
+    justifyContent: "center", 
+  },
+  titleImage: {
+    width: 23,  
+    height: 23, 
+    marginTop: 5,
+    marginRight: 10,
   },
 });
