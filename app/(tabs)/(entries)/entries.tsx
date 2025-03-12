@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -20,136 +20,92 @@ import {
   doc,
   getDoc,
   getDocs,
-  deleteDoc,
   query,
   where,
 } from 'firebase/firestore';
 import { getAuth, signOut } from 'firebase/auth';
-import {
-  router,
-  useLocalSearchParams,
-  useRouter,
-  useFocusEffect,
-} from 'expo-router';
-import { format } from 'date-fns';
+import { router, useLocalSearchParams, useRouter } from 'expo-router';
+import { format } from "date-fns";
+
 import DateTimePicker from '@react-native-community/datetimepicker';
 import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
 
-/**
- * Interface representing a journal entry.
- */
+interface StylesProps {
+  [key: string]: any;
+}
+
 interface JournalEntry {
   id: string;
   response: string;
   timestamp: Date | null;
 }
 
-/**
- * Interface representing a daily response.
- */
+// Updated DailyResponse to include an "id" for navigation
 interface DailyResponse {
   id: string;
   response: string;
   timestamp: Date | null;
 }
 
-/**
- * EntryPage component displays a daily question response and journal entries
- * for a given date. It allows the user to change the date, sign out, and navigate
- * to detailed entry screens.
- *
- * @returns {JSX.Element} The rendered entry page.
- */
-export default function EntryPage(): JSX.Element {
-  // Access the "date" parameter from the route.
-  const { date } = useLocalSearchParams<{ date: string }>();
-  // Format the date string to PST.
+// Entries page component displaying daily question and journal entries
+export default function EntryPage() {
+  // Access the date parameter from the route
+  const { date } = useLocalSearchParams();
+  // Format date string to PST
   const pstDateString = `${date}T00:00:00-08:00`;
 
-  // State variables.
-  const [showDropdown, setShowDropdown] = useState<boolean>(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(pstDateString));
+  // State variables
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [selectedDate, setSelectedDate] = useState(new Date(pstDateString));
   const [dailyResponse, setDailyResponse] = useState<DailyResponse | null>(null);
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [isDatePickerVisible, setIsDatePickerVisible] = useState<boolean>(false);
-  const [currentPickerType, setCurrentPickerType] = useState<string>('');
-  const [loading, setLoading] = useState<boolean>(false);
+  const [isDatePickerVisible, setIsDatePickerVisible] = useState(false);
+  const [currentPickerType, setCurrentPickerType] = useState('');
+  const [loading, setLoading] = useState(false);
   const router = useRouter();
 
   const auth = getAuth();
   const currentUser = auth.currentUser;
 
-  /**
-   * Toggles the visibility of the dropdown menu.
-   *
-   * @returns {void}
-   */
-  const toggleDropdown = (): void => {
+  // Function to toggle the dropdown menu visibility
+  const toggleDropdown = () => {
     setShowDropdown((prev) => !prev);
   };
 
-  /**
-   * Signs out the current user.
-   *
-   * @returns {Promise<void>}
-   */
-  const handleSignOut = async (): Promise<void> => {
+  // Function to handle user sign out
+  const handleSignOut = async () => {
     try {
       await signOut(FIREBASE_AUTH);
       Alert.alert('Signed out successfully!');
-      router.replace('/(setup)');
-    } catch (error: unknown) {
+      router.replace("/(setup)");
+    } catch (error: any) {
       console.error(error);
       Alert.alert('Failed to sign out. Please try again.');
     }
   };
 
-  /**
-   * Handles changes from the date picker.
-   *
-   * @param _event - The event object (unused).
-   * @param selected - The selected date (if any).
-   * @returns {void}
-   */
-  const handleDateChange = (_event: unknown, selected?: Date): void => {
-    if (selected) {
-      setSelectedDate(selected);
+  // Function to handle date changes from the date picker
+  const handleDateChange = (_event: any, selectedDate?: Date) => {
+    if (selectedDate) {
+      setSelectedDate(selectedDate);
     }
     setIsDatePickerVisible(false);
   };
 
-  /**
-   * Formats a Date into a string for Firestore queries.
-   *
-   * @param dateObj - The date to format.
-   * @returns {string} The formatted date.
-   */
-  const formatDateForFirestore = (dateObj: Date): string => {
-    return dateObj.toLocaleDateString('en-US', {
-      month: 'numeric',
-      day: 'numeric',
-      year: 'numeric',
-    });
+  // Function to format date for Firestore queries
+  const formatDateForFirestore = (date: Date): string => {
+    return date.toLocaleDateString('en-US', { month: 'numeric', day: 'numeric', year: 'numeric' });
   };
 
-  /**
-   * Formats a Date into a state-friendly string (YYYY-MM-DD).
-   *
-   * @param dateObj - The date to format.
-   * @returns {string} The formatted date.
-   */
-  const formatDateForState = (dateObj: Date): string => {
-    return format(dateObj, 'yyyy-MM-dd');
+  // Function to format date for state updates (YYYY-MM-DD)
+  const formatDateForState = (date: Date): string => {
+    return format(date, "yyyy-MM-dd");
   };
 
-  /**
-   * Fetches the daily question response and journal entries for the selected date.
-   *
-   * @returns {Promise<void>}
-   */
-  const fetchResponses = async (): Promise<void> => {
+  // Function to fetch daily question response and journal entries from Firestore
+  const fetchResponses = async () => {
     if (!currentUser?.uid) {
-      console.error('User not logged in!');
+      console.error("User not logged in!");
       return;
     }
 
@@ -157,121 +113,63 @@ export default function EntryPage(): JSX.Element {
     const firestoreDate = formatDateForFirestore(selectedDate);
 
     try {
-      // Fetch Daily Question Response.
+      // Fetch Daily Question Response
       const dailyQuestionQuery = query(
-        collection(FIRESTORE_DB, 'daily-question-responses'),
-        where('date', '==', firestoreDate),
-        where('userId', '==', currentUser.uid)
+        collection(FIRESTORE_DB, "daily-question-responses"),
+        where("date", "==", firestoreDate),
+        where("userId", "==", currentUser.uid)
       );
 
       const dailyQuestionSnapshot = await getDocs(dailyQuestionQuery);
       if (dailyQuestionSnapshot.docs.length > 0) {
-        const docSnap = dailyQuestionSnapshot.docs[0]; // Assuming one response per day.
+        const docSnap = dailyQuestionSnapshot.docs[0]; // Assuming only one response per day
         const docData = docSnap.data();
         setDailyResponse({
           id: docSnap.id,
-          response: docData.response || '',
+          response: docData.response || "",
           timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
         });
       } else {
         setDailyResponse(null);
       }
 
-      // Fetch Journal Entries.
+      // Fetch Journal Entries
       const journalQuery = query(
-        collection(FIRESTORE_DB, 'journal-responses'),
-        where('date', '==', firestoreDate),
-        where('userId', '==', currentUser.uid)
+        collection(FIRESTORE_DB, "journal-responses"),
+        where("date", "==", firestoreDate),
+        where("userId", "==", currentUser.uid)
       );
 
       const journalSnapshot = await getDocs(journalQuery);
       const journalEntriesData: JournalEntry[] = [];
-      journalSnapshot.forEach((docSnap) => {
-        const docData = docSnap.data();
+      journalSnapshot.forEach((doc) => {
+        const docData = doc.data();
         journalEntriesData.push({
-          id: docSnap.id,
-          response: docData.response || '',
+          id: doc.id, // Store the document ID
+          response: docData.response || "",
           timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
         });
       });
       setJournalEntries(journalEntriesData);
-    } catch (error: unknown) {
-      console.error('Error fetching responses:', error);
+
+    } catch (error: any) {
+      console.error("Error fetching responses:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  useFocusEffect(
-    useCallback(() => {
-      fetchResponses();
-    }, [selectedDate])
-  );
-  
-  /**
-   * Handles deleting an entry (daily response or journal entry) from Firestore.
-   *
-   * @param {string} entryType - The type of entry ("daily-question-responses" or "journal-responses").
-   * @param {DailyResponse | JournalEntry | null} entry - The entry object.
-   * @returns {Promise<void>}
-   */
-  const handleDelete = async (
-    entryType: "daily-question-responses" | "journal-responses",
-    entry: DailyResponse | JournalEntry | null
-  ): Promise<void> => {
-    console.log("handleDelete called with:", entryType, entry); // Debugging log
-  
-    if (!entry || !entry.id) {
-      console.error(`No ${entryType} entry found or missing ID.`);
-      return;
-    }
-  
-    Alert.alert(
-      "Delete Entry",
-      "Are you sure you want to delete this entry?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "OK",
-          onPress: async (): Promise<void> => {
-            try {
-              console.log("Attempting to delete entry with ID:", entry.id);
-              const docRef = doc(FIRESTORE_DB, entryType, entry.id);
-              await deleteDoc(docRef);
-              console.log("Document successfully deleted!");
-  
-              // Navigate back to entries page
-              const entryDate = entry.timestamp
-                ? format(entry.timestamp, "yyyy-MM-dd")
-                : format(new Date(), "yyyy-MM-dd");
-              router.replace(`/(entries)/entries?date=${entryDate}`);
-            } catch (error) {
-              console.error("Error removing document:", error);
-            }
-          },
-        },
-      ]
-    );
-  };
+  useEffect(() => {
+    fetchResponses();
+  }, [selectedDate]);
 
-  /**
-   * Formats a timestamp into a short time string.
-   *
-   * @param timestamp - The timestamp to format.
-   * @returns {string} The formatted time.
-   */
-  const formatTime = (timestamp: Date | null): string => {
+  // Function to format the time from a timestamp
+  const formatTime = (timestamp: Date | null) => {
     if (!timestamp) return '';
     return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   };
 
-  /**
-   * Renders the main content for the selected date, including the daily question response
-   * and any journal entries.
-   *
-   * @returns {JSX.Element} The rendered content.
-   */
-  const renderDateContent = (): JSX.Element => {
+  const renderDateContent = () => {
     if (loading) {
       return (
         <View style={styles.loadingContainer}>
@@ -296,11 +194,7 @@ export default function EntryPage(): JSX.Element {
           <Text style={styles.boldDay}>
             {selectedDate.toLocaleDateString('en-US', { weekday: 'long' })},
           </Text>{' '}
-          {selectedDate.toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
-          })}
+          {selectedDate.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
         </Text>
 
         {hasContent ? (
@@ -321,26 +215,14 @@ export default function EntryPage(): JSX.Element {
                   />
                   <View style={styles.textContainer}>
                     <View style={styles.titleRow}>
-                      {/* Left Side: Label & Timestamp */}
-                      <View style={styles.titleTextContainer}>
-                        <Text style={styles.entryLabel}>DAILY QUESTION</Text>
-                        {dailyResponse.timestamp && (
-                          <Text style={styles.timestampText}>
-                            {formatTime(dailyResponse.timestamp)}
-                          </Text>
-                        )}
-                      </View>
-
-                      {/* Right Side: Image */}
-                      <TouchableOpacity onPress={() => handleDelete("daily-question-responses", dailyResponse)}>
-                        <Image
-                          source={require('../../../assets/images/delete.png')} 
-                          style={styles.titleImage}
-                          resizeMode="contain"
-                        />
-                      </TouchableOpacity>
+                      <Text style={styles.entryLabel}>DAILY QUESTION</Text>
+                      {dailyResponse.timestamp && (
+                        <Text style={styles.timestampText}>
+                          {formatTime(dailyResponse.timestamp)}
+                        </Text>
+                      )}
                     </View>
-                    <Text style={styles.entryText} numberOfLines={5} ellipsizeMode="tail">
+                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
                       {dailyResponse.response}
                     </Text>
                   </View>
@@ -365,25 +247,14 @@ export default function EntryPage(): JSX.Element {
                   />
                   <View style={styles.textContainer}>
                     <View style={styles.titleRow}>
-                      {/* Left Side: Label & Timestamp */}
-                      <View style={styles.titleTextContainer}>
-                        <Text style={styles.entryLabel}>JOURNAL</Text>
-                        {entry.timestamp && (
-                          <Text style={styles.timestampText}>
-                            {formatTime(entry.timestamp)}
-                          </Text>
-                        )}
-                      </View>
-                      {/* Right Side: Image */}
-                      <TouchableOpacity onPress={() => handleDelete("journal-responses", entry)}>
-                        <Image
-                          source={require('../../../assets/images/delete.png')} 
-                          style={styles.titleImage}
-                          resizeMode="contain"
-                        />
-                      </TouchableOpacity>
+                      <Text style={styles.entryLabel}>JOURNAL</Text>
+                      {entry.timestamp && (
+                        <Text style={styles.timestampText}>
+                          {formatTime(entry.timestamp)}
+                        </Text>
+                      )}
                     </View>
-                    <Text style={styles.entryText} numberOfLines={5} ellipsizeMode="tail">
+                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
                       {entry.response}
                     </Text>
                   </View>
@@ -393,9 +264,7 @@ export default function EntryPage(): JSX.Element {
           </>
         ) : (
           <View style={styles.noContentContainer}>
-            <Text style={styles.noContentText}>
-              No responses or journal entries for this day.
-            </Text>
+            <Text style={styles.noContentText}>No responses or journal entries for this day.</Text>
           </View>
         )}
       </ScrollView>
@@ -411,12 +280,13 @@ export default function EntryPage(): JSX.Element {
         <View style={styles.container}>
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity
-              onPress={() => {
-                router.push({ pathname: '/(entries)', params: {} });
-              }}
-              style={styles.backButton}
-            >
+            {/* Back Arrow */}
+            <TouchableOpacity onPress={() => {
+              router.push({
+                pathname: "/(entries)",
+                params: {},
+              });
+            }} style={styles.backButton}>
               <Image
                 source={require('../../../assets/images/back_arrow.png')}
                 style={styles.backButtonImage}
@@ -447,66 +317,36 @@ export default function EntryPage(): JSX.Element {
               mode="date"
               display={Platform.OS === 'ios' ? 'spinner' : 'default'}
               onChange={handleDateChange}
-              textColor="black"
+              textColor='black'
             />
           )}
+
           {/* Scrollable Content */}
           <View style={{ flex: 1 }}>
-            <ScrollView>{renderDateContent()}</ScrollView>
+            <ScrollView>
+              {renderDateContent()}
+            </ScrollView>
           </View>
+
           {/* Footer */}
           <View style={styles.footer}>
-            <TouchableOpacity
-              onPress={() => {
-                router.replace('/(home)/homepage');
-              }}
-            >
-              <Image
-                source={require('../../../assets/images/today.png')}
-                style={styles.footerImage}
-                resizeMode="contain"
-              />
+            <TouchableOpacity onPress={() => { router.replace('/(home)/homepage') }}>
+              <Image source={require('../../../assets/images/today.png')} style={styles.footerImage} resizeMode="contain" />
             </TouchableOpacity>
             <TouchableOpacity>
-              <Image
-                source={require('../../../assets/images/entries.png')}
-                style={styles.footerImage}
-                resizeMode="contain"
-              />
+              <Image source={require('../../../assets/images/entries.png')} style={styles.footerImage} resizeMode="contain" />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                router.replace('/(add-journal)/');
-              }}
-            >
-              <Image
-                source={require('../../../assets/images/circle.png')}
-                style={styles.footerImage}
-                resizeMode="contain"
-              />
+            <TouchableOpacity onPress={() => { router.replace('/(add-journal)/') }}>
+              <Image source={require('../../../assets/images/circle.png')} style={styles.footerImage} resizeMode="contain" />
               <Text style={styles.plusSign}>+</Text>
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                router.replace('/(global-board)');
-              }}
-            >
-              <Image
-                source={require('../../../assets/images/feed.png')}
-                style={styles.footerImage}
-                resizeMode="contain"
-              />
+            <TouchableOpacity onPress={() => {
+            router.replace('/(global-board)');
+          }}>
+              <Image source={require('../../../assets/images/feed.png')} style={styles.footerImage} resizeMode="contain" />
             </TouchableOpacity>
-            <TouchableOpacity
-              onPress={() => {
-                router.replace('/(home)/homepage');
-              }}
-            >
-              <Image
-                source={require('../../../assets/images/friends.png')}
-                style={styles.footerImage}
-                resizeMode="contain"
-              />
+            <TouchableOpacity onPress={() => {router.replace('/(home)/homepage')}}>
+              <Image source={require('../../../assets/images/friends.png')} style={styles.footerImage} resizeMode="contain" />
             </TouchableOpacity>
           </View>
         </View>
@@ -515,7 +355,7 @@ export default function EntryPage(): JSX.Element {
   );
 }
 
-const styles = StyleSheet.create({
+const styles: StylesProps = StyleSheet.create({
   backButton: {
     borderRadius: 20,
     padding: 10,
@@ -587,14 +427,13 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '400',
     marginTop: 10,
-    letterSpacing: 13 * 0.1,
   },
   entryText: {
     color: "#706645CC",
     fontSize: 12,
     fontWeight: '600',
+    marginRight: 25,
     marginTop: 10,
-    marginRight: 10,
   },
   footer: {
     backgroundColor: '#F0ECE0',
@@ -663,24 +502,15 @@ const styles = StyleSheet.create({
   timestampText: {
     color: '#706645CC',
     fontFamily: "Poppins",
-    fontSize: 11,
-    fontWeight: '300',
-    marginRight: 25,
+    fontSize: 13,
+    position: 'absolute',
+    right: 20,
+    top: 10,
   },
   titleRow: {
-    flexDirection: "row", 
-    justifyContent: "space-between", 
-    alignItems: "center", 
-    width: "100%", 
-  },
-  titleTextContainer: {
-    flexDirection: "column", 
-    justifyContent: "center", 
-  },
-  titleImage: {
-    width: 23,  
-    height: 23, 
-    marginTop: 5,
-    marginRight: 10,
+    alignItems: 'center',
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    marginBottom: 5,
   },
 });

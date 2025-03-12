@@ -11,10 +11,6 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
-/**
- * RootLayout component defines the navigation stack for app screens.
- * @returns {JSX.Element} The navigation stack.
- */
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({
@@ -34,8 +30,8 @@ export default function RootLayout() {
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <Stack>
-        <Stack.Screen name="(setup)" options={{ headerShown: false, animation: "none" }} />
-        <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: "none" }}/>
+        <Stack.Screen name="(setup)" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }}/>
         <Stack.Screen name="+not-found" />
       </Stack>
       <StatusBar style="auto" />

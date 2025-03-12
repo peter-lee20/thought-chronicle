@@ -1,73 +1,66 @@
-import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import React from 'react';
-import { router } from 'expo-router';
+import { View, Image, Text, TouchableOpacity, StyleSheet } from 'react-native'
+import React from 'react'
+import { router } from 'expo-router'
 
-/**
- * Verification component displays a confirmation message and a sign-in button.
- *
- * @returns {JSX.Element} The rendered verification screen.
- */
-export default function Verification(): JSX.Element {
-  /**
-   * Navigates the user to the sign-in screen.
-   */
-  const goToSignIn = (): void => {
-    router.replace("/");
-  };
+export default function Verification() {
+    const goToSignIn = () => {
+      router.replace("/");
+    }
 
-  return (
-    <View style={styles.container}>
-      <Image
-        style={styles.image}
-        source={require("../../assets/images/setup-finish.png")}
-      />
-      <Text style={styles.heading}>Congrats!</Text>
-      <Text style={styles.text}>
-        You've finished creating your account! Please check your email to verify your account and start your journey.
-      </Text>
-      <TouchableOpacity onPress={goToSignIn}>
-        <Text style={styles.button}>Sign in</Text>
-      </TouchableOpacity>
-    </View>
-  );
+    return (
+        <View style={styles.container}>
+            <Image style={styles.image} source={require("../../assets/images/setup-finish.png")}></Image>
+            <Text style={styles.heading}>Congrats!</Text>
+            <Text style={styles.text}>
+                You've finished creating your account! Please check your email
+                to verify your account and start your journey.
+            </Text>
+            <TouchableOpacity onPress={goToSignIn}>
+                <Text style={styles.button}>Sign in</Text>
+            </TouchableOpacity>
+        </View>
+    )
 }
 
 const styles = StyleSheet.create({
-  button: {
-    backgroundColor: "#7E948C",
-    borderRadius: 14,
-    color: "#F0ECE0",
-    fontFamily: "Poppins",
-    fontSize: 16,
-    fontWeight: "600",
-    padding: 18,
-    textAlign: "center",
-    width: 352,
-  },
-  container: {
-    alignItems: "center",
-    backgroundColor: "#F0ECE0",
-    color: "#3C4444",
-    flex: 1,
-    fontFamily: "Poppins",
-    justifyContent: "center",
-  },
-  heading: {
-    fontSize: 24,
-    fontWeight: "700",
-    lineHeight: 36,
-    marginBottom: 26,
-    marginTop: 26,
-  },
-  image: {
-    height: 151,
-    width: 152,
-  },
-  text: {
-    fontSize: 15,
-    lineHeight: 22.5,
-    marginBottom: 26,
-    maxWidth: "77%",
-    textAlign: "center",
-  },
-});
+    container: {
+        flex: 1,
+        fontFamily: "Poppins",
+        backgroundColor: "#F0ECE0",
+        color: "#3C4444",
+        justifyContent: "center",
+        alignItems: "center"
+    },
+
+    image: {
+        width: 152,
+        height: 151
+    },
+
+    heading: {
+        fontWeight: 700,
+        fontSize: 24,
+        lineHeight: 36,
+        marginTop: 26,
+        marginBottom: 26,
+    },
+
+    text: {
+        fontSize: 15,
+        lineHeight: 22.5,
+        textAlign: "center",
+        maxWidth: "77%",
+        marginBottom: 26
+    },
+
+    button: {
+        backgroundColor: "#7E948C",
+        color: "#F0ECE0",
+        textAlign: "center",
+        fontWeight: 600,
+        fontSize: 16,
+        width: 352,
+        borderRadius: 14,
+        padding: 18
+    }
+})

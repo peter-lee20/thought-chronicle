@@ -78,6 +78,12 @@ const styles = StyleSheet.create({
     marginBottom: 5,
   },
 
+  tabContent: {
+    flex: 1,
+    paddingVertical: 20,
+    width: '100%',
+  },
+
   searchBarContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -97,12 +103,6 @@ const styles = StyleSheet.create({
     width: 20,
     height: 20,
     marginRight: 10,
-  },
-
-  tabContent: {
-    flex: 1,
-    paddingVertical: 20,
-    width: '100%',
   },
 });
 
