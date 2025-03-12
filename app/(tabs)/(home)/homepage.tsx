@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Alert,
   Image,
@@ -14,7 +14,6 @@ import {
   View,
   GestureResponderEvent,
 } from "react-native";
-import {} from "react-native";
 import {
   addDoc,
   collection,
@@ -29,49 +28,55 @@ import {
   where,
 } from "firebase/firestore";
 import { signOut } from "firebase/auth";
-import { router } from "expo-router";
-
+import { router, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
+import { format } from "date-fns";
+import DateTimePicker from "@react-native-community/datetimepicker";
 import WeekCalendar from "./weekCalendar";
-import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../FirebaseConfig";
 import ShareModal from "./shareModal";
+import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../FirebaseConfig";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-interface StylesProps {
-  [key: string]: any;
-}
+// Maximum allowed characters for the response field. This limit is set to prevent excessively long entries.
+const maxCharacters: number = 1500;
 
-// Defines the maximum number of characters allowed in the response field.
-const maxCharacters = 1500;
-
-// Function to navigate to the entries page.
-const navEntries = async () => {
+// Navigation functions to quickly switch views.
+const navEntries = async (): Promise<void> => {
   router.replace("/(entries)/");
 };
-const navBoard = async () => {
+const navBoard = async (): Promise<void> => {
   router.replace("/(global-board)");
 };
 
-// Main component for the home page.
-export default function HomePage() {
-  // State variables:
+/**
+ * HomePage component is the main screen for daily question responses.
+ * It fetches the current daily question, allows the user to submit a response,
+ * and lets the user adjust visibility settings on their response.
+ *
+ * @returns {JSX.Element} The rendered home page.
+ */
+export default function HomePage(): JSX.Element {
+  // State variables used to store response text, user settings, and question data.
   const [response, setResponse] = useState<string>("");
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [streak, setStreak] = useState<number>(0);
   const [question, setQuestion] = useState<string>("");
   const [responded, setResponded] = useState<boolean>(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const currentDate = new Date();
+  const [modalVisible, setModalVisible] = useState<boolean>(false);
+  const currentDate: Date = new Date();
+  const routerInstance = useRouter();
 
-  // useEffect hook to fetch the daily question on component mount.
-  useEffect(() => {
-    const fetchQuestion = async () => {
+  // Fetch the daily question on component mount.
+  useEffect((): void => {
+    /**
+     * Fetches the latest daily question from Firestore.
+     * We use the 'latest' document from the 'current-question' collection to ensure the question is current.
+     */
+    const fetchQuestion = async (): Promise<void> => {
       try {
-        // Reference to the 'latest' document in the 'current-question' collection.
         const docRef = doc(FIRESTORE_DB, "current-question", "latest");
         const snapshot = await getDoc(docRef);
 
         if (snapshot.exists()) {
-          // Set the question state with the text from the document.
           setQuestion(snapshot.data().text);
         } else {
           console.log("No daily question found!");
@@ -86,19 +91,19 @@ export default function HomePage() {
   }, []);
 
   /**
-   * Function to set the current streak state to the correct value depending
-   * on if the user has answered the daily question response or not.
+   * Fetches and updates the user's streak based on whether they have answered today's question.
+   * The logic here helps maintain user engagement by tracking daily participation.
    */
-  const fetchUserStreak = async () => {
+  const fetchUserStreak = async (): Promise<void> => {
     const user = FIREBASE_AUTH.currentUser;
-
     if (user) {
       try {
         const streakDocRef = doc(FIRESTORE_DB, "userStreaks", user.uid);
         const streakDocSnap = await getDoc(streakDocRef);
-        const currDateString = currentDate.toLocaleDateString();
+        const currDateString: string = currentDate.toLocaleDateString();
 
-        const currDailyQuestionDocs = await getDocs(
+        // We query daily responses for today to know if the user answered.
+        const currDailyQuestionDocs: QuerySnapshot<DocumentData> = await getDocs(
           query(
             collection(FIRESTORE_DB, "daily-question-responses"),
             where("userId", "==", user.uid),
@@ -106,6 +111,7 @@ export default function HomePage() {
           )
         );
 
+        // If no streak record exists, initialize it.
         if (!streakDocSnap.exists()) {
           await setDoc(doc(FIRESTORE_DB, "userStreaks", user.uid), {
             currentStreak: 0,
@@ -114,8 +120,8 @@ export default function HomePage() {
         }
 
         if (streakDocSnap.exists()) {
-          const currentStreak = streakDocSnap.data().currentStreak;
-
+          const currentStreak: number = streakDocSnap.data().currentStreak;
+          // Increase streak only if there's a response for today.
           if (!currDailyQuestionDocs.empty) {
             setStreak(currentStreak + 1);
           } else {
@@ -128,22 +134,22 @@ export default function HomePage() {
     }
   };
 
-  /**
-   * Effect that runs the fetchUserStreak function whenever 
-   * the page renders
-   */
-  useEffect(() => {
+  // Run fetchUserStreak every time the responded flag changes.
+  useEffect((): void => {
     fetchUserStreak();
   }, [responded]);
 
-  // Function to calculate the start and end dates of the current week.
-  const getWeekRange = () => {
+  /**
+   * Calculates the start and end dates of the current week.
+   * This is used to display week-related data in the calendar.
+   *
+   * @returns {{ start: string; end: string }} The start and end dates as strings.
+   */
+  const getWeekRange = (): { start: string; end: string } => {
     const startOfWeek = new Date(currentDate);
     const endOfWeek = new Date(currentDate);
-
     startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
     endOfWeek.setDate(currentDate.getDate() + (6 - currentDate.getDay()));
-
     return {
       start: startOfWeek.toLocaleDateString(),
       end: endOfWeek.toLocaleDateString(),
@@ -152,27 +158,23 @@ export default function HomePage() {
 
   const weekRange = getWeekRange();
 
-  // Function to check if the user has already responded to the daily question today.
-  const checkResponse = async () => {
+  /**
+   * Checks if the user has already responded to the daily question today.
+   * This prevents duplicate responses and helps enforce daily limits.
+   *
+   * @returns {Promise<void>}
+   */
+  const checkResponse = async (): Promise<void> => {
     const user = FIREBASE_AUTH.currentUser;
-
     if (user) {
-      const userId = user.uid;
-      const responsesCollection = collection(
-        FIRESTORE_DB,
-        "daily-question-responses"
-      );
-      const snapshot: QuerySnapshot<DocumentData> = await getDocs(
-        responsesCollection
-      );
-
+      const userId: string = user.uid;
+      const responsesCollection = collection(FIRESTORE_DB, "daily-question-responses");
+      const snapshot: QuerySnapshot<DocumentData> = await getDocs(responsesCollection);
       if (snapshot.empty) {
         return;
       }
-
-      const documents = snapshot.docs;
-
-      documents.forEach((document) => {
+      snapshot.docs.forEach((document) => {
+        // We compare the stored date with the current date string to decide if a response exists.
         if (
           document.data()["userId"] === userId &&
           document.data()["date"] === currentDate.toLocaleDateString()
@@ -186,56 +188,62 @@ export default function HomePage() {
     }
   };
 
-  // Function to toggle the visibility of the dropdown menu.
-  const toggleDropdown = () => {
+  /**
+   * Toggles the visibility of the dropdown menu.
+   * We use this to allow users quick access to account actions (like sign out).
+   *
+   * @returns {void}
+   */
+  const toggleDropdown = (): void => {
     setShowDropdown((prev) => !prev);
   };
 
-  const openVisiblityModal = () => {
-    // don't want to check requirements for the response if the user is just
-    // changing their settings
+  /**
+   * Opens the visibility modal for the response.
+   * We first validate the response (if not just updating settings) to prevent invalid submissions.
+   *
+   * @returns {void}
+   */
+  const openVisiblityModal = (): void => {
     if (!responded) {
       if (response.trim() === "") {
         Alert.alert("Please enter a response.");
         return;
       }
-
       if (response.length > maxCharacters) {
-        Alert.alert(
-          `Response exceeds the maximum limit of ${maxCharacters} characters.`
-        );
+        Alert.alert(`Response exceeds the maximum limit of ${maxCharacters} characters.`);
         return;
       }
     }
-
     setModalVisible(true);
   };
 
+  /**
+   * Submits the user's response to the daily question.
+   * We enforce content length and ensure the user is authenticated before submission.
+   *
+   * @param options - Sharing settings for the response.
+   * @returns {Promise<void>}
+   */
   const handleSubmitResponse = async (options: {
     globalFeed: boolean;
     anonymous: boolean;
     friends: boolean;
-  }) => {
+  }): Promise<void> => {
     if (response.trim() === "") {
       Alert.alert("Please enter a response.");
       return;
     }
-
     if (response.length > maxCharacters) {
-      Alert.alert(
-        `Response exceeds the maximum limit of ${maxCharacters} characters.`
-      );
+      Alert.alert(`Response exceeds the maximum limit of ${maxCharacters} characters.`);
       return;
     }
-
     try {
       const user = FIREBASE_AUTH.currentUser;
-
       if (user) {
-        const todayStr = currentDate.toLocaleDateString();
-
+        const todayStr: string = currentDate.toLocaleDateString();
+        // Update the streak even if the user is submitting a new response.
         fetchUserStreak();
-
         await addDoc(collection(FIRESTORE_DB, "daily-question-responses"), {
           question: question,
           response: response,
@@ -246,7 +254,6 @@ export default function HomePage() {
           sharedWithFriends: options["friends"],
           userId: user.uid,
         });
-
         Alert.alert("Response submitted successfully!");
         setResponse("");
         setResponded(true);
@@ -261,49 +268,39 @@ export default function HomePage() {
   };
 
   /**
-   * Function that is called when the user taps on "Change Visibility Settings"
-   * button after they have responded to the daily question. This opens up the
-   * sharing modal again so they can change their sharing settings.
+   * Called when the user wants to change the sharing settings after submitting a response.
+   * It updates the Firestore document with the new visibility settings.
    *
-   * @param options The new sharing settings to update
-   * @returns Updates the provided changes to the Firestore and on the feeds
+   * @param options - The new sharing settings.
+   * @returns {Promise<void>}
    */
   const handleEditSettings = async (options: {
     globalFeed: boolean;
     anonymous: boolean;
     friends: boolean;
-  }) => {
+  }): Promise<void> => {
     try {
       const user = FIREBASE_AUTH.currentUser;
-
       if (user) {
-        const todayStr = currentDate.toLocaleDateString();
+        const todayStr: string = currentDate.toLocaleDateString();
         const responseQuery = query(
           collection(FIRESTORE_DB, "daily-question-responses"),
           where("userId", "==", user.uid),
           where("date", "==", todayStr)
         );
         const snapshot = await getDocs(responseQuery);
-
         if (snapshot.empty) {
           console.error("No response was found. Please enter a response first");
-          Alert.alert("No reponse was found. Please enter a response first.");
+          Alert.alert("No response was found. Please enter a response first.");
           return;
         }
-
         const responseDoc = snapshot.docs[0];
-        const docRef = doc(
-          FIRESTORE_DB,
-          "daily-question-responses",
-          responseDoc.id
-        );
-
+        const docRef = doc(FIRESTORE_DB, "daily-question-responses", responseDoc.id);
         await updateDoc(docRef, {
           sharedGlobally: options["globalFeed"],
           anonymous: options["anonymous"],
           sharedWithFriends: options["friends"],
         });
-
         Alert.alert("Settings changed successfully!");
         setModalVisible(false);
       } else {
@@ -315,8 +312,13 @@ export default function HomePage() {
     }
   };
 
-  // Handles signing out the current user.
-  const handleSignOut = async () => {
+  /**
+   * Signs out the current user.
+   * Signing out is critical for security, ensuring that sessions are properly closed.
+   *
+   * @returns {Promise<void>}
+   */
+  const handleSignOut = async (): Promise<void> => {
     try {
       await signOut(FIREBASE_AUTH);
       Alert.alert("Signed out successfully!");
@@ -348,7 +350,6 @@ export default function HomePage() {
                 />
                 <Text style={styles.days}>{streak}</Text>
               </View>
-
               <View>
                 <TouchableOpacity onPress={toggleDropdown}>
                   <Image
@@ -357,20 +358,15 @@ export default function HomePage() {
                     resizeMode="contain"
                   />
                 </TouchableOpacity>
-
                 {showDropdown && (
                   <View style={styles.dropdownMenu}>
-                    <TouchableOpacity
-                      style={styles.dropdownItem}
-                      onPress={handleSignOut}
-                    >
+                    <TouchableOpacity style={styles.dropdownItem} onPress={handleSignOut}>
                       <Text style={styles.dropdownText}>Sign Out</Text>
                     </TouchableOpacity>
                   </View>
                 )}
               </View>
             </View>
-
             {/* Main Content */}
             <View style={styles.mainContent}>
               <Text style={styles.title}>Today</Text>
@@ -382,11 +378,9 @@ export default function HomePage() {
                   day: "numeric",
                 })}
               </Text>
-
               <View style={styles.weekDisplay}>
                 <WeekCalendar />
               </View>
-
               <View style={styles.dailyQuestion}>
                 <Text style={styles.subtitle}>TODAY'S DAILY QUESTION</Text>
                 <Text style={styles.question}>{question}</Text>
@@ -407,38 +401,28 @@ export default function HomePage() {
                 <Text style={styles.characterCounter}>
                   {response.length}/{maxCharacters} characters
                 </Text>
-
                 <TouchableOpacity
                   style={responded ? styles.grayButton : styles.respondButton}
                   onPress={openVisiblityModal}
-                  // disabled={responded}
                 >
                   {!responded ? (
                     <Text style={styles.buttonText}>Submit Response</Text>
                   ) : (
-                    // text is different depending on whther user is submitting their response or changing their settings
-                    <Text style={styles.buttonText}>
-                      Change Visibility Settings
-                    </Text>
+                    <Text style={styles.buttonText}>Change Visibility Settings</Text>
                   )}
                 </TouchableOpacity>
-
                 <ShareModal
                   isVisible={modalVisible}
                   isFirstSubmit={!responded}
-                  // indicates to the share modal whether the user is submitting their response or changing their settings
                   onClose={() => setModalVisible(false)}
-                  onSubmit={
-                    responded ? handleEditSettings : handleSubmitResponse
-                  }
+                  onSubmit={responded ? handleEditSettings : handleSubmitResponse}
                 />
               </View>
             </View>
           </ScrollView>
         </TouchableWithoutFeedback>
       </KeyboardAvoidingView>
-
-      {/* Footer outside KeyboardAvoidingView */}
+      {/* Footer */}
       <View style={styles.footer}>
         <TouchableOpacity>
           <Image
@@ -493,7 +477,7 @@ export default function HomePage() {
   );
 }
 
-const styles: StylesProps = StyleSheet.create({
+const styles = StyleSheet.create({
   buttonText: {
     color: "#FFF",
     fontFamily: "Poppins",
@@ -519,6 +503,9 @@ const styles: StylesProps = StyleSheet.create({
     flex: 1,
     padding: 20,
   },
+  dailyQuestion: {
+    marginBottom: 20,
+  },
   date: {
     color: "#706645",
     fontFamily: "Poppins",
@@ -531,9 +518,6 @@ const styles: StylesProps = StyleSheet.create({
     fontFamily: "Poppins",
     fontSize: 24,
     fontWeight: "700",
-  },
-  dailyQuestion: {
-    marginBottom: 20,
   },
   dropdownItem: {
     borderBottomColor: "#EEE",
@@ -633,14 +617,14 @@ const styles: StylesProps = StyleSheet.create({
     justifyContent: "space-between",
   },
   streakContainer: {
-    flexDirection: "row",
-    alignItems: "center", // Optional: aligns items vertically in the center
-    borderColor: "#706645CC",
-    borderWidth: 2,
-    borderRadius: 20,
+    alignItems: "center",
     backgroundColor: "#F0ECE0",
-    paddingVertical: 3,
+    borderColor: "#706645CC",
+    borderRadius: 20,
+    borderWidth: 2,
+    flexDirection: "row",
     paddingHorizontal: 9,
+    paddingVertical: 3,
   },
   subtitle: {
     color: "#706645",
@@ -660,3 +644,4 @@ const styles: StylesProps = StyleSheet.create({
     marginBottom: 20,
   },
 });
+

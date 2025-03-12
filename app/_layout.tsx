@@ -11,6 +11,10 @@ import { useColorScheme } from '@/hooks/useColorScheme';
 // Prevent the splash screen from auto-hiding before asset loading is complete.
 SplashScreen.preventAutoHideAsync();
 
+/**
+ * RootLayout component defines the navigation stack for app screens.
+ * @returns {JSX.Element} The navigation stack.
+ */
 export default function RootLayout() {
   const colorScheme = useColorScheme();
   const [loaded] = useFonts({

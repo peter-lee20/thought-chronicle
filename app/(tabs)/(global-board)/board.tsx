@@ -123,7 +123,7 @@ export default function Board(): JSX.Element {
       if (!querySnapshot.empty) {
         const docData = querySnapshot.docs[0].data();
         const { firstname, lastname, username } = docData;
-        return { fullName: `${firstname} ${lastname}`, username };
+        return { fullName: ``, username };
       }
     } catch (error) {
       console.error('Error fetching user data for userId:', userId, error);
@@ -170,7 +170,7 @@ export default function Board(): JSX.Element {
         fetchedEntries.map(async (entry) => {
           if (entry.anonymous) {
             // For global entries, anonymous entries will show as "ANONYMOUS"
-            return { ...entry, displayName: 'ANONYMOUS', username: 'ANONYMOUS' };
+            return { ...entry, displayName: '', username: 'ANONYMOUS' };
           }
           const userData = await fetchUserDataByUserId(entry.userId);
           if (!userData) return null;
@@ -286,7 +286,7 @@ export default function Board(): JSX.Element {
 
     // If the entry is anonymous in the global tab, show "ANONYMOUS"
     if (activeTab === 'global' && item.anonymous) {
-      displayName = 'ANONYMOUS';
+      displayName = '';
       username = 'ANONYMOUS';
     }
 
