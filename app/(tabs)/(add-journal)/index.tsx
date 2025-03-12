@@ -222,7 +222,7 @@ const styles = StyleSheet.create({
     color: "#706645",
     fontFamily: "Poppins",
     fontSize: 14,
-    marginLeft: -15,
+    marginHorizontal: 10,
   },
 
   help: {

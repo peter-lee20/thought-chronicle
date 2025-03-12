@@ -31,10 +31,8 @@ exports.scheduleFetchQuestion = onSchedule("0 7 * * *", async () => {
       timestamp: FieldValue.serverTimestamp(),
     });
 
-    //return null;
   } catch (error) {
     console.error("Error fetching question:", error);
-    // return null;
   }
 });
 
