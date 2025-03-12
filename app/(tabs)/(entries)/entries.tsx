@@ -1,38 +1,33 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from "react";
 import {
   ActivityIndicator,
   Alert,
   Image,
   Keyboard,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   StyleSheet,
   Text,
-  TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
-} from 'react-native';
+} from "react-native";
 import {
   collection,
-  doc,
-  getDoc,
   getDocs,
   query,
   where,
-} from 'firebase/firestore';
-import { getAuth, signOut } from 'firebase/auth';
+} from "firebase/firestore";
+import { getAuth, signOut } from "firebase/auth";
 import {
-  router,
   useLocalSearchParams,
   useRouter,
   useFocusEffect,
-} from 'expo-router';
-import { format } from 'date-fns';
-import DateTimePicker from '@react-native-community/datetimepicker';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
+} from "expo-router";
+import { format } from "date-fns";
+import DateTimePicker from "@react-native-community/datetimepicker";
+import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../FirebaseConfig";
 
 /**
  * Interface representing a journal entry.
@@ -67,11 +62,16 @@ export default function EntryPage(): JSX.Element {
 
   // State variables.
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
-  const [selectedDate, setSelectedDate] = useState<Date>(new Date(pstDateString));
-  const [dailyResponse, setDailyResponse] = useState<DailyResponse | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date>(
+    new Date(pstDateString)
+  );
+  const [dailyResponse, setDailyResponse] = useState<DailyResponse | null>(
+    null
+  );
   const [journalEntries, setJournalEntries] = useState<JournalEntry[]>([]);
-  const [isDatePickerVisible, setIsDatePickerVisible] = useState<boolean>(false);
-  const [currentPickerType, setCurrentPickerType] = useState<string>('');
+  const [isDatePickerVisible, setIsDatePickerVisible] =
+    useState<boolean>(false);
+  const [currentPickerType, setCurrentPickerType] = useState<string>("");
   const [loading, setLoading] = useState<boolean>(false);
   const router = useRouter();
 
@@ -95,11 +95,11 @@ export default function EntryPage(): JSX.Element {
   const handleSignOut = async (): Promise<void> => {
     try {
       await signOut(FIREBASE_AUTH);
-      Alert.alert('Signed out successfully!');
-      router.replace('/(setup)');
+      Alert.alert("Signed out successfully!");
+      router.replace("/(setup)");
     } catch (error: unknown) {
       console.error(error);
-      Alert.alert('Failed to sign out. Please try again.');
+      Alert.alert("Failed to sign out. Please try again.");
     }
   };
 
@@ -124,10 +124,10 @@ export default function EntryPage(): JSX.Element {
    * @returns {string} The formatted date.
    */
   const formatDateForFirestore = (dateObj: Date): string => {
-    return dateObj.toLocaleDateString('en-US', {
-      month: 'numeric',
-      day: 'numeric',
-      year: 'numeric',
+    return dateObj.toLocaleDateString("en-US", {
+      month: "numeric",
+      day: "numeric",
+      year: "numeric",
     });
   };
 
@@ -138,7 +138,7 @@ export default function EntryPage(): JSX.Element {
    * @returns {string} The formatted date.
    */
   const formatDateForState = (dateObj: Date): string => {
-    return format(dateObj, 'yyyy-MM-dd');
+    return format(dateObj, "yyyy-MM-dd");
   };
 
   /**
@@ -148,7 +148,7 @@ export default function EntryPage(): JSX.Element {
    */
   const fetchResponses = async (): Promise<void> => {
     if (!currentUser?.uid) {
-      console.error('User not logged in!');
+      console.error("User not logged in!");
       return;
     }
 
@@ -158,9 +158,9 @@ export default function EntryPage(): JSX.Element {
     try {
       // Fetch Daily Question Response.
       const dailyQuestionQuery = query(
-        collection(FIRESTORE_DB, 'daily-question-responses'),
-        where('date', '==', firestoreDate),
-        where('userId', '==', currentUser.uid)
+        collection(FIRESTORE_DB, "daily-question-responses"),
+        where("date", "==", firestoreDate),
+        where("userId", "==", currentUser.uid)
       );
 
       const dailyQuestionSnapshot = await getDocs(dailyQuestionQuery);
@@ -169,7 +169,7 @@ export default function EntryPage(): JSX.Element {
         const docData = docSnap.data();
         setDailyResponse({
           id: docSnap.id,
-          response: docData.response || '',
+          response: docData.response || "",
           timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
         });
       } else {
@@ -178,9 +178,9 @@ export default function EntryPage(): JSX.Element {
 
       // Fetch Journal Entries.
       const journalQuery = query(
-        collection(FIRESTORE_DB, 'journal-responses'),
-        where('date', '==', firestoreDate),
-        where('userId', '==', currentUser.uid)
+        collection(FIRESTORE_DB, "journal-responses"),
+        where("date", "==", firestoreDate),
+        where("userId", "==", currentUser.uid)
       );
 
       const journalSnapshot = await getDocs(journalQuery);
@@ -189,13 +189,13 @@ export default function EntryPage(): JSX.Element {
         const docData = docSnap.data();
         journalEntriesData.push({
           id: docSnap.id,
-          response: docData.response || '',
+          response: docData.response || "",
           timestamp: docData.timestamp ? docData.timestamp.toDate() : null,
         });
       });
       setJournalEntries(journalEntriesData);
     } catch (error: unknown) {
-      console.error('Error fetching responses:', error);
+      console.error("Error fetching responses:", error);
     } finally {
       setLoading(false);
     }
@@ -214,8 +214,11 @@ export default function EntryPage(): JSX.Element {
    * @returns {string} The formatted time.
    */
   const formatTime = (timestamp: Date | null): string => {
-    if (!timestamp) return '';
-    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (!timestamp) return "";
+    return timestamp.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   /**
@@ -247,12 +250,12 @@ export default function EntryPage(): JSX.Element {
       >
         <Text style={styles.dateText}>
           <Text style={styles.boldDay}>
-            {selectedDate.toLocaleDateString('en-US', { weekday: 'long' })},
-          </Text>{' '}
-          {selectedDate.toLocaleDateString('en-US', {
-            month: 'long',
-            day: 'numeric',
-            year: 'numeric',
+            {selectedDate.toLocaleDateString("en-US", { weekday: "long" })},
+          </Text>{" "}
+          {selectedDate.toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
           })}
         </Text>
 
@@ -264,11 +267,13 @@ export default function EntryPage(): JSX.Element {
                 <TouchableOpacity
                   style={styles.entryContainer}
                   onPress={() => {
-                    router.push(`../(add-journal)/daily-response/${dailyResponse.id}`);
+                    router.push(
+                      `../(add-journal)/daily-response/${dailyResponse.id}`
+                    );
                   }}
                 >
                   <Image
-                    source={require('../../../assets/images/question_mark.png')}
+                    source={require("../../../assets/images/question_mark.png")}
                     style={styles.entryImage}
                     resizeMode="contain"
                   />
@@ -281,7 +286,11 @@ export default function EntryPage(): JSX.Element {
                         </Text>
                       )}
                     </View>
-                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
+                    <Text
+                      style={styles.entryText}
+                      numberOfLines={3}
+                      ellipsizeMode="tail"
+                    >
                       {dailyResponse.response}
                     </Text>
                   </View>
@@ -296,11 +305,11 @@ export default function EntryPage(): JSX.Element {
                   style={styles.entryContainer}
                   onPress={() => {
                     router.push(`../(add-journal)/journal-entry/${entry.id}`);
-                    console.log('pressed journal entry');
+                    console.log("pressed journal entry");
                   }}
                 >
                   <Image
-                    source={require('../../../assets/images/journal.png')}
+                    source={require("../../../assets/images/journal.png")}
                     style={styles.entryImage}
                     resizeMode="contain"
                   />
@@ -313,7 +322,11 @@ export default function EntryPage(): JSX.Element {
                         </Text>
                       )}
                     </View>
-                    <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
+                    <Text
+                      style={styles.entryText}
+                      numberOfLines={3}
+                      ellipsizeMode="tail"
+                    >
                       {entry.response}
                     </Text>
                   </View>
@@ -335,7 +348,7 @@ export default function EntryPage(): JSX.Element {
   return (
     <KeyboardAvoidingView
       style={{ flex: 1 }}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+      behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
@@ -343,12 +356,12 @@ export default function EntryPage(): JSX.Element {
           <View style={styles.header}>
             <TouchableOpacity
               onPress={() => {
-                router.push({ pathname: '/(entries)', params: {} });
+                router.push({ pathname: "/(entries)", params: {} });
               }}
               style={styles.backButton}
             >
               <Image
-                source={require('../../../assets/images/back_arrow.png')}
+                source={require("../../../assets/images/back_arrow.png")}
                 style={styles.backButtonImage}
                 resizeMode="contain"
               />
@@ -356,14 +369,17 @@ export default function EntryPage(): JSX.Element {
             <View>
               <TouchableOpacity onPress={toggleDropdown}>
                 <Image
-                  source={require('../../../assets/images/profile.png')}
+                  source={require("../../../assets/images/profile.png")}
                   style={styles.image}
                   resizeMode="contain"
                 />
               </TouchableOpacity>
               {showDropdown && (
                 <View style={styles.dropdownMenu}>
-                  <TouchableOpacity style={styles.dropdownItem} onPress={handleSignOut}>
+                  <TouchableOpacity
+                    style={styles.dropdownItem}
+                    onPress={handleSignOut}
+                  >
                     <Text style={styles.dropdownText}>Sign Out</Text>
                   </TouchableOpacity>
                 </View>
@@ -375,7 +391,7 @@ export default function EntryPage(): JSX.Element {
             <DateTimePicker
               value={selectedDate}
               mode="date"
-              display={Platform.OS === 'ios' ? 'spinner' : 'default'}
+              display={Platform.OS === "ios" ? "spinner" : "default"}
               onChange={handleDateChange}
               textColor="black"
             />
@@ -388,29 +404,29 @@ export default function EntryPage(): JSX.Element {
           <View style={styles.footer}>
             <TouchableOpacity
               onPress={() => {
-                router.replace('/(home)/homepage');
+                router.replace("/(home)/homepage");
               }}
             >
               <Image
-                source={require('../../../assets/images/today.png')}
+                source={require("../../../assets/images/today.png")}
                 style={styles.footerImage}
                 resizeMode="contain"
               />
             </TouchableOpacity>
             <TouchableOpacity>
               <Image
-                source={require('../../../assets/images/entries.png')}
+                source={require("../../../assets/images/entries.png")}
                 style={styles.footerImage}
                 resizeMode="contain"
               />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
-                router.replace('/(add-journal)/');
+                router.replace("/(add-journal)/");
               }}
             >
               <Image
-                source={require('../../../assets/images/circle.png')}
+                source={require("../../../assets/images/circle.png")}
                 style={styles.footerImage}
                 resizeMode="contain"
               />
@@ -418,22 +434,22 @@ export default function EntryPage(): JSX.Element {
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
-                router.replace('/(global-board)');
+                router.replace("/(global-board)");
               }}
             >
               <Image
-                source={require('../../../assets/images/feed.png')}
+                source={require("../../../assets/images/feed.png")}
                 style={styles.footerImage}
                 resizeMode="contain"
               />
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => {
-                router.replace('/(home)/homepage');
+                router.replace("/(home)/homepage");
               }}
             >
               <Image
-                source={require('../../../assets/images/friends.png')}
+                source={require("../../../assets/images/friends.png")}
                 style={styles.footerImage}
                 resizeMode="contain"
               />
@@ -450,39 +466,46 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     padding: 10,
   },
+
   backButtonImage: {
     height: 30,
     width: 30,
   },
+
   boldDay: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
+
   container: {
-    backgroundColor: '#F0ECE0',
+    backgroundColor: "#F0ECE0",
     flex: 1,
   },
+
   dateEntryContainer: {
     marginBottom: 10,
   },
+
   dateText: {
     color: "#706645",
     fontFamily: "Poppins",
     fontSize: 20,
-    fontWeight: '400',
+    fontWeight: "400",
     marginBottom: 10,
   },
+
   dropdownItem: {
-    borderBottomColor: '#EEE',
+    borderBottomColor: "#EEE",
     borderBottomWidth: 1,
     padding: 10,
   },
+
   dropdownMenu: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 8,
     elevation: 5,
-    position: 'absolute',
+    position: "absolute",
     right: 0,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -490,21 +513,24 @@ const styles = StyleSheet.create({
     width: 100,
     zIndex: 10,
   },
+
   dropdownText: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 16,
   },
+
   entryContainer: {
-    alignItems: 'flex-start',
-    backgroundColor: '#FDFCF3',
+    alignItems: "flex-start",
+    backgroundColor: "#FDFCF3",
     borderRadius: 15,
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 10,
     minHeight: 130,
-    overflow: 'hidden',
+    overflow: "hidden",
     padding: 10,
   },
+  
   entryImage: {
     height: 30,
     marginLeft: 10,
@@ -512,95 +538,111 @@ const styles = StyleSheet.create({
     marginTop: 40,
     width: 30,
   },
+
   entryLabel: {
     color: "#706645CC",
     fontSize: 13,
-    fontWeight: '400',
+    fontWeight: "400",
     marginTop: 10,
   },
+
   entryText: {
     color: "#706645CC",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     marginRight: 25,
     marginTop: 10,
   },
+
   footer: {
-    backgroundColor: '#F0ECE0',
-    borderTopColor: '#70664533',
+    backgroundColor: "#F0ECE0",
+    borderTopColor: "#70664533",
     borderTopWidth: 1,
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    flexDirection: "row",
+    justifyContent: "space-around",
     paddingVertical: 20,
   },
+
   footerImage: {
     height: 50,
     width: 50,
   },
+
   header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
     padding: 20,
     marginTop: 25,
   },
+
   image: {
     height: 40,
     width: 40,
   },
+
   loadingContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
+
   noContentContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     marginTop: 50,
   },
+
   noContentText: {
-    color: '#706645',
+    color: "#706645",
     fontSize: 16,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
+
   noDataText: {
     color: "#888",
     fontSize: 14,
     fontStyle: "italic",
     marginTop: 10,
   },
+
   plusSign: {
-    color: 'white',
+    color: "white",
     fontSize: 30,
-    fontWeight: '400',
+    fontWeight: "400",
     marginLeft: 15.5,
     marginTop: 4,
-    position: 'absolute',
+    position: "absolute",
   },
+
   scrollContent: {
     flexGrow: 1,
     padding: 20,
     paddingBottom: 100,
   },
+
   scrollView: {
     flex: 1,
   },
+
   textContainer: {
     flex: 1,
   },
+
   timestampText: {
-    color: '#706645CC',
+    color: "#706645CC",
     fontFamily: "Poppins",
     fontSize: 13,
-    position: 'absolute',
+    position: "absolute",
     right: 20,
     top: 10,
   },
+  
   titleRow: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 5,
   },
 });

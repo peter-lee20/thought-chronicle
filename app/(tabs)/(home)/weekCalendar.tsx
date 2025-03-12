@@ -74,28 +74,34 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     justifyContent: "space-between",
   },
+
   container: {
     flex: 1,
   },
+
   currentDay: {
     borderColor: "#70664550",
     borderRadius: 5,
     borderWidth: 2,
   },
+
   dayContainer: {
     alignItems: "center",
     width: 40,
   },
+
   dayDate: {
     color: "#706645",
     fontSize: 16,
     fontWeight: "700",
   },
+
   dayName: {
     color: "#706645",
     fontSize: 12,
     fontWeight: "400",
   },
+  
   futureDay: {
     opacity: 0.5,
   },

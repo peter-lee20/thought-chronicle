@@ -1,4 +1,4 @@
-import { Stack } from "expo-router"
+import { Stack } from "expo-router";
 
 /**
  * SetupLayout component defines the navigation stack for friend screens.
@@ -7,7 +7,7 @@ import { Stack } from "expo-router"
 export default function SetupLayout() {
   return (
     <Stack>
-        <Stack.Screen name="index" options={{ headerShown: false}}/>
+      <Stack.Screen name="index" options={{ headerShown: false }} />
     </Stack>
   );
 }

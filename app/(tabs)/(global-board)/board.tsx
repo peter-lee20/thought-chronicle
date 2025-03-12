@@ -58,8 +58,6 @@ export default function Board(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
 
-  const currentUser = FIREBASE_AUTH.currentUser;
-
   /**
    * Toggle the visibility of the dropdown menu.
    */
@@ -490,15 +488,18 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: 22,
   },
+
   container: {
     backgroundColor: '#F0ECE0',
     flex: 1,
   },
+
   dropdownItem: {
     borderBottomColor: '#EEE',
     borderBottomWidth: 1,
     padding: 10,
   },
+
   dropdownMenu: {
     backgroundColor: '#FFF',
     borderRadius: 8,
@@ -513,11 +514,13 @@ const styles = StyleSheet.create({
     width: 100,
     zIndex: 10,
   },
+
   dropdownText: {
     color: '#706645',
     fontFamily: 'Poppins',
     fontSize: 16,
   },
+
   entryContainer: {
     alignItems: 'flex-start',
     backgroundColor: '#FDFCF3',
@@ -529,12 +532,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     padding: 10,
   },
+
   entryLabel: {
     color: '#706645CC',
     fontFamily: 'Poppins',
     fontSize: 13,
     fontWeight: '400',
   },
+
   entryText: {
     color: '#706645CC',
     fontFamily: 'Poppins',
@@ -543,10 +548,12 @@ const styles = StyleSheet.create({
     marginRight: 25,
     marginTop: 10,
   },
+
   entryTextContainer: {
     marginLeft: 42,
     marginTop: -10,
   },
+
   footer: {
     backgroundColor: '#F0ECE0',
     flexDirection: 'row',
@@ -557,10 +564,12 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
   },
+
   footerImage: {
     height: 50,
     width: 50,
   },
+
   header: {
     alignItems: 'center',
     flexDirection: 'row',
@@ -568,6 +577,7 @@ const styles = StyleSheet.create({
     marginTop: -29,
     padding: 20,
   },
+
   headerDate: {
     color: '#706645',
     fontFamily: 'Poppins',
@@ -575,39 +585,47 @@ const styles = StyleSheet.create({
     fontWeight: '400',
     marginTop: 4,
   },
+
   headerTitle: {
     color: '#706645',
     fontFamily: 'Poppins',
     fontSize: 24,
     fontWeight: 'bold',
   },
+
   image: {
     height: 40,
     width: 40,
   },
+
   listContainer: {
     paddingBottom: 20,
   },
+
   loadingContainer: {
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
   },
+
   nameContainer: {
     alignItems: 'center',
     flexDirection: 'row',
   },
+
   noContentContainer: {
     alignItems: 'center',
     flex: 1,
     justifyContent: 'center',
     marginTop: 50,
   },
+
   noContentText: {
     color: '#706645',
     fontSize: 16,
     fontStyle: 'italic',
   },
+
   plusSign: {
     color: 'white',
     fontSize: 30,
@@ -616,12 +634,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
     position: 'absolute',
   },
+
   profileIcon: {
     height: 35,
     marginRight: 8,
     marginTop: 2,
     width: 35,
   },
+
   questionContainer: {
     backgroundColor: '#FDFCF3',
     borderRadius: 15,
@@ -630,6 +650,7 @@ const styles = StyleSheet.create({
     marginTop: 10,
     padding: 15,
   },
+
   questionLabel: {
     color: '#706645',
     fontFamily: 'Poppins',
@@ -637,21 +658,25 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     marginBottom: 8,
   },
+
   questionText: {
     color: '#706645',
     fontFamily: 'Poppins',
     fontSize: 16,
   },
+
   tabContainer: {
     flexDirection: 'row',
     justifyContent: 'space-evenly',
     marginBottom: 10,
   },
+
   tabIcon: {
     height: 20,
     marginRight: 5,
     width: 20,
   },
+
   tabItem: {
     alignItems: 'center',
     flex: 1,
@@ -659,15 +684,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     position: 'relative',
   },
+
   tabText: {
     color: '#706645',
     fontFamily: 'Poppins',
     fontSize: 24,
     fontWeight: 'bold',
   },
+
   textContainer: {
     flex: 1,
   },
+  
   timeText: {
     color: '#706645CC',
     fontFamily: 'Poppins',

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -12,7 +12,6 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
-  GestureResponderEvent,
 } from "react-native";
 import {
   addDoc,
@@ -28,13 +27,10 @@ import {
   where,
 } from "firebase/firestore";
 import { signOut } from "firebase/auth";
-import { router, useLocalSearchParams, useRouter, useFocusEffect } from "expo-router";
-import { format } from "date-fns";
-import DateTimePicker from "@react-native-community/datetimepicker";
+import { router } from "expo-router";
 import WeekCalendar from "./weekCalendar";
 import ShareModal from "./shareModal";
 import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../FirebaseConfig";
-import { SafeAreaProvider } from "react-native-safe-area-context";
 
 // Maximum allowed characters for the response field. This limit is set to prevent excessively long entries.
 const maxCharacters: number = 1500;
@@ -43,6 +39,7 @@ const maxCharacters: number = 1500;
 const navEntries = async (): Promise<void> => {
   router.replace("/(entries)/");
 };
+
 const navBoard = async (): Promise<void> => {
   router.replace("/(global-board)");
 };
@@ -63,7 +60,6 @@ export default function HomePage(): JSX.Element {
   const [responded, setResponded] = useState<boolean>(false);
   const [modalVisible, setModalVisible] = useState<boolean>(false);
   const currentDate: Date = new Date();
-  const routerInstance = useRouter();
 
   // Fetch the daily question on component mount.
   useEffect((): void => {
@@ -103,13 +99,14 @@ export default function HomePage(): JSX.Element {
         const currDateString: string = currentDate.toLocaleDateString();
 
         // We query daily responses for today to know if the user answered.
-        const currDailyQuestionDocs: QuerySnapshot<DocumentData> = await getDocs(
-          query(
-            collection(FIRESTORE_DB, "daily-question-responses"),
-            where("userId", "==", user.uid),
-            where("date", "==", currDateString)
-          )
-        );
+        const currDailyQuestionDocs: QuerySnapshot<DocumentData> =
+          await getDocs(
+            query(
+              collection(FIRESTORE_DB, "daily-question-responses"),
+              where("userId", "==", user.uid),
+              where("date", "==", currDateString)
+            )
+          );
 
         // If no streak record exists, initialize it.
         if (!streakDocSnap.exists()) {
@@ -156,8 +153,6 @@ export default function HomePage(): JSX.Element {
     };
   };
 
-  const weekRange = getWeekRange();
-
   /**
    * Checks if the user has already responded to the daily question today.
    * This prevents duplicate responses and helps enforce daily limits.
@@ -168,8 +163,13 @@ export default function HomePage(): JSX.Element {
     const user = FIREBASE_AUTH.currentUser;
     if (user) {
       const userId: string = user.uid;
-      const responsesCollection = collection(FIRESTORE_DB, "daily-question-responses");
-      const snapshot: QuerySnapshot<DocumentData> = await getDocs(responsesCollection);
+      const responsesCollection = collection(
+        FIRESTORE_DB,
+        "daily-question-responses"
+      );
+      const snapshot: QuerySnapshot<DocumentData> = await getDocs(
+        responsesCollection
+      );
       if (snapshot.empty) {
         return;
       }
@@ -211,7 +211,9 @@ export default function HomePage(): JSX.Element {
         return;
       }
       if (response.length > maxCharacters) {
-        Alert.alert(`Response exceeds the maximum limit of ${maxCharacters} characters.`);
+        Alert.alert(
+          `Response exceeds the maximum limit of ${maxCharacters} characters.`
+        );
         return;
       }
     }
@@ -235,7 +237,9 @@ export default function HomePage(): JSX.Element {
       return;
     }
     if (response.length > maxCharacters) {
-      Alert.alert(`Response exceeds the maximum limit of ${maxCharacters} characters.`);
+      Alert.alert(
+        `Response exceeds the maximum limit of ${maxCharacters} characters.`
+      );
       return;
     }
     try {
@@ -295,7 +299,11 @@ export default function HomePage(): JSX.Element {
           return;
         }
         const responseDoc = snapshot.docs[0];
-        const docRef = doc(FIRESTORE_DB, "daily-question-responses", responseDoc.id);
+        const docRef = doc(
+          FIRESTORE_DB,
+          "daily-question-responses",
+          responseDoc.id
+        );
         await updateDoc(docRef, {
           sharedGlobally: options["globalFeed"],
           anonymous: options["anonymous"],
@@ -360,7 +368,10 @@ export default function HomePage(): JSX.Element {
                 </TouchableOpacity>
                 {showDropdown && (
                   <View style={styles.dropdownMenu}>
-                    <TouchableOpacity style={styles.dropdownItem} onPress={handleSignOut}>
+                    <TouchableOpacity
+                      style={styles.dropdownItem}
+                      onPress={handleSignOut}
+                    >
                       <Text style={styles.dropdownText}>Sign Out</Text>
                     </TouchableOpacity>
                   </View>
@@ -408,14 +419,18 @@ export default function HomePage(): JSX.Element {
                   {!responded ? (
                     <Text style={styles.buttonText}>Submit Response</Text>
                   ) : (
-                    <Text style={styles.buttonText}>Change Visibility Settings</Text>
+                    <Text style={styles.buttonText}>
+                      Change Visibility Settings
+                    </Text>
                   )}
                 </TouchableOpacity>
                 <ShareModal
                   isVisible={modalVisible}
                   isFirstSubmit={!responded}
                   onClose={() => setModalVisible(false)}
-                  onSubmit={responded ? handleEditSettings : handleSubmitResponse}
+                  onSubmit={
+                    responded ? handleEditSettings : handleSubmitResponse
+                  }
                 />
               </View>
             </View>
@@ -484,6 +499,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     fontWeight: "bold",
   },
+
   characterCounter: {
     color: "#706645",
     fontFamily: "Poppins",
@@ -491,6 +507,7 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     textAlign: "right",
   },
+
   circleButton: {
     alignItems: "center",
     height: 50,
@@ -498,14 +515,17 @@ const styles = StyleSheet.create({
     position: "relative",
     width: 50,
   },
+
   container: {
     backgroundColor: "#F0ECE0",
     flex: 1,
     padding: 20,
   },
+
   dailyQuestion: {
     marginBottom: 20,
   },
+
   date: {
     color: "#706645",
     fontFamily: "Poppins",
@@ -513,17 +533,20 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     marginBottom: 20,
   },
+
   days: {
     color: "#706645CC",
     fontFamily: "Poppins",
     fontSize: 24,
     fontWeight: "700",
   },
+
   dropdownItem: {
     borderBottomColor: "#EEE",
     borderBottomWidth: 1,
     padding: 10,
   },
+
   dropdownMenu: {
     backgroundColor: "#FFF",
     borderRadius: 8,
@@ -541,27 +564,32 @@ const styles = StyleSheet.create({
     width: 100,
     zIndex: 10,
   },
+
   dropdownText: {
     color: "#706645",
     fontFamily: "Poppins",
     fontSize: 16,
   },
+
   fireImage: {
     height: 20,
     marginLeft: -20,
     marginRight: -15,
     padding: 0,
   },
+
   footer: {
     backgroundColor: "#F0ECE0",
     flexDirection: "row",
     justifyContent: "space-around",
     paddingVertical: 20,
   },
+
   footerImage: {
     height: 50,
     width: 50,
   },
+
   grayButton: {
     alignItems: "center",
     backgroundColor: "#808080",
@@ -569,6 +597,7 @@ const styles = StyleSheet.create({
     marginBottom: "30%",
     paddingVertical: 17.5,
   },
+
   header: {
     alignItems: "center",
     flexDirection: "row",
@@ -576,13 +605,16 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     marginTop: 25,
   },
+
   image: {
     height: 40,
     width: 40,
   },
+
   mainContent: {
     flex: 1,
   },
+
   plusSign: {
     color: "white",
     fontSize: 30,
@@ -591,12 +623,14 @@ const styles = StyleSheet.create({
     marginTop: 4,
     position: "absolute",
   },
+
   question: {
     color: "#706645",
     fontFamily: "Poppins",
     fontSize: 16,
     marginBottom: 10,
   },
+
   respondButton: {
     alignItems: "center",
     backgroundColor: "#706645CC",
@@ -604,6 +638,7 @@ const styles = StyleSheet.create({
     marginBottom: "30%",
     paddingVertical: 17.5,
   },
+
   responseField: {
     backgroundColor: "#70664533",
     borderRadius: 10,
@@ -612,10 +647,12 @@ const styles = StyleSheet.create({
     padding: 10,
     textAlignVertical: "top",
   },
+
   scrollContentContainer: {
     flexGrow: 1,
     justifyContent: "space-between",
   },
+
   streakContainer: {
     alignItems: "center",
     backgroundColor: "#F0ECE0",
@@ -626,6 +663,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 9,
     paddingVertical: 3,
   },
+
   subtitle: {
     color: "#706645",
     fontFamily: "Poppins",
@@ -633,6 +671,7 @@ const styles = StyleSheet.create({
     fontWeight: "400",
     marginBottom: 10,
   },
+
   title: {
     color: "#706645",
     fontFamily: "Poppins",
@@ -640,8 +679,8 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     marginBottom: 5,
   },
+  
   weekDisplay: {
     marginBottom: 20,
   },
 });
-

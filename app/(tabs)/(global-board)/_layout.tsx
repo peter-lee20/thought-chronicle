@@ -1,4 +1,4 @@
-import { Stack } from "expo-router"
+import { Stack } from "expo-router";
 
 /**
  * SetupLayout component defines the navigation stack for setup screens.
@@ -7,7 +7,7 @@ import { Stack } from "expo-router"
 export default function SetupLayout() {
   return (
     <Stack>
-        <Stack.Screen name="board" options={{ headerShown: false }}/>
+      <Stack.Screen name="board" options={{ headerShown: false }} />
     </Stack>
   );
 }

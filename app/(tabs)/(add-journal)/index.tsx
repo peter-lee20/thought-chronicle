@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from "react";
 import {
   Alert,
   View,
@@ -10,11 +10,11 @@ import {
   KeyboardAvoidingView,
   ScrollView,
   SafeAreaView,
-} from 'react-native';
-import { router } from 'expo-router';
-import { FIREBASE_AUTH } from '../../../FirebaseConfig';
-import { FIRESTORE_DB } from '../../../FirebaseConfig';
-import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
+} from "react-native";
+import { router } from "expo-router";
+import { FIREBASE_AUTH } from "../../../FirebaseConfig";
+import { FIRESTORE_DB } from "../../../FirebaseConfig";
+import { addDoc, collection } from "firebase/firestore";
 
 /**
  * Calls the protected prompt function and returns its response.
@@ -24,23 +24,26 @@ import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
 const callPromptFunc = async (): Promise<any> => {
   try {
     const user = FIREBASE_AUTH.currentUser;
-    if (!user) throw new Error('User not authenticated');
+    if (!user) throw new Error("User not authenticated");
 
     const idToken = await user.getIdToken();
 
-    const response = await fetch('https://fetchprompt-bdm3hcghyq-uc.a.run.app', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: `Bearer ${idToken}`,
-      },
-      body: JSON.stringify({ message: 'Authenticated request' }),
-    });
+    const response = await fetch(
+      "https://fetchprompt-bdm3hcghyq-uc.a.run.app",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${idToken}`,
+        },
+        body: JSON.stringify({ message: "Authenticated request" }),
+      }
+    );
 
     const data = await response.json();
     return data;
   } catch (error) {
-    console.error('Error calling protected function:', error);
+    console.error("Error calling protected function:", error);
   }
 };
 
@@ -51,10 +54,14 @@ const callPromptFunc = async (): Promise<any> => {
  * @returns {JSX.Element} The rendered journal entry screen.
  */
 export default function JournalEntry(): JSX.Element {
-  const [prompt, setPrompt] = useState<string>('What are you currently feeling or experiencing?');
-  const [response, setResponse] = useState<string>('');
+  const [prompt, setPrompt] = useState<string>(
+    "What are you currently feeling or experiencing?"
+  );
+  const [response, setResponse] = useState<string>("");
   const [showMessage, setShowMessage] = useState<boolean>(true);
-  const wordCount: number = response.trim() ? response.trim().split(/\s+/).length : 0;
+  const wordCount: number = response.trim()
+    ? response.trim().split(/\s+/).length
+    : 0;
   const currentDate: Date = new Date();
   const maxWords = 1500;
 
@@ -64,7 +71,7 @@ export default function JournalEntry(): JSX.Element {
    * @returns {void}
    */
   const backHome = (): void => {
-    router.replace('/(home)/homepage');
+    router.replace("/(home)/homepage");
   };
 
   /**
@@ -86,36 +93,43 @@ export default function JournalEntry(): JSX.Element {
    */
   const handleSubmitResponse = async (): Promise<void> => {
     if (wordCount > maxWords) {
-      Alert.alert('Woah, slow your roll!', 'Please enter an entry that is between 50 and 1500 words.');
+      Alert.alert(
+        "Woah, slow your roll!",
+        "Please enter an entry that is between 50 and 1500 words."
+      );
       return;
     }
     try {
       const user = FIREBASE_AUTH.currentUser; // Get the current user's UID from Firebase Auth
       if (user) {
-        await addDoc(collection(FIRESTORE_DB, 'journal-responses'), {
+        await addDoc(collection(FIRESTORE_DB, "journal-responses"), {
           response: response,
           date: currentDate.toLocaleDateString(),
           timestamp: new Date(),
-          userId: user.uid,  // Track the user who submitted the response
+          userId: user.uid, // Track the user who submitted the response
         });
-        router.replace('/(add-journal)/confirmation');
-        setResponse('');  // Clear input after submission
+        router.replace("/(add-journal)/confirmation");
+        setResponse(""); // Clear input after submission
       } else {
-        Alert.alert('You need to be logged in to submit a response.');
+        Alert.alert("You need to be logged in to submit a response.");
       }
     } catch (error) {
       console.error(error);
-      Alert.alert('Failed to submit response. Please try again.');
+      Alert.alert("Failed to submit response. Please try again.");
     }
   };
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F0ECE0' }}>
-      <KeyboardAvoidingView style={styles.container} behavior="height" keyboardVerticalOffset={500}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F0ECE0" }}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior="height"
+        keyboardVerticalOffset={500}
+      >
         <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
           <TouchableOpacity onPress={backHome}>
             <Image
-              source={require('../../../assets/images/close-button.png')}
+              source={require("../../../assets/images/close-button.png")}
               style={styles.close}
             />
           </TouchableOpacity>
@@ -133,7 +147,9 @@ export default function JournalEntry(): JSX.Element {
               <Text
                 style={[
                   styles.maxWordDisplay,
-                  wordCount > maxWords ? { color: 'red' } : { color: '#706645' },
+                  wordCount > maxWords
+                    ? { color: "red" }
+                    : { color: "#706645" },
                 ]}
               >
                 {wordCount}/{maxWords} words
@@ -146,15 +162,24 @@ export default function JournalEntry(): JSX.Element {
                   getPrompt();
                 }}
               >
-                <Image source={require('../../../assets/images/fire.png')} style={styles.check} />
+                <Image
+                  source={require("../../../assets/images/fire.png")}
+                  style={styles.check}
+                />
               </TouchableOpacity>
               {showMessage && (
                 <Text style={styles.generatePromptText}>
                   &lt;- Generate a random prompt
                 </Text>
               )}
-              <TouchableOpacity style={styles.finished} onPress={handleSubmitResponse}>
-                <Image source={require('../../../assets/images/check.png')} style={styles.check} />
+              <TouchableOpacity
+                style={styles.finished}
+                onPress={handleSubmitResponse}
+              >
+                <Image
+                  source={require("../../../assets/images/check.png")}
+                  style={styles.check}
+                />
               </TouchableOpacity>
             </View>
           </View>
@@ -166,88 +191,99 @@ export default function JournalEntry(): JSX.Element {
 
 const styles = StyleSheet.create({
   buttons: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
+
   check: {
-    resizeMode: 'center',
+    resizeMode: "center",
   },
+
   close: {
     height: 30,
     marginLeft: 10,
     marginTop: 10,
-    resizeMode: 'cover',
+    resizeMode: "cover",
     width: 30,
   },
+
   container: {
-    backgroundColor: '#F0ECE0',
+    backgroundColor: "#F0ECE0",
     flex: 1,
   },
+
   footer: {
     flex: 1,
     marginBottom: 15,
   },
+
   generatePromptText: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 14,
     marginLeft: -15,
   },
+
   help: {
-    alignItems: 'center',
-    backgroundColor: '#F0ECE0',
-    borderColor: '#706645CC',
+    alignItems: "center",
+    backgroundColor: "#F0ECE0",
+    borderColor: "#706645CC",
     borderRadius: 30,
     borderWidth: 2,
     height: 60,
-    justifyContent: 'center',
+    justifyContent: "center",
     marginLeft: 27,
     width: 60,
   },
+
   input: {
-    alignSelf: 'center',
-    color: '#3C4444',
-    fontFamily: 'Poppins',
+    alignSelf: "center",
+    color: "#3C4444",
+    fontFamily: "Poppins",
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: "400",
     height: 200,
     lineHeight: 24,
     paddingLeft: 9,
-    textAlignVertical: 'top',
+    textAlignVertical: "top",
     width: 346,
   },
+
   maxWordDisplay: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 14,
   },
+
   prompt: {
-    alignSelf: 'center',
-    borderLeftColor: '#706645',
+    alignSelf: "center",
+    borderLeftColor: "#706645",
     borderLeftWidth: 2,
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 16,
-    fontWeight: '400',
+    fontWeight: "400",
     marginBottom: 25,
     marginTop: 20,
     paddingLeft: 9,
     width: 346,
   },
+
   finished: {
-    alignItems: 'center',
-    backgroundColor: '#7E948C',
+    alignItems: "center",
+    backgroundColor: "#7E948C",
     borderRadius: 30,
     height: 60,
-    justifyContent: 'center',
+    justifyContent: "center",
     marginRight: 27,
     width: 60,
   },
+  
   wordCount: {
-    alignItems: 'flex-end',
+    alignItems: "flex-end",
     flex: 1,
-    justifyContent: 'flex-end',
+    justifyContent: "flex-end",
     marginBottom: 25,
     marginLeft: 27,
     marginRight: 27,
