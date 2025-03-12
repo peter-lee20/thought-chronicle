@@ -11,10 +11,8 @@ import {
   View,
   Switch,
 } from "react-native";
-import { useEffect as useReactEffect, useState as useReactState } from "react"; // redundant import removed
 import {
   collection,
-  doc,
   getDocs,
   query,
   where,
@@ -99,9 +97,8 @@ const ShareModal: React.FC<ShareModalProps> = ({
   onClose,
   onSubmit,
 }) => {
-  const [modalOverlayColor, setModalOverlayColor] = useState<string>(
-    "rgba(0, 0, 0, 0.2)"
-  );
+  const [modalOverlayColor, setModalOverlayColor] =
+    useState<string>("rgba(0, 0, 0, 0.2)");
 
   // Default sharing options if no previous response exists.
   const defaultOptions = {
@@ -174,10 +171,15 @@ const ShareModal: React.FC<ShareModalProps> = ({
             console.error("You have not responded to the daily question");
           }
         } else {
-          console.error("You need to be logged in to view your response settings");
+          console.error(
+            "You need to be logged in to view your response settings"
+          );
         }
       } catch (error: any) {
-        console.error("There was a server error fetching your visibility options", error);
+        console.error(
+          "There was a server error fetching your visibility options",
+          error
+        );
       }
     };
 
@@ -195,7 +197,12 @@ const ShareModal: React.FC<ShareModalProps> = ({
         onDismiss={() => setModalOverlayColor("rgba(0, 0, 0, 0.2)")}
       >
         <TouchableWithoutFeedback onPress={handleModalClose}>
-          <View style={[styles.modalOverlay, { backgroundColor: modalOverlayColor }]}>
+          <View
+            style={[
+              styles.modalOverlay,
+              { backgroundColor: modalOverlayColor },
+            ]}
+          >
             <TouchableWithoutFeedback onPress={(e) => e.stopPropagation()}>
               <View style={styles.modalContainer}>
                 <Text style={styles.modalTitle}>Share</Text>
@@ -236,7 +243,10 @@ const ShareModal: React.FC<ShareModalProps> = ({
                   <Text style={styles.modalWarning}>
                     *Your entry will be saved even if you don't share.
                   </Text>
-                  <TouchableOpacity style={styles.modalSubmit} onPress={handleModalSubmit}>
+                  <TouchableOpacity
+                    style={styles.modalSubmit}
+                    onPress={handleModalSubmit}
+                  >
                     {isFirstSubmit ? (
                       <Text style={styles.modalSubmitText}>Submit</Text>
                     ) : (
@@ -256,85 +266,98 @@ const ShareModal: React.FC<ShareModalProps> = ({
 export default ShareModal;
 
 const styles = StyleSheet.create({
-    modalBody: {
-        alignSelf: "center",
-        gap: 15,
-        marginBottom: 70,
-        marginTop: 30,
-        width: "90%",
-    },
-    modalContainer: {
-        backgroundColor: "#F0ECE0",
-        borderRadius: 20,
-        paddingBottom: 30,
-        paddingLeft: 5,
-        paddingRight: 5,
-        paddingTop: 30,
-    },
-    modalFooter: {
-        alignSelf: "center",
-        width: "90%",
-    },
-    modalOverlay: {
-        flex: 1,
-        justifyContent: "flex-end",
-    },
-    modalSubmit: {
-        alignItems: "center",
-        backgroundColor: "#7E948C",
-        borderRadius: 14,
-        paddingBottom: 18,
-        paddingTop: 18,
-        width: "100%",
-    },
-    modalSubmitText: {
-        color: "#F0ECE0",
-        fontSize: 16,
-        fontWeight: 600,
-    },
-    modalTitle: {
-        alignSelf: "center",
-        color: "#706645",
-        fontFamily: "Poppins",
-        fontSize: 20,
-        fontWeight: 700,
-        lineHeight: 30,
-    },
-    modalWarning: {
-        color: "#706645",
-        fontFamily: "Poppins",
-        fontSize: 11,
-        lineHeight: 16,
-    },
-    optionContainer: {
-        alignItems: "center",
-        flexDirection: "row",
-        justifyContent: "space-between",
-    },
-    optionImage: {
-        height: "100%",
-        resizeMode: "contain",
-        width: 50,
-    },
-    optionImageContainer: {
-        height: 50,
-        width: 65,
-    },
-    optionText: {
-        color: "#706645",
-        fontFamily: "Poppins",
-        fontSize: 11,
-        lineHeight: 17,
-    },
-    optionTextContainer: {
-        flex: 1,
-        flexDirection: "row",
-        justifyContent: "space-between",
-    },
-    optionTitle: {
-        color: "#706645",
-        fontFamily: "Poppins",
-        fontSize: 16,
-        lineHeight: 24,
-    },
+  modalBody: {
+    alignSelf: "center",
+    gap: 15,
+    marginBottom: 70,
+    marginTop: 30,
+    width: "90%",
+  },
+
+  modalContainer: {
+    backgroundColor: "#F0ECE0",
+    borderRadius: 20,
+    paddingBottom: 30,
+    paddingLeft: 5,
+    paddingRight: 5,
+    paddingTop: 30,
+  },
+
+  modalFooter: {
+    alignSelf: "center",
+    width: "90%",
+  },
+
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "flex-end",
+  },
+
+  modalSubmit: {
+    alignItems: "center",
+    backgroundColor: "#7E948C",
+    borderRadius: 14,
+    paddingBottom: 18,
+    paddingTop: 18,
+    width: "100%",
+  },
+
+  modalSubmitText: {
+    color: "#F0ECE0",
+    fontSize: 16,
+    fontWeight: 600,
+  },
+
+  modalTitle: {
+    alignSelf: "center",
+    color: "#706645",
+    fontFamily: "Poppins",
+    fontSize: 20,
+    fontWeight: 700,
+    lineHeight: 30,
+  },
+
+  modalWarning: {
+    color: "#706645",
+    fontFamily: "Poppins",
+    fontSize: 11,
+    lineHeight: 16,
+  },
+
+  optionContainer: {
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  optionImage: {
+    height: "100%",
+    resizeMode: "contain",
+    width: 50,
+  },
+
+  optionImageContainer: {
+    height: 50,
+    width: 65,
+  },
+
+  optionText: {
+    color: "#706645",
+    fontFamily: "Poppins",
+    fontSize: 11,
+    lineHeight: 17,
+  },
+
+  optionTextContainer: {
+    flex: 1,
+    flexDirection: "row",
+    justifyContent: "space-between",
+  },
+
+  optionTitle: {
+    color: "#706645",
+    fontFamily: "Poppins",
+    fontSize: 16,
+    lineHeight: 24,
+  },
 });

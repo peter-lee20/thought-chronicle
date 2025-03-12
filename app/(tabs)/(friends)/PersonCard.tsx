@@ -1,5 +1,5 @@
-import React from 'react';
-import { View, Text, Image, TouchableOpacity, StyleSheet } from 'react-native';
+import React from "react";
+import { View, Text, Image, TouchableOpacity, StyleSheet } from "react-native";
 
 /**
  * Props for the button component.
@@ -27,7 +27,7 @@ interface PersonCardProps {
 const PersonCard: React.FC<PersonCardProps> = ({ username, name, buttons }) => (
   <View style={styles.cardContainer}>
     <Image
-      source={require('../../../assets/images/profile.png')}
+      source={require("../../../assets/images/profile.png")}
       style={styles.avatar}
     />
     <View style={styles.textContainer}>
@@ -55,39 +55,46 @@ const styles = StyleSheet.create({
     marginRight: 20,
     width: 40,
   },
+
   button: {
-    backgroundColor: '#70664533',
+    backgroundColor: "#70664533",
     borderRadius: 5,
     marginLeft: 8,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
+
   buttonContainer: {
-    marginLeft: 'auto',
+    marginLeft: "auto",
   },
+
   buttonText: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 14,
   },
+
   cardContainer: {
-    alignItems: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    flexDirection: "row",
     paddingVertical: 20,
   },
+
   name: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 16,
   },
+
   textContainer: {
-    flexDirection: 'column',
+    flexDirection: "column",
   },
+  
   username: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
 });
 

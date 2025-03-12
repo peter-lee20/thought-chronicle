@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -9,7 +9,7 @@ import {
   Text,
   View,
   SafeAreaView,
-} from 'react-native';
+} from "react-native";
 import {
   collection,
   getDocs,
@@ -17,10 +17,10 @@ import {
   where,
   doc,
   getDoc,
-} from 'firebase/firestore';
-import { signOut } from 'firebase/auth';
-import { FIREBASE_AUTH, FIRESTORE_DB } from '../../../FirebaseConfig';
-import { useRouter } from 'expo-router';
+} from "firebase/firestore";
+import { signOut } from "firebase/auth";
+import { FIREBASE_AUTH, FIRESTORE_DB } from "../../../FirebaseConfig";
+import { useRouter } from "expo-router";
 
 /**
  * Interface representing an entry.
@@ -29,7 +29,7 @@ interface Entry {
   id: string;
   response: string;
   timestamp: Date | null;
-  type: 'daily-question' | 'journal';
+  type: "daily-question" | "journal";
   anonymous: boolean;
   userId: string;
   displayName: string;
@@ -50,15 +50,13 @@ interface UserData {
  * @returns {JSX.Element} The board component.
  */
 export default function Board(): JSX.Element {
-  const [question, setQuestion] = useState<string>('');
+  const [question, setQuestion] = useState<string>("");
   // activeTab controls which feed is shown: 'global' or 'friends'
-  const [activeTab, setActiveTab] = useState<'global' | 'friends'>('global');
+  const [activeTab, setActiveTab] = useState<"global" | "friends">("global");
   const [showDropdown, setShowDropdown] = useState<boolean>(false);
   const [entries, setEntries] = useState<Entry[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const router = useRouter();
-
-  const currentUser = FIREBASE_AUTH.currentUser;
 
   /**
    * Toggle the visibility of the dropdown menu.
@@ -74,10 +72,10 @@ export default function Board(): JSX.Element {
    */
   const getCurrentDate = (): string => {
     const date = new Date();
-    return date.toLocaleDateString('en-US', {
-      weekday: 'long',
-      month: 'long',
-      day: 'numeric',
+    return date.toLocaleDateString("en-US", {
+      weekday: "long",
+      month: "long",
+      day: "numeric",
     });
   };
 
@@ -85,7 +83,7 @@ export default function Board(): JSX.Element {
    * Navigate to the entries screen.
    */
   const navigateToEntries = async (): Promise<void> => {
-    router.replace('/(entries)/');
+    router.replace("/(entries)/");
   };
 
   /**
@@ -95,15 +93,15 @@ export default function Board(): JSX.Element {
    */
   const fetchQuestion = async (): Promise<void> => {
     try {
-      const questionDocRef = doc(FIRESTORE_DB, 'current-question', 'latest');
+      const questionDocRef = doc(FIRESTORE_DB, "current-question", "latest");
       const snapshot = await getDoc(questionDocRef);
       if (snapshot.exists()) {
         setQuestion(snapshot.data().text);
       } else {
-        console.log('No daily question found!');
+        console.log("No daily question found!");
       }
     } catch (error) {
-      console.error('Error fetching question:', error);
+      console.error("Error fetching question:", error);
     }
   };
 
@@ -113,11 +111,13 @@ export default function Board(): JSX.Element {
    * @param {string} userId - The user ID to fetch data for.
    * @returns {Promise<UserData | null>} The fetched user data or null if not found.
    */
-  const fetchUserDataByUserId = async (userId: string): Promise<UserData | null> => {
+  const fetchUserDataByUserId = async (
+    userId: string
+  ): Promise<UserData | null> => {
     try {
       const usersQuery = query(
-        collection(FIRESTORE_DB, 'users'),
-        where('userId', '==', userId)
+        collection(FIRESTORE_DB, "users"),
+        where("userId", "==", userId)
       );
       const querySnapshot = await getDocs(usersQuery);
       if (!querySnapshot.empty) {
@@ -126,7 +126,7 @@ export default function Board(): JSX.Element {
         return { fullName: ``, username };
       }
     } catch (error) {
-      console.error('Error fetching user data for userId:', userId, error);
+      console.error("Error fetching user data for userId:", userId, error);
     }
     return null;
   };
@@ -143,20 +143,22 @@ export default function Board(): JSX.Element {
       today.setHours(0, 0, 0, 0);
 
       const globalEntriesQuery = query(
-        collection(FIRESTORE_DB, 'daily-question-responses'),
-        where('sharedGlobally', '==', true)
+        collection(FIRESTORE_DB, "daily-question-responses"),
+        where("sharedGlobally", "==", true)
       );
       const globalSnapshot = await getDocs(globalEntriesQuery);
       const fetchedEntries: Entry[] = globalSnapshot.docs
         .map((doc) => ({
           id: doc.id,
-          response: doc.data().response || '',
-          timestamp: doc.data().timestamp ? doc.data().timestamp.toDate() : null,
-          type: 'daily-question' as 'daily-question', // Explicit literal cast
+          response: doc.data().response || "",
+          timestamp: doc.data().timestamp
+            ? doc.data().timestamp.toDate()
+            : null,
+          type: "daily-question" as "daily-question", // Explicit literal cast
           anonymous: doc.data().anonymous || false,
-          userId: doc.data().userId || '',
-          displayName: '', // placeholder
-          username: '',    // placeholder
+          userId: doc.data().userId || "",
+          displayName: "", // placeholder
+          username: "", // placeholder
         }))
         .filter((entry) => {
           if (!entry.timestamp) return false;
@@ -164,17 +166,24 @@ export default function Board(): JSX.Element {
           entryDate.setHours(0, 0, 0, 0);
           return entryDate.getTime() === today.getTime();
         })
-        .sort((a, b) => (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0));
+        .sort(
+          (a, b) =>
+            (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0)
+        );
 
       const entriesWithUserData = await Promise.all(
         fetchedEntries.map(async (entry) => {
           if (entry.anonymous) {
             // For global entries, anonymous entries will show as "ANONYMOUS"
-            return { ...entry, displayName: '', username: 'ANONYMOUS' };
+            return { ...entry, displayName: "", username: "ANONYMOUS" };
           }
           const userData = await fetchUserDataByUserId(entry.userId);
           if (!userData) return null;
-          return { ...entry, displayName: userData.fullName, username: userData.username };
+          return {
+            ...entry,
+            displayName: userData.fullName,
+            username: userData.username,
+          };
         })
       );
       const filteredEntries = entriesWithUserData.filter(
@@ -182,7 +191,7 @@ export default function Board(): JSX.Element {
       );
       setEntries(filteredEntries);
     } catch (error) {
-      console.error('Error fetching global entries:', error);
+      console.error("Error fetching global entries:", error);
     } finally {
       setLoading(false);
     }
@@ -203,8 +212,8 @@ export default function Board(): JSX.Element {
       }
       // Retrieve current user's document to get friends list.
       const currentUserQuery = query(
-        collection(FIRESTORE_DB, 'users'),
-        where('userId', '==', currentUserId)
+        collection(FIRESTORE_DB, "users"),
+        where("userId", "==", currentUserId)
       );
       const currentUserSnapshot = await getDocs(currentUserQuery);
       if (currentUserSnapshot.empty) {
@@ -222,21 +231,24 @@ export default function Board(): JSX.Element {
       for (const friendUsername of friendsUsernames) {
         // Find friend's document by matching username.
         const friendUserQuery = query(
-          collection(FIRESTORE_DB, 'users'),
-          where('username', '==', friendUsername)
+          collection(FIRESTORE_DB, "users"),
+          where("username", "==", friendUsername)
         );
         const friendUserSnapshot = await getDocs(friendUserQuery);
         if (friendUserSnapshot.empty) {
-          console.warn("Friend document not found for username", friendUsername);
+          console.warn(
+            "Friend document not found for username",
+            friendUsername
+          );
           continue;
         }
         const friendDoc = friendUserSnapshot.docs[0].data();
         const friendUserId = friendDoc.userId;
         // Query for entries that belong to the friend where sharedWithFriends is true.
         const friendEntriesQuery = query(
-          collection(FIRESTORE_DB, 'daily-question-responses'),
-          where('userId', '==', friendUserId),
-          where('sharedWithFriends', '==', true)
+          collection(FIRESTORE_DB, "daily-question-responses"),
+          where("userId", "==", friendUserId),
+          where("sharedWithFriends", "==", true)
         );
         const friendEntriesSnapshot = await getDocs(friendEntriesQuery);
         const friendEntries: Entry[] = friendEntriesSnapshot.docs
@@ -244,14 +256,15 @@ export default function Board(): JSX.Element {
             const data = doc.data();
             return {
               id: doc.id,
-              response: data.response || '',
+              response: data.response || "",
               timestamp: data.timestamp ? data.timestamp.toDate() : null,
-              type: 'daily-question' as 'daily-question', // Explicit literal cast
+              type: "daily-question" as "daily-question", // Explicit literal cast
               anonymous: data.anonymous || false,
-              userId: data.userId || '',
-              displayName: friendDoc.firstname && friendDoc.lastname
-                ? `${friendDoc.firstname} ${friendDoc.lastname}`
-                : friendDoc.username,
+              userId: data.userId || "",
+              displayName:
+                friendDoc.firstname && friendDoc.lastname
+                  ? `${friendDoc.firstname} ${friendDoc.lastname}`
+                  : friendDoc.username,
               username: friendDoc.username,
             };
           })
@@ -264,7 +277,9 @@ export default function Board(): JSX.Element {
         allFriendEntries = allFriendEntries.concat(friendEntries);
       }
       // Sort entries by time (earlier posts first)
-      allFriendEntries.sort((a, b) => (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0));
+      allFriendEntries.sort(
+        (a, b) => (a.timestamp?.getTime() || 0) - (b.timestamp?.getTime() || 0)
+      );
       setEntries(allFriendEntries);
     } catch (error) {
       console.error("Error fetching friends entries:", error);
@@ -285,9 +300,9 @@ export default function Board(): JSX.Element {
     let username = item.username;
 
     // If the entry is anonymous in the global tab, show "ANONYMOUS"
-    if (activeTab === 'global' && item.anonymous) {
-      displayName = '';
-      username = 'ANONYMOUS';
+    if (activeTab === "global" && item.anonymous) {
+      displayName = "";
+      username = "ANONYMOUS";
     }
 
     return (
@@ -295,7 +310,7 @@ export default function Board(): JSX.Element {
         style={styles.entryContainer}
         onPress={() => {
           const route =
-            activeTab === 'friends'
+            activeTab === "friends"
               ? (`../friends-daily-response/${item.id}` as const)
               : (`../global-daily-response/${item.id}` as const);
 
@@ -305,7 +320,7 @@ export default function Board(): JSX.Element {
         <View style={styles.textContainer}>
           <View style={styles.nameContainer}>
             <Image
-              source={require('../../../assets/images/profile.png')}
+              source={require("../../../assets/images/profile.png")}
               style={styles.profileIcon}
               resizeMode="contain"
             />
@@ -314,12 +329,19 @@ export default function Board(): JSX.Element {
             </Text>
             {item.timestamp && (
               <Text style={styles.timeText}>
-                {item.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                {item.timestamp.toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
               </Text>
             )}
           </View>
           <View style={styles.entryTextContainer}>
-            <Text style={styles.entryText} numberOfLines={3} ellipsizeMode="tail">
+            <Text
+              style={styles.entryText}
+              numberOfLines={3}
+              ellipsizeMode="tail"
+            >
               {item.response}
             </Text>
           </View>
@@ -336,11 +358,11 @@ export default function Board(): JSX.Element {
   const handleSignOut = async (): Promise<void> => {
     try {
       await signOut(FIREBASE_AUTH);
-      Alert.alert('Signed out successfully!');
-      router.replace('/(setup)');
+      Alert.alert("Signed out successfully!");
+      router.replace("/(setup)");
     } catch (error: unknown) {
       console.error(error);
-      Alert.alert('Failed to sign out. Please try again.');
+      Alert.alert("Failed to sign out. Please try again.");
     }
   };
 
@@ -351,15 +373,15 @@ export default function Board(): JSX.Element {
 
   // Fetch the appropriate entries whenever the active tab changes.
   useEffect(() => {
-    if (activeTab === 'global') {
+    if (activeTab === "global") {
       fetchGlobalEntries();
-    } else if (activeTab === 'friends') {
+    } else if (activeTab === "friends") {
       fetchFriendsEntries();
     }
   }, [activeTab]);
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: '#F0ECE0' }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F0ECE0" }}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
@@ -369,14 +391,17 @@ export default function Board(): JSX.Element {
           </View>
           <TouchableOpacity onPress={toggleDropdown}>
             <Image
-              source={require('../../../assets/images/profile.png')}
+              source={require("../../../assets/images/profile.png")}
               style={styles.image}
               resizeMode="contain"
             />
           </TouchableOpacity>
           {showDropdown && (
             <View style={styles.dropdownMenu}>
-              <TouchableOpacity style={styles.dropdownItem} onPress={handleSignOut}>
+              <TouchableOpacity
+                style={styles.dropdownItem}
+                onPress={handleSignOut}
+              >
                 <Text style={styles.dropdownText}>Sign Out</Text>
               </TouchableOpacity>
             </View>
@@ -385,23 +410,33 @@ export default function Board(): JSX.Element {
 
         {/* Tab Navigation */}
         <View style={styles.tabContainer}>
-          <TouchableOpacity style={styles.tabItem} onPress={() => setActiveTab('global')}>
+          <TouchableOpacity
+            style={styles.tabItem}
+            onPress={() => setActiveTab("global")}
+          >
             <Image
-              source={require('../../../assets/images/global-icon.png')}
+              source={require("../../../assets/images/global-icon.png")}
               style={styles.tabIcon}
               resizeMode="contain"
             />
             <Text style={styles.tabText}>Global</Text>
-            {activeTab === 'global' && <View style={styles.activeTabIndicator} />}
+            {activeTab === "global" && (
+              <View style={styles.activeTabIndicator} />
+            )}
           </TouchableOpacity>
-          <TouchableOpacity style={styles.tabItem} onPress={() => setActiveTab('friends')}>
+          <TouchableOpacity
+            style={styles.tabItem}
+            onPress={() => setActiveTab("friends")}
+          >
             <Image
-              source={require('../../../assets/images/friends-icon.png')}
+              source={require("../../../assets/images/friends-icon.png")}
               style={styles.tabIcon}
               resizeMode="contain"
             />
             <Text style={styles.tabText}>Friends</Text>
-            {activeTab === 'friends' && <View style={styles.activeTabIndicator} />}
+            {activeTab === "friends" && (
+              <View style={styles.activeTabIndicator} />
+            )}
           </TouchableOpacity>
         </View>
 
@@ -425,7 +460,6 @@ export default function Board(): JSX.Element {
             showsVerticalScrollIndicator={false}
             ListFooterComponent={<View style={{ height: 50 }} />}
           />
-
         ) : (
           <View style={styles.noContentContainer}>
             <Text style={styles.noContentText}>No entries found.</Text>
@@ -434,26 +468,26 @@ export default function Board(): JSX.Element {
 
         {/* Footer */}
         <View style={styles.footer}>
-          <TouchableOpacity onPress={() => router.replace('/(home)/homepage')}>
+          <TouchableOpacity onPress={() => router.replace("/(home)/homepage")}>
             <Image
-              source={require('../../../assets/images/today.png')}
+              source={require("../../../assets/images/today.png")}
               style={styles.footerImage}
               resizeMode="contain"
             />
           </TouchableOpacity>
           <TouchableOpacity onPress={navigateToEntries}>
             <Image
-              source={require('../../../assets/images/entries.png')}
+              source={require("../../../assets/images/entries.png")}
               style={styles.footerImage}
               resizeMode="contain"
             />
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => router.replace('/(add-journal)/')}
-            style={{ alignItems: 'center' }}
+            onPress={() => router.replace("/(add-journal)/")}
+            style={{ alignItems: "center" }}
           >
             <Image
-              source={require('../../../assets/images/circle.png')}
+              source={require("../../../assets/images/circle.png")}
               style={styles.footerImage}
               resizeMode="contain"
             />
@@ -461,14 +495,14 @@ export default function Board(): JSX.Element {
           </TouchableOpacity>
           <TouchableOpacity>
             <Image
-              source={require('../../../assets/images/feed.png')}
+              source={require("../../../assets/images/feed.png")}
               style={styles.footerImage}
               resizeMode="contain"
             />
           </TouchableOpacity>
-          <TouchableOpacity onPress={() => router.replace('/(friends)/')}>
+          <TouchableOpacity onPress={() => router.replace("/(friends)/")}>
             <Image
-              source={require('../../../assets/images/friends.png')}
+              source={require("../../../assets/images/friends.png")}
               style={styles.footerImage}
               resizeMode="contain"
             />
@@ -482,30 +516,33 @@ export default function Board(): JSX.Element {
 // Sorted stylesheet classes alphabetically
 const styles = StyleSheet.create({
   activeTabIndicator: {
-    backgroundColor: '#706645',
+    backgroundColor: "#706645",
     borderRadius: 1,
     bottom: -5,
     height: 2,
     left: 22,
-    position: 'absolute',
+    position: "absolute",
     right: 22,
   },
+
   container: {
-    backgroundColor: '#F0ECE0',
+    backgroundColor: "#F0ECE0",
     flex: 1,
   },
+
   dropdownItem: {
-    borderBottomColor: '#EEE',
+    borderBottomColor: "#EEE",
     borderBottomWidth: 1,
     padding: 10,
   },
+
   dropdownMenu: {
-    backgroundColor: '#FFF',
+    backgroundColor: "#FFF",
     borderRadius: 8,
     elevation: 5,
-    position: 'absolute',
+    position: "absolute",
     right: 20,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.1,
     shadowRadius: 4,
@@ -513,166 +550,193 @@ const styles = StyleSheet.create({
     width: 100,
     zIndex: 10,
   },
+
   dropdownText: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 16,
   },
+
   entryContainer: {
-    alignItems: 'flex-start',
-    backgroundColor: '#FDFCF3',
+    alignItems: "flex-start",
+    backgroundColor: "#FDFCF3",
     borderRadius: 15,
-    flexDirection: 'row',
+    flexDirection: "row",
     marginBottom: 10,
     marginHorizontal: 20,
     minHeight: 130,
-    overflow: 'hidden',
+    overflow: "hidden",
     padding: 10,
   },
+
   entryLabel: {
-    color: '#706645CC',
-    fontFamily: 'Poppins',
+    color: "#706645CC",
+    fontFamily: "Poppins",
     fontSize: 13,
-    fontWeight: '400',
+    fontWeight: "400",
   },
+
   entryText: {
-    color: '#706645CC',
-    fontFamily: 'Poppins',
+    color: "#706645CC",
+    fontFamily: "Poppins",
     fontSize: 12,
-    fontWeight: '600',
+    fontWeight: "600",
     marginRight: 25,
     marginTop: 10,
   },
+
   entryTextContainer: {
     marginLeft: 42,
     marginTop: -10,
   },
+
   footer: {
-    backgroundColor: '#F0ECE0',
-    flexDirection: 'row',
-    justifyContent: 'space-around',
+    backgroundColor: "#F0ECE0",
+    flexDirection: "row",
+    justifyContent: "space-around",
     paddingVertical: 20,
-    position: 'absolute',
+    position: "absolute",
     bottom: -34,
     left: 0,
     right: 0,
   },
+
   footerImage: {
     height: 50,
     width: 50,
   },
+
   header: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginTop: -29,
     padding: 20,
   },
+
   headerDate: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 18,
-    fontWeight: '400',
+    fontWeight: "400",
     marginTop: 4,
   },
+
   headerTitle: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
+
   image: {
     height: 40,
     width: 40,
   },
+
   listContainer: {
     paddingBottom: 20,
   },
+
   loadingContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
+
   nameContainer: {
-    alignItems: 'center',
-    flexDirection: 'row',
+    alignItems: "center",
+    flexDirection: "row",
   },
+
   noContentContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     marginTop: 50,
   },
+
   noContentText: {
-    color: '#706645',
+    color: "#706645",
     fontSize: 16,
-    fontStyle: 'italic',
+    fontStyle: "italic",
   },
+
   plusSign: {
-    color: 'white',
+    color: "white",
     fontSize: 30,
-    fontWeight: '400',
+    fontWeight: "400",
     marginLeft: 15.5,
     marginTop: 4,
-    position: 'absolute',
+    position: "absolute",
   },
+
   profileIcon: {
     height: 35,
     marginRight: 8,
     marginTop: 2,
     width: 35,
   },
+
   questionContainer: {
-    backgroundColor: '#FDFCF3',
+    backgroundColor: "#FDFCF3",
     borderRadius: 15,
     margin: 20,
     marginBottom: 20,
     marginTop: 10,
     padding: 15,
   },
+
   questionLabel: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 14,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     marginBottom: 8,
   },
+
   questionText: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 16,
   },
+
   tabContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-evenly',
+    flexDirection: "row",
+    justifyContent: "space-evenly",
     marginBottom: 10,
   },
+
   tabIcon: {
     height: 20,
     marginRight: 5,
     width: 20,
   },
+
   tabItem: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
-    flexDirection: 'row',
-    justifyContent: 'center',
-    position: 'relative',
+    flexDirection: "row",
+    justifyContent: "center",
+    position: "relative",
   },
+
   tabText: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 24,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
+
   textContainer: {
     flex: 1,
   },
+
   timeText: {
-    color: '#706645CC',
-    fontFamily: 'Poppins',
+    color: "#706645CC",
+    fontFamily: "Poppins",
     fontSize: 13,
-    position: 'absolute',
+    position: "absolute",
     right: 20,
     top: 10,
   },

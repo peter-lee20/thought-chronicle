@@ -17,7 +17,7 @@ import { collection, getDocs, query, where } from "firebase/firestore";
 
 export default function EntriesCalendar() {
   const [showDropdown, setShowDropdown] = useState(false); // State for dropdown visibility
-const [markedDates, setMarkedDates] = useState<Record<string, any>>({}); // Keeps track of days with entries written by the user
+  const [markedDates, setMarkedDates] = useState<Record<string, any>>({}); // Keeps track of days with entries written by the user
   const currentDate = new Date(); // Current date object
 
   // Current date string formatted in PST (local time)
@@ -27,6 +27,7 @@ const [markedDates, setMarkedDates] = useState<Record<string, any>>({}); // Keep
     month: "2-digit",
     day: "2-digit",
   };
+
   const pstDateString = new Intl.DateTimeFormat("en-CA", options).format(
     currentDate
   );
@@ -237,21 +238,21 @@ const [markedDates, setMarkedDates] = useState<Record<string, any>>({}); // Keep
       </SafeAreaView>
 
       {/* calendar */}
-    <View style={styles.body}>
-      <Calendar
-        theme={{
-        calendarBackground: "#F0ECE0",
-        dayTextColor: "#706645",
-        textSectionTitleColor: "#706645",
-        textDayHeaderFontFamily: "Poppins",
-        }}
-        enableSwipeMonths={true}
-        hideExtraDays={true}
-        renderHeader={(date: Date) => <HeaderComponent date={date} />}
-        renderArrow={(direction: string) => <Arrow direction={direction} />}
-        dayComponent={dayComponent}
-      />
-    </View>
+      <View style={styles.body}>
+        <Calendar
+          theme={{
+            calendarBackground: "#F0ECE0",
+            dayTextColor: "#706645",
+            textSectionTitleColor: "#706645",
+            textDayHeaderFontFamily: "Poppins",
+          }}
+          enableSwipeMonths={true}
+          hideExtraDays={true}
+          renderHeader={(date: Date) => <HeaderComponent date={date} />}
+          renderArrow={(direction: string) => <Arrow direction={direction} />}
+          dayComponent={dayComponent}
+        />
+      </View>
 
       {/* footer */}
       <View style={styles.footer}>
@@ -320,6 +321,7 @@ const styles = StyleSheet.create({
   body: {
     paddingHorizontal: 10,
   },
+
   circleButton: {
     position: "relative",
     width: 50,
@@ -327,10 +329,12 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
   },
+
   container: {
     flex: 1,
     backgroundColor: "#F0ECE0",
   },
+
   date: {
     textAlign: "center",
     fontFamily: "Poppins",
@@ -340,15 +344,18 @@ const styles = StyleSheet.create({
     lineHeight: 36,
     marginRight: 7,
   },
+
   dateChangeButton: {
     flexDirection: "row",
     alignItems: "center",
   },
+
   dateContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
   },
+
   dayIconContainer: {
     width: 45,
     height: 45,
@@ -357,6 +364,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+
   dayText: {
     fontFamily: "Poppins",
     fontSize: 13,
@@ -364,11 +372,13 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginTop: 8,
   },
+
   dropdownItem: {
     padding: 10,
     borderBottomWidth: 1,
     borderBottomColor: "#EEE",
   },
+
   dropdownMenu: {
     position: "absolute",
     top: 50,
@@ -383,11 +393,13 @@ const styles = StyleSheet.create({
     elevation: 5,
     zIndex: 10,
   },
+
   dropdownText: {
     color: "#706645",
     fontSize: 16,
     fontFamily: "Poppins",
   },
+
   footer: {
     flexDirection: "row",
     justifyContent: "space-around",
@@ -395,10 +407,12 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     backgroundColor: "#F0ECE0",
   },
+
   footerImage: {
     width: 50,
     height: 50,
   },
+
   header: {
     flexDirection: "row",
     justifyContent: "flex-end",
@@ -406,14 +420,17 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 20,
   },
+
   headerImage: {
     width: 40,
     height: 40,
   },
+
   modalArrows: {
     width: 20,
     height: 40,
   },
+
   modalContent: {
     flexDirection: "column",
     width: 352,
@@ -426,12 +443,14 @@ const styles = StyleSheet.create({
     paddingBottom: 18,
     alignItems: "center",
   },
+
   modalOverlay: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: "rgba(0, 0, 0, 0.5)",
   },
+
   plusSign: {
     marginLeft: 15.5,
     marginTop: 4,
@@ -440,6 +459,7 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "400",
   },
+  
   selectedDayText: {
     fontFamily: "Poppins",
     fontSize: 13,
@@ -449,4 +469,4 @@ const styles = StyleSheet.create({
     marginTop: 8,
     borderRadius: 10,
   },
-});  
+});

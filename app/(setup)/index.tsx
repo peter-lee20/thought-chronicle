@@ -1,21 +1,23 @@
-import { Link, router } from 'expo-router';
-import React, { useState } from 'react';
+import { Link, router } from "expo-router";
+import React, { useState } from "react";
 import {
   Alert,
   Image,
   Keyboard,
   KeyboardAvoidingView,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   TouchableWithoutFeedback,
   View,
-} from 'react-native';
-import { FIREBASE_AUTH } from '../../FirebaseConfig';
-import { sendEmailVerification, signInWithEmailAndPassword } from 'firebase/auth';
+} from "react-native";
+import { FIREBASE_AUTH } from "../../FirebaseConfig";
+import {
+  sendEmailVerification,
+  signInWithEmailAndPassword,
+} from "firebase/auth";
 
 /**
  * SignInScreen - Renders the sign-in page for user authentication.
@@ -28,7 +30,7 @@ export default function SignInScreen(): JSX.Element {
 
   // Firebase authentication token
   const auth = FIREBASE_AUTH;
-  
+
   /**
    * Redirects the user to the forgot password screen.
    */
@@ -45,14 +47,18 @@ export default function SignInScreen(): JSX.Element {
     try {
       const response = await signInWithEmailAndPassword(auth, email, password);
 
-      if(!response.user.emailVerified) {
-        Alert.alert("Email Not Verified", "Please verify your email before signing in.", [
-          {
-            text: "Send again",
-            onPress: async () => await sendEmailVerification(response.user),
-          },
-          {text: "Ok",}
-        ]);
+      if (!response.user.emailVerified) {
+        Alert.alert(
+          "Email Not Verified",
+          "Please verify your email before signing in.",
+          [
+            {
+              text: "Send again",
+              onPress: async () => await sendEmailVerification(response.user),
+            },
+            { text: "Ok" },
+          ]
+        );
         setLoading(false);
         return;
       }
@@ -74,7 +80,10 @@ export default function SignInScreen(): JSX.Element {
       <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
         <View style={styles.container}>
           {/* Illustration */}
-          <Image source={require('../../assets/images/illustration.png')} style={styles.illustration} />
+          <Image
+            source={require("../../assets/images/illustration.png")}
+            style={styles.illustration}
+          />
 
           {/* Title and Subtitle */}
           <Text style={styles.title}>Chronicle your thoughts</Text>
@@ -100,19 +109,21 @@ export default function SignInScreen(): JSX.Element {
           />
 
           {/* Forgot Password Link */}
-          <View style={{ width: '100%' }}>
+          <View style={{ width: "100%" }}>
             <TouchableOpacity onPress={handleForgotPassword}>
-              <Text style={[styles.forgotPassword, { textDecorationLine: 'underline' }]}>
+              <Text
+                style={[
+                  styles.forgotPassword,
+                  { textDecorationLine: "underline" },
+                ]}
+              >
                 Forgot your password?
               </Text>
             </TouchableOpacity>
           </View>
 
           {/* Sign In Button */}
-          <TouchableOpacity 
-            style={styles.signInButton}
-            onPress={handleSignIn}
-          >
+          <TouchableOpacity style={styles.signInButton} onPress={handleSignIn}>
             <Text style={styles.signInButtonText}>Sign in</Text>
           </TouchableOpacity>
 
@@ -121,18 +132,18 @@ export default function SignInScreen(): JSX.Element {
             <Text
               style={[
                 styles.signUp,
-                { color: '#666', fontWeight: 'normal', textAlign: 'center' },
+                { color: "#666", fontWeight: "normal", textAlign: "center" },
               ]}
             >
-              Don't have an account?{' '}
+              Don't have an account?{" "}
               <Link
                 href="/signup"
                 style={[
                   styles.signUp,
                   {
-                    color: '#7E948C',
-                    fontWeight: 'bold',
-                    textDecorationLine: 'underline',
+                    color: "#7E948C",
+                    fontWeight: "bold",
+                    textDecorationLine: "underline",
                   },
                 ]}
               >
@@ -149,34 +160,38 @@ export default function SignInScreen(): JSX.Element {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: '#F0ECE0',
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#F0ECE0",
     padding: 20,
   },
+
   forgotPassword: {
     fontSize: 14,
-    color: '#7E948C',
+    color: "#7E948C",
     marginBottom: 20,
-    textAlign: 'right',
-    width: '100%',
-    fontWeight: 'bold',
+    textAlign: "right",
+    width: "100%",
+    fontWeight: "bold",
   },
+
   illustration: {
     width: 250,
     height: 200,
     marginBottom: 20,
   },
+
   input: {
-    width: '100%',
+    width: "100%",
     height: 50,
-    borderColor: '#7E948C',
+    borderColor: "#7E948C",
     borderWidth: 2,
     borderRadius: 15,
     paddingHorizontal: 10,
     marginBottom: 15,
-    backgroundColor: '#F0ECE0',
+    backgroundColor: "#F0ECE0",
   },
+
   signInButton: {
     backgroundColor: "#7E948C",
     paddingVertical: 20,
@@ -189,29 +204,33 @@ const styles = StyleSheet.create({
     marginTop: 20,
     marginBottom: 20,
   },
+
   signInButtonText: {
     color: "white",
     fontSize: 16,
     fontWeight: "bold",
     fontFamily: "Poppins",
   },
+
   signUp: {
     fontSize: 14,
-    color: '#7E948C',
-    textAlign: 'center',
-    fontWeight: 'bold',
+    color: "#7E948C",
+    textAlign: "center",
+    fontWeight: "bold",
   },
+
   subtitle: {
     fontSize: 16,
-    color: '#666',
+    color: "#666",
     marginBottom: 30,
-    textAlign: 'center',
+    textAlign: "center",
   },
+  
   title: {
     fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
+    fontWeight: "bold",
+    color: "#333",
     marginBottom: 20,
-    textAlign: 'center',
+    textAlign: "center",
   },
 });

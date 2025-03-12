@@ -1,7 +1,13 @@
 // FriendsTab.tsx
-import React, { useState } from 'react';
-import { View, Text, TextInput, FlatList, StyleSheet, Image } from 'react-native';
-import PersonCard from './PersonCard';
+import React, { useState } from "react";
+import {
+  View,
+  TextInput,
+  FlatList,
+  StyleSheet,
+  Image,
+} from "react-native";
+import PersonCard from "./PersonCard";
 
 /**
  * Represents a person with basic information and optional interaction buttons.
@@ -27,7 +33,7 @@ interface FriendsTabProps {
  * @returns {JSX.Element} The rendered FriendsTab component.
  */
 const FriendsTab: React.FC<FriendsTabProps> = ({ items }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   const filteredItems = items.filter((item) =>
     item.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -37,7 +43,7 @@ const FriendsTab: React.FC<FriendsTabProps> = ({ items }) => {
     <View style={styles.container}>
       <View style={styles.searchBarContainer}>
         <Image
-          source={require('../../../assets/images/search_icon.png')}
+          source={require("../../../assets/images/search_icon.png")}
           style={styles.searchIcon}
           resizeMode="contain"
         />
@@ -51,7 +57,11 @@ const FriendsTab: React.FC<FriendsTabProps> = ({ items }) => {
       <FlatList
         data={filteredItems}
         renderItem={({ item }) => (
-          <PersonCard username={item.username} name={item.name} buttons={item.buttons} />
+          <PersonCard
+            username={item.username}
+            name={item.name}
+            buttons={item.buttons}
+          />
         )}
         keyExtractor={(item) => item.id}
       />
@@ -63,36 +73,41 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     paddingVertical: 20,
-    width: '100%',
+    width: "100%",
   },
+
   listItem: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 16,
     marginBottom: 5,
   },
+
   searchBarContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: '#70664533',
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "#70664533",
     borderRadius: 30,
     marginBottom: 10,
     paddingHorizontal: 10,
   },
+
   searchBar: {
     flex: 1,
     paddingVertical: 10,
     paddingRight: 10, // Add some padding to the right
   },
+
   searchIcon: {
     width: 20,
     height: 20,
     marginRight: 10,
   },
+
   tabContent: {
     flex: 1,
     paddingVertical: 20,
-    width: '100%',
+    width: "100%",
   },
 });
 

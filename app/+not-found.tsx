@@ -33,6 +33,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     padding: 20,
   },
+
   link: {
     marginTop: 15,
     paddingVertical: 15,

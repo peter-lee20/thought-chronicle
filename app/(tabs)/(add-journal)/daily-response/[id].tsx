@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   StyleSheet,
   View,
@@ -8,11 +8,11 @@ import {
   Image,
   Alert,
   TextInput,
-} from 'react-native';
-import { useLocalSearchParams, router } from 'expo-router';
-import { FIRESTORE_DB } from '../../../../FirebaseConfig';
-import { doc, getDoc, deleteDoc, updateDoc } from 'firebase/firestore';
-import { format } from 'date-fns';
+} from "react-native";
+import { useLocalSearchParams, router } from "expo-router";
+import { FIRESTORE_DB } from "../../../../FirebaseConfig";
+import { doc, getDoc, deleteDoc, updateDoc } from "firebase/firestore";
+import { format } from "date-fns";
 
 /**
  * Interface representing a daily question entry.
@@ -107,7 +107,9 @@ export default function DailyQuestionEntryPage(): JSX.Element {
 
     // Enforce character limit
     if (contents.length > maxCharacters) {
-      Alert.alert(`Response exceeds the maximum limit of ${maxCharacters} characters.`);
+      Alert.alert(
+        `Response exceeds the maximum limit of ${maxCharacters} characters.`
+      );
       return;
     }
     Alert.alert(
@@ -147,30 +149,26 @@ export default function DailyQuestionEntryPage(): JSX.Element {
       return;
     }
 
-    Alert.alert(
-      "Delete Entry",
-      "Are you sure you want to delete this entry?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "OK",
-          onPress: async (): Promise<void> => {
-            try {
-              const docRef = doc(FIRESTORE_DB, "daily-question-responses", id);
-              await deleteDoc(docRef);
-              console.log("Document successfully deleted!");
-              // Navigate back to the entries page for the same date.
-              const entryDate = dailyEntry.timestamp
-                ? format(dailyEntry.timestamp, "yyyy-MM-dd")
-                : format(new Date(), "yyyy-MM-dd");
-              router.replace(`/(entries)/entries?date=${entryDate}`);
-            } catch (error) {
-              console.error("Error removing document:", error);
-            }
-          },
+    Alert.alert("Delete Entry", "Are you sure you want to delete this entry?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "OK",
+        onPress: async (): Promise<void> => {
+          try {
+            const docRef = doc(FIRESTORE_DB, "daily-question-responses", id);
+            await deleteDoc(docRef);
+            console.log("Document successfully deleted!");
+            // Navigate back to the entries page for the same date.
+            const entryDate = dailyEntry.timestamp
+              ? format(dailyEntry.timestamp, "yyyy-MM-dd")
+              : format(new Date(), "yyyy-MM-dd");
+            router.replace(`/(entries)/entries?date=${entryDate}`);
+          } catch (error) {
+            console.error("Error removing document:", error);
+          }
         },
-      ]
-    );
+      },
+    ]);
   };
 
   /**
@@ -180,7 +178,7 @@ export default function DailyQuestionEntryPage(): JSX.Element {
    * @returns {JSX.Element} The formatted date as a JSX element.
    */
   const formatDateFull = (timestamp: Date | null): JSX.Element | string => {
-    if (!timestamp) return '';
+    if (!timestamp) return "";
     const dayOfWeek = format(timestamp, "EEEE");
     const month = format(timestamp, "MMMM");
     const day = format(timestamp, "d");
@@ -200,8 +198,11 @@ export default function DailyQuestionEntryPage(): JSX.Element {
    * @returns {string} The formatted time.
    */
   const formatTime = (timestamp: Date | null): string => {
-    if (!timestamp) return '';
-    return timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    if (!timestamp) return "";
+    return timestamp.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
   };
 
   if (loading) {
@@ -226,7 +227,7 @@ export default function DailyQuestionEntryPage(): JSX.Element {
       <View style={styles.header}>
         <TouchableOpacity onPress={goBack} style={styles.backButton}>
           <Image
-            source={require('../../../../assets/images/back_arrow.png')}
+            source={require("../../../../assets/images/back_arrow.png")}
             style={styles.backButtonImage}
             resizeMode="contain"
           />
@@ -235,7 +236,7 @@ export default function DailyQuestionEntryPage(): JSX.Element {
           {editing ? (
             <TouchableOpacity onPress={handleEdit}>
               <Image
-                source={require('../../../../assets/images/journal-check.png')}
+                source={require("../../../../assets/images/journal-check.png")}
                 resizeMode="contain"
                 style={styles.editImage}
               />
@@ -243,7 +244,7 @@ export default function DailyQuestionEntryPage(): JSX.Element {
           ) : (
             <TouchableOpacity onPress={() => enableEdit(dailyEntry.response)}>
               <Image
-                source={require('../../../../assets/images/edit.png')}
+                source={require("../../../../assets/images/edit.png")}
                 resizeMode="contain"
                 style={styles.editImage}
               />
@@ -251,7 +252,7 @@ export default function DailyQuestionEntryPage(): JSX.Element {
           )}
           <TouchableOpacity onPress={handleDelete}>
             <Image
-              source={require('../../../../assets/images/delete.png')}
+              source={require("../../../../assets/images/delete.png")}
               resizeMode="contain"
               style={styles.deleteImage}
             />
@@ -266,7 +267,9 @@ export default function DailyQuestionEntryPage(): JSX.Element {
         {/* Daily Question Label and Time */}
         <View style={styles.infoContainer}>
           <Text style={styles.entryLabel}>DAILY QUESTION</Text>
-          <Text style={styles.timeText}>{formatTime(dailyEntry.timestamp)}</Text>
+          <Text style={styles.timeText}>
+            {formatTime(dailyEntry.timestamp)}
+          </Text>
         </View>
 
         {/* Display the Question */}
@@ -302,17 +305,21 @@ const styles = StyleSheet.create({
   backButton: {
     marginRight: 10,
   },
+
   backButtonImage: {
     height: 24,
     width: 24,
   },
+
   boldDay: {
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
+
   buttonContainer: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
   },
+
   characterCounter: {
     color: "#706645",
     flex: 1,
@@ -325,99 +332,114 @@ const styles = StyleSheet.create({
     textAlign: "right",
     justifyContent: "flex-end",
   },
+
   container: {
-    backgroundColor: '#F0ECE0',
+    backgroundColor: "#F0ECE0",
     flex: 1,
   },
+
   content: {
     flex: 1,
     padding: 20,
   },
+
   dateText: {
-    alignItems: 'flex-start',
+    alignItems: "flex-start",
     color: "#706645",
-    flexDirection: 'row',
+    flexDirection: "row",
     fontFamily: "Poppins",
     fontSize: 24,
-    fontWeight: '400',
+    fontWeight: "400",
     marginBottom: 15,
   },
+
   deleteImage: {
     height: 30,
     width: 30,
   },
+
   editImage: {
     height: 28,
     width: 28,
   },
+
   editText: {
     alignSelf: "center",
     color: "#3C4444",
     fontFamily: "Poppins",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     height: 400,
     lineHeight: 24,
     paddingLeft: 9,
     textAlignVertical: "top",
     width: 346,
   },
+
   entryLabel: {
-    color: '#706645CC',
-    fontFamily: 'Poppins',
+    color: "#706645CC",
+    fontFamily: "Poppins",
     fontSize: 13,
-    fontWeight: '400',
+    fontWeight: "400",
   },
+
   entryText: {
-    color: '#706645CC',
-    fontFamily: 'Poppins',
+    color: "#706645CC",
+    fontFamily: "Poppins",
     fontSize: 14,
-    fontWeight: '600',
+    fontWeight: "600",
     lineHeight: 24,
   },
+
   footer: {
     flex: 1,
     marginBottom: 15,
   },
+
   header: {
-    alignItems: 'center',
-    backgroundColor: '#F0ECE0',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    backgroundColor: "#F0ECE0",
+    flexDirection: "row",
+    justifyContent: "space-between",
     paddingHorizontal: 20,
     paddingTop: 50,
     paddingBottom: 0,
   },
+
   infoContainer: {
-    alignItems: 'center',
-    flexDirection: 'row',
-    justifyContent: 'space-between',
+    alignItems: "center",
+    flexDirection: "row",
+    justifyContent: "space-between",
     marginBottom: 20,
   },
+
   loadingContainer: {
-    alignItems: 'center',
+    alignItems: "center",
     flex: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
   },
+
   sectionResponse: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 5,
     marginTop: 18,
   },
+
   sectionTitle: {
-    color: '#706645',
-    fontFamily: 'Poppins',
+    color: "#706645",
+    fontFamily: "Poppins",
     fontSize: 16,
-    fontWeight: '600',
+    fontWeight: "600",
     marginBottom: 5,
     marginTop: 5,
   },
+  
   timeText: {
-    color: '#706645CC',
-    fontFamily: 'Poppins',
+    color: "#706645CC",
+    fontFamily: "Poppins",
     fontSize: 13,
   },
 });
